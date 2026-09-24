@@ -508,6 +508,30 @@ fn reads_an_image_and_refuses_unknown_types_before_touching_disk() {
 }
 
 #[test]
+fn image_from_bytes_encodes_known_types_and_refuses_the_rest() {
+    use base64::Engine as _;
+    let bytes: Vec<u8> = (0..=255).collect();
+    let img = image_from_bytes("shot.PNG", &bytes).unwrap();
+    assert_eq!(img.mime, "image/png");
+    assert_eq!(img.rel, "shot.PNG");
+    assert_eq!(
+        base64::engine::general_purpose::STANDARD
+            .decode(&img.base64)
+            .unwrap(),
+        bytes
+    );
+    // A backslash is normalised the same way `read_image` normalises `rel`.
+    assert_eq!(
+        image_from_bytes("sub\\photo.jpg", &bytes).unwrap().rel,
+        "sub/photo.jpg"
+    );
+    // Not a known image extension: no bytes are ever touched, so garbage
+    // content is fine here.
+    assert!(image_from_bytes("notes.md", &bytes).is_none());
+    assert!(image_from_bytes("noext", &bytes).is_none());
+}
+
+#[test]
 fn delete_needs_an_existing_file() {
     let fx = Fixture::new();
     let root = fx.root(LinkPolicy::Strict);
@@ -556,4 +580,18 @@ fn a_directory_swapped_for_a_symlink_after_the_guard_is_not_followed() {
         fs::remove_file(fx.dir.join("notes")).unwrap();
         fs::rename(fx.dir.join("notes-real"), fx.dir.join("notes")).unwrap();
     }
+}
+
+#[test]
+fn text_from_bytes_refuses_invalid_utf8_and_nul_bytes() {
+    assert_eq!(
+        text_from_bytes(b"fn main() {}\n".to_vec()).as_deref(),
+        Some("fn main() {}\n")
+    );
+    assert_eq!(
+        text_from_bytes("Grüße".as_bytes().to_vec()).as_deref(),
+        Some("Grüße")
+    );
+    assert_eq!(text_from_bytes(vec![0xff, 0xfe]), None);
+    assert_eq!(text_from_bytes(b"a\0b".to_vec()), None);
 }

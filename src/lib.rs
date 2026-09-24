@@ -27,7 +27,8 @@ pub mod watch;
 pub use error::FilesError;
 pub use file::{
     Image, LARGE_FILE_BYTES, MAX_IMAGE_BYTES, MAX_READ_BYTES, MAX_WRITE_BYTES, TextFile, Version,
-    current_version, delete, ensure_top_level_dir, read_image, read_text, write_text,
+    current_version, delete, ensure_top_level_dir, image_from_bytes, image_mime, read_image,
+    read_text, text_from_bytes, write_text,
 };
 pub use grants::{Grant, GrantKind, GrantStore};
 pub use root::{LinkPolicy, Root, RootResolver};

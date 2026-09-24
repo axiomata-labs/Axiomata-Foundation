@@ -99,8 +99,8 @@ pub struct Image {
 /// Errors:
 ///     [`FilesError::NotFound`] if it does not exist,
 ///     [`FilesError::TooLarge`] over `max_bytes` (also if it grows past it
-///     while being read), [`FilesError::NotUtf8`] for binary content, and
-///     every guard failure of [`Root::resolve`].
+///     while being read), [`FilesError::NotUtf8`] for binary content (see
+///     [`text_from_bytes`]), and every guard failure of [`Root::resolve`].
 pub fn read_text(root: &Root, rel: &str, max_bytes: u64) -> Result<TextFile, FilesError> {
     let resolved = root.resolve_entry(rel)?;
     if !resolved.exists {
@@ -109,7 +109,7 @@ pub fn read_text(root: &Root, rel: &str, max_bytes: u64) -> Result<TextFile, Fil
     let (bytes, meta) = read_capped(root, rel, &resolved.target, max_bytes)?;
     let version = Version::of(&bytes);
     let large = bytes.len() as u64 > LARGE_FILE_BYTES;
-    let content = String::from_utf8(bytes).map_err(|_| FilesError::NotUtf8 { path: rel.into() })?;
+    let content = text_from_bytes(bytes).ok_or_else(|| FilesError::NotUtf8 { path: rel.into() })?;
     Ok(TextFile {
         rel: normalise(rel),
         content,
@@ -117,6 +117,17 @@ pub fn read_text(root: &Root, rel: &str, max_bytes: u64) -> Result<TextFile, Fil
         modified: meta.modified().ok().map(DateTime::<Utc>::from),
         large,
     })
+}
+
+/// `bytes` as text, or `None` for binary content: not UTF-8, or valid UTF-8
+/// with a NUL byte in it (which no text file has, and the editor could not
+/// show). The one rule for "is this text" — the editor's `read_text` and the
+/// base side of a diff (M7.3 H2) both go through it, so the two sides of one
+/// diff can never disagree about the same content.
+pub fn text_from_bytes(bytes: Vec<u8>) -> Option<String> {
+    String::from_utf8(bytes)
+        .ok()
+        .filter(|text| !text.contains('\0'))
 }
 
 /// The current version of a file, or `None` if it does not exist — what a
@@ -209,12 +220,23 @@ pub fn read_image(root: &Root, rel: &str, max_bytes: u64) -> Result<Image, Files
         return Err(FilesError::NotFound { path: rel.into() });
     }
     let (bytes, _) = read_capped(root, rel, &resolved.target, max_bytes)?;
+    Ok(encode_image(rel, mime, &bytes))
+}
+
+/// Bytes that came from somewhere other than a root — a git blob (M7.3 H8) —
+/// as the same [`Image`] `read_image` returns, or `None` for an extension
+/// [`image_mime`] does not know.
+pub fn image_from_bytes(rel: &str, bytes: &[u8]) -> Option<Image> {
+    image_mime(rel).map(|mime| encode_image(rel, mime, bytes))
+}
+
+fn encode_image(rel: &str, mime: &'static str, bytes: &[u8]) -> Image {
     use base64::Engine as _;
-    Ok(Image {
+    Image {
         rel: normalise(rel),
         mime,
         base64: base64::engine::general_purpose::STANDARD.encode(bytes),
-    })
+    }
 }
 
 /// If `rel`'s parent is a single missing directory directly under the root,
@@ -254,7 +276,7 @@ pub fn ensure_top_level_dir(root: &Root, rel: &str) -> Result<(), FilesError> {
 /// `md-file.svelte` treats as an image — keep the three lists in lockstep.
 /// SVG is never included: it can carry `<script>`. Whether BMP/TIFF/HEIC/AVIF
 /// actually render is up to WebKit's image stack, not this function.
-fn image_mime(rel: &str) -> Option<&'static str> {
+pub fn image_mime(rel: &str) -> Option<&'static str> {
     let ext = Path::new(rel).extension()?.to_str()?.to_ascii_lowercase();
     Some(match ext.as_str() {
         "png" => "image/png",
