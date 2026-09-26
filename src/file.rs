@@ -188,6 +188,21 @@ pub fn write_text(
     Ok(Version::of(content.as_bytes()))
 }
 
+/// Makes `rel` a new, empty text file and returns its version; refused if
+/// anything is already there — never an overwrite (the tree's "New file", W13).
+///
+/// Errors:
+///     [`FilesError::Refused`] if something exists at `rel` or the guard
+///     refuses it, [`FilesError::Io`] if the parent folder is missing.
+pub fn create_text(root: &Root, rel: &str) -> Result<Version, FilesError> {
+    let resolved = root.resolve_entry(rel)?;
+    if resolved.exists {
+        return Err(refused(rel, "something with this name is already there"));
+    }
+    pinned::create_new(root, rel, &resolved.entry)?;
+    Ok(Version::of(b""))
+}
+
 /// Deletes a file. For an allowed symlink this removes the link, never the
 /// file it points to.
 ///

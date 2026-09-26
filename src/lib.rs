@@ -17,6 +17,7 @@
 //! [`Grant`] — a file or folder the owner picked in the open dialog — since
 //! a standalone editor needs those too.
 
+pub mod dir;
 pub mod error;
 pub mod file;
 pub mod grants;
@@ -24,11 +25,15 @@ mod pinned;
 pub mod root;
 pub mod watch;
 
+pub use dir::{
+    DirEntry, EntryKind, Listing, MAX_COUNT, MAX_LISTING, count_tree, delete_tree, list_dir,
+    make_dir, rename_entry,
+};
 pub use error::FilesError;
 pub use file::{
     Image, LARGE_FILE_BYTES, MAX_IMAGE_BYTES, MAX_READ_BYTES, MAX_WRITE_BYTES, TextFile, Version,
-    current_version, delete, ensure_top_level_dir, image_from_bytes, image_mime, read_image,
-    read_text, text_from_bytes, write_text,
+    create_text, current_version, delete, ensure_top_level_dir, image_from_bytes, image_mime,
+    read_image, read_text, text_from_bytes, write_text,
 };
 pub use grants::{Grant, GrantKind, GrantStore};
 pub use root::{LinkPolicy, Root, RootResolver};

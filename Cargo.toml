@@ -13,3 +13,4 @@ thiserror.workspace = true
 base64.workspace = true
 rustix.workspace = true
 notify.workspace = true
+ignore.workspace = true

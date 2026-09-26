@@ -20,7 +20,7 @@
 use std::ffi::OsStr;
 use std::fs::File;
 use std::os::fd::OwnedFd;
-use std::path::Path;
+use std::path::{Component, Path};
 
 use rustix::fs::{AtFlags, FileType, Mode, OFlags, RawMode};
 use rustix::io::Errno;
@@ -32,19 +32,27 @@ use crate::root::{LinkPolicy, Root};
 const TMP_SUFFIX: &str = ".axiomata-tmp";
 
 /// A directory held open by descriptor, plus the name of the entry in it.
-struct Pinned<'a> {
-    dir: OwnedFd,
-    name: &'a OsStr,
+pub(crate) struct Pinned<'a> {
+    pub(crate) dir: OwnedFd,
+    pub(crate) name: &'a OsStr,
 }
 
 /// Pins the parent directory of `path`, a canonical path inside `root`.
-fn pin<'a>(root: &Root, rel: &str, path: &'a Path) -> Result<Pinned<'a>, FilesError> {
+pub(crate) fn pin<'a>(root: &Root, rel: &str, path: &'a Path) -> Result<Pinned<'a>, FilesError> {
     let inside = path
         .strip_prefix(root.path())
         .map_err(|_| refused(rel, "resolves outside the root"))?;
     let name = inside
         .file_name()
         .ok_or_else(|| refused(rel, "path has no file name"))?;
+    // Callers validate first; this holds on its own too — `O_NOFOLLOW` stops a
+    // symlink, not a literal `..`, which the kernel would take to the real parent.
+    if inside
+        .components()
+        .any(|c| !matches!(c, Component::Normal(_) | Component::CurDir))
+    {
+        return Err(refused(rel, "path must stay inside its root"));
+    }
     let dir_flags = OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC;
     let mut dir =
         rustix::fs::open(root.path(), dir_flags, Mode::empty()).map_err(errno(rel, root.path()))?;
@@ -126,6 +134,19 @@ pub(crate) fn replace(
     written
 }
 
+/// Creates `target` as a new, empty file — never over something already there
+/// (`O_CREAT | O_EXCL | O_NOFOLLOW` on the pinned parent).
+pub(crate) fn create_new(root: &Root, rel: &str, target: &Path) -> Result<(), FilesError> {
+    let pinned = pin(root, rel, target)?;
+    let flags = OFlags::WRONLY | OFlags::CREATE | OFlags::EXCL | OFlags::NOFOLLOW | OFlags::CLOEXEC;
+    rustix::fs::openat(&pinned.dir, pinned.name, flags, Mode::from_raw_mode(0o666))
+        .map(drop)
+        .map_err(|err| match err {
+            Errno::EXIST => refused(rel, "something with this name is already there"),
+            other => errno(rel, target)(other),
+        })
+}
+
 /// Removes the directory entry at `entry` — for a symlink, the link itself.
 pub(crate) fn unlink(root: &Root, rel: &str, entry: &Path) -> Result<(), FilesError> {
     let pinned = pin(root, rel, entry)?;
@@ -135,7 +156,7 @@ pub(crate) fn unlink(root: &Root, rel: &str, entry: &Path) -> Result<(), FilesEr
 /// Maps a failed `*at` call onto [`FilesError`]. `ELOOP` and `ENOTDIR` mean
 /// a component turned into a symlink (or a file) after the guard ran —
 /// refused, not an I/O accident; `ENOENT` means the file vanished.
-fn errno<'a>(rel: &'a str, path: &'a Path) -> impl FnOnce(Errno) -> FilesError + 'a {
+pub(crate) fn errno<'a>(rel: &'a str, path: &'a Path) -> impl FnOnce(Errno) -> FilesError + 'a {
     move |err| match err {
         Errno::LOOP | Errno::NOTDIR => refused(rel, "changed while being opened"),
         Errno::NOENT => FilesError::NotFound { path: rel.into() },
