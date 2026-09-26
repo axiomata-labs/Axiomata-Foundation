@@ -21,6 +21,7 @@ pub mod dir;
 pub mod error;
 pub mod file;
 pub mod grants;
+pub mod index;
 mod pinned;
 pub mod root;
 pub mod watch;
@@ -36,5 +37,6 @@ pub use file::{
     read_image, read_text, text_from_bytes, write_text,
 };
 pub use grants::{Grant, GrantKind, GrantStore};
+pub use index::{FileIndex, MAX_INDEX, index_files};
 pub use root::{LinkPolicy, Root, RootResolver};
 pub use watch::{Change, ChangeKind, FileWatcher};
