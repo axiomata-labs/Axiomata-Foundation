@@ -90,11 +90,54 @@ fn flags_a_large_file_and_refuses_one_over_the_limit() {
     fs::write(fx.dir.join("big.txt"), &big).unwrap();
     assert!(read_text(&root, "big.txt", MAX_READ_BYTES).unwrap().large);
     assert_eq!(kind(read_text(&root, "big.txt", 1024)), "TooLarge");
+    // A large file is edited (T2): it can be written back.
+    assert!(write_text(&root, "big.txt", &big, None, MAX_WRITE_BYTES).is_ok());
+    let too_big = "x".repeat(MAX_WRITE_BYTES as usize + 1);
     assert_eq!(
-        kind(write_text(&root, "new.txt", &big, None, MAX_WRITE_BYTES)),
+        kind(write_text(
+            &root,
+            "new.txt",
+            &too_big,
+            None,
+            MAX_WRITE_BYTES
+        )),
         "TooLarge"
     );
     assert!(!fx.dir.join("new.txt").exists());
+}
+
+#[test]
+fn writes_and_reads_exactly_at_the_16_mib_limit_but_not_one_byte_over() {
+    let fx = Fixture::new();
+    let root = fx.root(LinkPolicy::Contained);
+    // Exactly on the limit must succeed on both sides — `read_capped`'s
+    // "one byte more" check must not reject the boundary itself.
+    let exactly_at_limit = "x".repeat(MAX_WRITE_BYTES as usize);
+    write_text(&root, "exact.txt", &exactly_at_limit, None, MAX_WRITE_BYTES).unwrap();
+    let read = read_text(&root, "exact.txt", MAX_READ_BYTES).unwrap();
+    assert_eq!(read.content.len() as u64, MAX_WRITE_BYTES);
+    assert!(read.large);
+
+    // One byte over refuses on the write side before anything touches disk...
+    let one_over = "x".repeat(MAX_WRITE_BYTES as usize + 1);
+    assert_eq!(
+        kind(write_text(
+            &root,
+            "over.txt",
+            &one_over,
+            None,
+            MAX_WRITE_BYTES
+        )),
+        "TooLarge"
+    );
+    assert!(!fx.dir.join("over.txt").exists());
+
+    // ...and on the read side too, for a file that grew past the cap by other means.
+    fs::write(fx.dir.join("over.txt"), one_over.as_bytes()).unwrap();
+    assert_eq!(
+        kind(read_text(&root, "over.txt", MAX_READ_BYTES)),
+        "TooLarge"
+    );
 }
 
 #[test]

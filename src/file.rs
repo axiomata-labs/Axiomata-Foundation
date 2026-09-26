@@ -21,12 +21,11 @@ use crate::root::{Root, validate_components};
 
 /// Largest file the editor reads at all.
 pub const MAX_READ_BYTES: u64 = 16 * 1024 * 1024;
-/// Above this a read is flagged [`TextFile::large`]; the editor opens such a
-/// file read-only (D19).
+/// Above this a read is flagged [`TextFile::large`]; the editor edits such a
+/// file in its light mode, without syntax colours (`docs/plans/editor.md`, T2).
 pub const LARGE_FILE_BYTES: u64 = 2 * 1024 * 1024;
-/// Largest content the editor writes — the same bound as "large", since a
-/// large file is never edited.
-pub const MAX_WRITE_BYTES: u64 = LARGE_FILE_BYTES;
+/// Largest content the editor writes — everything it can read, it can edit (T2).
+pub const MAX_WRITE_BYTES: u64 = MAX_READ_BYTES;
 /// Largest image [`read_image`] inlines. Photos routinely exceed a MiB;
 /// base64 inflates this by a third over IPC, still small for a local call.
 pub const MAX_IMAGE_BYTES: u64 = 8 * 1024 * 1024;
@@ -80,7 +79,7 @@ pub struct TextFile {
     pub version: Version,
     /// Last modification time, if the file system reports one.
     pub modified: Option<DateTime<Utc>>,
-    /// Over [`LARGE_FILE_BYTES`]: shown, but not edited.
+    /// Over [`LARGE_FILE_BYTES`]: edited in the light mode.
     pub large: bool,
 }
 
