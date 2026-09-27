@@ -274,6 +274,12 @@ pub fn make_dir(root: &Root, rel: &str) -> Result<(), FilesError> {
 ///     [`FilesError::Refused`] if either path is refused or `to` exists,
 ///     [`FilesError::NotFound`] if `from` does not exist.
 pub fn rename_entry(root: &Root, from: &str, to: &str) -> Result<(), FilesError> {
+    // A folder into itself: the kernel refuses it (EINVAL) whatever the spelling; this only says what it
+    // means, comparing path components so `./src/x` or `src//x` are recognised too (ED5.9).
+    let (from_parts, to_parts) = (normal_components(from)?, normal_components(to)?);
+    if to_parts.len() > from_parts.len() && to_parts.starts_with(&from_parts) {
+        return Err(refused(to, "a folder cannot be moved into itself"));
+    }
     let from_full = root.path().join(from);
     let to_full = root.path().join(to);
     let source = entry_of(root, from, &from_full)?;
@@ -630,6 +636,20 @@ mod tests {
             fs::read_to_string(dir.join("archive/main.rs")).unwrap(),
             "fn main() {}\n"
         );
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_folder_is_not_moved_into_itself() {
+        let (dir, root) = project();
+        for to in ["src/deep/src", "./src/deep/src", "src//deep/src"] {
+            let err = rename_entry(&root, "src", to).unwrap_err();
+            assert!(err.to_string().contains("into itself"), "{to}: {err}");
+        }
+        // A sibling that only starts with the same letters is fine.
+        make_dir(&root, "src2").unwrap();
+        rename_entry(&root, "src", "src2/src").unwrap();
+        assert!(dir.join("src2/src/deep").is_dir());
         let _ = fs::remove_dir_all(dir);
     }
 
