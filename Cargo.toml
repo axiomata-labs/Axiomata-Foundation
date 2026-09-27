@@ -14,3 +14,5 @@ base64.workspace = true
 rustix.workspace = true
 notify.workspace = true
 ignore.workspace = true
+regex.workspace = true
+globset.workspace = true

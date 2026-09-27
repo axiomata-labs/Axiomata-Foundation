@@ -33,6 +33,10 @@ pub enum FilesError {
     #[error("{path} changed since it was read")]
     Conflict { path: PathBuf },
 
+    /// A search pattern (or an include/exclude glob) that does not compile.
+    #[error("bad search pattern: {0}")]
+    BadPattern(String),
+
     /// Any other file-system failure, including a missing parent directory.
     #[error("{path}: {source}")]
     Io {
@@ -52,6 +56,7 @@ impl FilesError {
             Self::TooLarge { .. } => "TooLarge",
             Self::NotUtf8 { .. } => "NotUtf8",
             Self::Conflict { .. } => "Conflict",
+            Self::BadPattern(_) => "BadPattern",
             Self::Io { .. } => "Io",
         }
     }
@@ -78,7 +83,7 @@ mod tests {
     #[test]
     fn kind_names_every_variant_and_is_stable_for_callers_to_match_on() {
         let path = PathBuf::from("notes/inbox.md");
-        let cases: [(FilesError, &str); 7] = [
+        let cases: [(FilesError, &str); 8] = [
             (FilesError::UnknownRoot("grant:9".into()), "UnknownRoot"),
             (refused(&path, "is a directory"), "Refused"),
             (FilesError::NotFound { path: path.clone() }, "NotFound"),
@@ -91,6 +96,10 @@ mod tests {
             ),
             (FilesError::NotUtf8 { path: path.clone() }, "NotUtf8"),
             (FilesError::Conflict { path: path.clone() }, "Conflict"),
+            (
+                FilesError::BadPattern("unclosed group".into()),
+                "BadPattern",
+            ),
             (
                 FilesError::Io {
                     path: path.clone(),

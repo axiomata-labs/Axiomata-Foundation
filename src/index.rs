@@ -18,6 +18,8 @@
 //! comes first, so a root full of ignored bulk (an agent's worktree, say) cannot
 //! keep it busy for long; either way the index says `truncated`.
 
+use std::ops::ControlFlow;
+
 use ignore::WalkBuilder;
 use serde::Serialize;
 
@@ -57,7 +59,32 @@ pub fn index_files(root: &Root) -> Result<FileIndex, FilesError> {
             truncated: false,
         });
     }
-    let walk = WalkBuilder::new(root.path())
+    let mut files = Vec::new();
+    // Breaking off at a file past the limit — or at the visit limit — is what `truncated` means.
+    let truncated = walk_files(root, |rel| {
+        if files.len() >= MAX_INDEX {
+            return ControlFlow::Break(());
+        }
+        files.push(rel.to_owned());
+        ControlFlow::Continue(())
+    });
+    files.sort();
+    Ok(FileIndex { files, truncated })
+}
+
+/// Walks the files of a directory root by the rules in the module docs,
+/// calling `visit` with each file's `/`-separated relative path, in walk
+/// order, until it breaks. Returns whether the walk stopped early — `visit`
+/// broke off, or [`MAX_VISITED`] entries were looked at.
+///
+/// There is deliberately no way to pass the walk `ignore` overrides: an
+/// override *whitelists* what it matches, past the hidden-file and
+/// `.gitignore` rules — a search's include glob `.env` would have read the
+/// secrets this walk exists to leave out (ED5.7 security review). A caller
+/// narrows the walk by filtering what `visit` is given instead.
+pub(crate) fn walk_files(root: &Root, mut visit: impl FnMut(&str) -> ControlFlow<()>) -> bool {
+    let mut builder = WalkBuilder::new(root.path());
+    builder
         .hidden(true)
         .follow_links(false)
         .parents(false)
@@ -66,14 +93,10 @@ pub fn index_files(root: &Root) -> Result<FileIndex, FilesError> {
         .filter_entry(|entry| {
             let is_dir = entry.file_type().is_some_and(|t| t.is_dir());
             !(is_dir && entry.depth() > 0 && SKIPPED_DIRS.iter().any(|d| entry.file_name() == *d))
-        })
-        .build();
-    let mut files = Vec::new();
-    let mut truncated = false;
-    for (visited, entry) in walk.enumerate() {
+        });
+    for (visited, entry) in builder.build().enumerate() {
         if visited >= MAX_VISITED {
-            truncated = true;
-            break;
+            return true;
         }
         let Ok(entry) = entry else { continue };
         if !entry.file_type().is_some_and(|t| t.is_file()) {
@@ -83,14 +106,11 @@ pub fn index_files(root: &Root) -> Result<FileIndex, FilesError> {
             continue;
         };
         let Some(rel) = rel.to_str() else { continue };
-        if files.len() >= MAX_INDEX {
-            truncated = true;
-            break;
+        if visit(&rel.replace(std::path::MAIN_SEPARATOR, "/")).is_break() {
+            return true;
         }
-        files.push(rel.replace(std::path::MAIN_SEPARATOR, "/"));
     }
-    files.sort();
-    Ok(FileIndex { files, truncated })
+    false
 }
 
 #[cfg(test)]

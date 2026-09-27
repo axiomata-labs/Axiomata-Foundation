@@ -24,6 +24,7 @@ pub mod grants;
 pub mod index;
 mod pinned;
 pub mod root;
+pub mod search;
 pub mod watch;
 
 pub use dir::{
@@ -39,4 +40,5 @@ pub use file::{
 pub use grants::{Grant, GrantKind, GrantStore};
 pub use index::{FileIndex, MAX_INDEX, index_files};
 pub use root::{LinkPolicy, Root, RootResolver};
+pub use search::{FileMatches, LineMatch, MAX_MATCHES, SearchQuery, SearchSummary, search};
 pub use watch::{Change, ChangeKind, FileWatcher};
