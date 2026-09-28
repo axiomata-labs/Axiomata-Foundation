@@ -273,7 +273,9 @@ impl LspHost {
         }
         let home = std::env::var_os("HOME").map(PathBuf::from);
         let toolchain = servers::toolchain_roots(server, &program, &self.search, home.as_deref());
-        let mut child = Command::new(&program)
+        let mut command = Command::new(&program);
+        crate::toolenv::apply(&mut command, &self.search);
+        let mut child = command
             .args(&args)
             .current_dir(root.path())
             .stdin(Stdio::piped())

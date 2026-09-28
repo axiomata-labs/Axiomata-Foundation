@@ -330,7 +330,9 @@ fn ask(search: &[PathBuf], program: &str, args: &[&str]) -> Vec<PathBuf> {
     let Some(program) = find_program(program, search) else {
         return Vec::new();
     };
-    let Ok(mut child) = std::process::Command::new(program)
+    let mut command = std::process::Command::new(program);
+    crate::toolenv::apply(&mut command, search);
+    let Ok(mut child) = command
         .args(args)
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::piped())

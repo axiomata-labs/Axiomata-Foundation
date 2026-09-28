@@ -27,6 +27,7 @@ pub mod lsp;
 mod pinned;
 pub mod root;
 pub mod search;
+pub mod toolenv;
 pub mod watch;
 
 pub use dir::{

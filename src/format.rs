@@ -285,7 +285,7 @@ pub fn format(
                 ]
             })
             .collect();
-        match run_step(&program, &args, &cwd, &current)? {
+        match run_step(&program, &args, &cwd, &current, search)? {
             Ok(out) => current = out,
             Err(message) => {
                 return Ok(Formatted::Failed {
@@ -308,8 +308,11 @@ fn run_step(
     args: &[String],
     cwd: &Path,
     input: &str,
+    search: &[PathBuf],
 ) -> Result<Result<String, String>, FilesError> {
-    let mut child = Command::new(program)
+    let mut command = Command::new(program);
+    crate::toolenv::apply(&mut command, search);
+    let mut child = command
         .args(args)
         .current_dir(cwd)
         .stdin(Stdio::piped())
