@@ -28,7 +28,7 @@
 pub mod framing;
 pub mod servers;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::io::{BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, Command, Stdio};
@@ -39,8 +39,12 @@ use std::time::{Duration, Instant};
 use serde::Serialize;
 
 use crate::error::FilesError;
+use crate::file::{LARGE_FILE_BYTES, TextFile, Version, text_from_bytes};
 use crate::root::Root;
+use rustix::fs::{FileType, Mode, OFlags};
 use servers::{Overrides, Resolution};
+use std::io::Read as _;
+use std::os::unix::ffi::OsStrExt;
 
 /// How long a server may sit with no open document before it is stopped (L4).
 pub const IDLE_LIMIT: Duration = Duration::from_secs(10 * 60);
@@ -69,7 +73,15 @@ pub const ALLOWED_METHODS: &[&str] = &[
     "textDocument/didOpen",
     "textDocument/didChange",
     "textDocument/didClose",
+    // ED6.2
+    "textDocument/hover",
+    "textDocument/definition",
 ];
+
+/// Most files outside the roots one server may make readable (L11).
+const MAX_FOREIGN: usize = 4096;
+/// Most definition requests of one server waiting for their answer.
+const MAX_PENDING_DEFINITIONS: usize = 256;
 
 /// Most servers running at once.
 pub const MAX_SERVERS: usize = 8;
@@ -104,6 +116,13 @@ struct Server {
     stdin: Arc<Mutex<ChildStdin>>,
     open: usize,
     idle_since: Option<Instant>,
+    /// Ids of `textDocument/definition` requests in flight — their answers are read here.
+    definition_ids: HashSet<String>,
+    /// Files the server named in a definition answer: readable, read-only (L11).
+    foreign: HashSet<PathBuf>,
+    /// The only folders outside the roots such a file may lie in
+    /// ([`servers::toolchain_roots`]).
+    toolchain: Vec<PathBuf>,
 }
 
 #[derive(Default)]
@@ -232,6 +251,8 @@ impl LspHost {
                 stop(old);
             }
         }
+        let home = std::env::var_os("HOME").map(PathBuf::from);
+        let toolchain = servers::toolchain_roots(server, &program, &self.search, home.as_deref());
         let mut child = Command::new(&program)
             .args(&args)
             .current_dir(root.path())
@@ -260,6 +281,9 @@ impl LspHost {
                 stdin: Arc::new(Mutex::new(stdin)),
                 open: 0,
                 idle_since: Some(Instant::now()),
+                definition_ids: HashSet::new(),
+                foreign: HashSet::new(),
+                toolchain,
             },
         );
         drop(inner);
@@ -295,12 +319,21 @@ impl LspHost {
             return Err(refused(handle, "a message the editor does not send"));
         }
         let stdin = {
-            let inner = lock(&self.inner);
+            let mut inner = lock(&self.inner);
             let server = inner
                 .servers
-                .get(&handle)
+                .get_mut(&handle)
                 .filter(|s| s.page == page)
                 .ok_or_else(|| refused(handle, "no such language server for this page"))?;
+            if value.get("method").and_then(serde_json::Value::as_str)
+                == Some("textDocument/definition")
+                && let Some(id) = value.get("id")
+            {
+                if server.definition_ids.len() >= MAX_PENDING_DEFINITIONS {
+                    return Err(refused(handle, "too many definition requests waiting"));
+                }
+                server.definition_ids.insert(id.to_string());
+            }
             Arc::clone(&server.stdin)
         };
         let mut stdin = stdin.lock().unwrap_or_else(|poison| poison.into_inner());
@@ -331,6 +364,91 @@ impl LspHost {
                 server.idle_since = Some(Instant::now());
             }
         }
+    }
+
+    /// Reads a file outside every root that server `handle` named in a
+    /// definition answer (L11) — read-only, a regular file reached without any
+    /// symbolic link, at most `max_bytes`, UTF-8.
+    ///
+    /// Errors:
+    ///     [`FilesError::Refused`] for a path the server did not name, a link or
+    ///     not a regular file; [`FilesError::TooLarge`], [`FilesError::NotUtf8`],
+    ///     [`FilesError::Io`] as for any read.
+    pub fn read_foreign(
+        &self,
+        handle: u64,
+        path: &Path,
+        max_bytes: u64,
+    ) -> Result<TextFile, FilesError> {
+        let named = lock(&self.inner)
+            .servers
+            .get(&handle)
+            .is_some_and(|s| s.foreign.contains(path));
+        if !named {
+            return Err(FilesError::Refused {
+                path: path.to_path_buf(),
+                reason: "not a file this language server pointed to".into(),
+            });
+        }
+        let io = |source| FilesError::Io {
+            path: path.to_path_buf(),
+            source,
+        };
+        let not_plain = || FilesError::Refused {
+            path: path.to_path_buf(),
+            reason: "not a regular file reached without links".into(),
+        };
+        // Opened once, and everything is checked on that open file: a path swapped
+        // for a link between a check and a second open cannot redirect the read
+        // (the invariant `pinned.rs` keeps for every root).
+        let flags = OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC;
+        let fd = rustix::fs::open(path, flags, Mode::empty()).map_err(|err| {
+            if err == rustix::io::Errno::LOOP {
+                not_plain()
+            } else {
+                io(err.into())
+            }
+        })?;
+        let stat = rustix::fs::fstat(&fd).map_err(|err| io(err.into()))?;
+        if FileType::from_raw_mode(stat.st_mode) != FileType::RegularFile {
+            return Err(not_plain());
+        }
+        // Where the open file really is: a link in a parent folder would show here.
+        let actual = rustix::fs::getpath(&fd).map_err(|err| io(err.into()))?;
+        if Path::new(std::ffi::OsStr::from_bytes(actual.as_bytes())) != path {
+            return Err(not_plain());
+        }
+        if stat.st_size as u64 > max_bytes {
+            return Err(FilesError::TooLarge {
+                path: path.to_path_buf(),
+                limit: max_bytes,
+            });
+        }
+        let mut file = std::fs::File::from(fd);
+        let mut bytes = Vec::new();
+        (&mut file)
+            .take(max_bytes + 1)
+            .read_to_end(&mut bytes)
+            .map_err(io)?;
+        if bytes.len() as u64 > max_bytes {
+            return Err(FilesError::TooLarge {
+                path: path.to_path_buf(),
+                limit: max_bytes,
+            });
+        }
+        let modified = file.metadata().ok().and_then(|m| m.modified().ok());
+        let version = Version::of(&bytes);
+        let large = bytes.len() as u64 > LARGE_FILE_BYTES;
+        let content = text_from_bytes(bytes).ok_or_else(|| FilesError::NotUtf8 {
+            path: path.to_path_buf(),
+        })?;
+        Ok(TextFile {
+            rel: path.display().to_string(),
+            content,
+            version,
+            modified: modified.map(chrono::DateTime::<chrono::Utc>::from),
+            large,
+        })
     }
 
     /// Stops a server now.
@@ -399,6 +517,9 @@ fn pump(
     handle: u64,
 ) {
     while let Ok(Some(message)) = framing::read_message(&mut stdout) {
+        if let Some(inner) = inner.upgrade() {
+            note_definition(&inner, handle, &message);
+        }
         sink(message);
     }
     sink(EXITED_NOTIFICATION.to_string());
@@ -409,6 +530,87 @@ fn pump(
             let _ = server.child.wait();
         }
     }
+}
+
+/// If `message` answers one of the server's definition requests, makes the
+/// files it names readable (L11). Parses only while such a request is open.
+fn note_definition(inner: &Mutex<Inner>, handle: u64, message: &str) {
+    let waiting = lock(inner)
+        .servers
+        .get(&handle)
+        .is_some_and(|s| !s.definition_ids.is_empty());
+    if !waiting {
+        return;
+    }
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(message) else {
+        return;
+    };
+    if value.get("method").is_some() {
+        return;
+    }
+    let Some(id) = value.get("id").map(serde_json::Value::to_string) else {
+        return;
+    };
+    let mut guard = lock(inner);
+    let Some(server) = guard.servers.get_mut(&handle) else {
+        return;
+    };
+    if !server.definition_ids.remove(&id) {
+        return;
+    }
+    let mut paths = Vec::new();
+    if let Some(result) = value.get("result") {
+        collect_locations(result, &mut paths);
+    }
+    // Only what lies in the server's toolchain folders: a project file can make a
+    // server name any path at all (ED6.2 security review).
+    for path in paths {
+        if server.foreign.len() >= MAX_FOREIGN {
+            break;
+        }
+        if server.toolchain.iter().any(|root| path.starts_with(root)) {
+            server.foreign.insert(path);
+        }
+    }
+}
+
+/// The file paths of the `uri`/`targetUri` fields in a definition answer
+/// (`Location`, `Location[]` or `LocationLink[]`).
+fn collect_locations(value: &serde_json::Value, out: &mut Vec<PathBuf>) {
+    match value {
+        serde_json::Value::Array(items) => {
+            items.iter().for_each(|item| collect_locations(item, out))
+        }
+        serde_json::Value::Object(map) => {
+            for key in ["uri", "targetUri"] {
+                if let Some(path) = map
+                    .get(key)
+                    .and_then(serde_json::Value::as_str)
+                    .and_then(file_uri_path)
+                {
+                    out.push(path);
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+/// The path of a `file://` URI, percent-decoded; `None` for anything else.
+pub fn file_uri_path(uri: &str) -> Option<PathBuf> {
+    let rest = uri.strip_prefix("file://")?;
+    let mut bytes = Vec::with_capacity(rest.len());
+    let mut chars = rest.bytes();
+    while let Some(b) = chars.next() {
+        if b == b'%' {
+            let hex = [chars.next()?, chars.next()?];
+            bytes.push(u8::from_str_radix(std::str::from_utf8(&hex).ok()?, 16).ok()?);
+        } else {
+            bytes.push(b);
+        }
+    }
+    let path = PathBuf::from(String::from_utf8(bytes).ok()?);
+    path.is_absolute().then_some(path)
 }
 
 /// Asks a server to shut down and exit, and kills it if it does not.
@@ -621,6 +823,120 @@ while True:
         };
         assert_ne!(first, second, "a reloaded page restarts it");
         assert!(!host.is_running(first) && host.is_running(second));
+    }
+
+    #[test]
+    fn file_uris_decode_and_only_absolute_file_paths_count() {
+        assert_eq!(
+            file_uri_path("file:///Users/me/a%20b/%C3%BC.rs"),
+            Some(PathBuf::from("/Users/me/a b/ü.rs"))
+        );
+        assert_eq!(file_uri_path("https://example.com/x"), None);
+        assert_eq!(file_uri_path("file://relative"), None);
+        assert_eq!(file_uri_path("file:///bad%zz"), None);
+        let mut found = Vec::new();
+        collect_locations(
+            &serde_json::json!([{"uri": "file:///a.rs"}, {"targetUri": "file:///b.rs", "originSelectionRange": {}}]),
+            &mut found,
+        );
+        assert_eq!(found, vec![PathBuf::from("/a.rs"), PathBuf::from("/b.rs")]);
+    }
+
+    #[test]
+    fn only_named_files_in_the_toolchain_folders_become_readable() {
+        if Command::new("python3").arg("--version").output().is_err() {
+            return;
+        }
+        let (dir, root) = setup("foreign");
+        let tool = dir.join("toolchain");
+        std::fs::create_dir_all(&tool).unwrap();
+        let tool = tool.canonicalize().unwrap();
+        let named = tool.join("lib.rs");
+        std::fs::write(&named, "pub fn std() {}\n").unwrap();
+        let other = tool.join("secret.rs");
+        std::fs::write(&other, "secret").unwrap();
+        let link = tool.join("link.rs");
+        std::os::unix::fs::symlink(&other, &link).unwrap();
+        // What a project file can make a server name (`#[path = "…"]`): outside the toolchain.
+        let elsewhere = dir.canonicalize().unwrap().join("id_ed25519");
+        std::fs::write(&elsewhere, "private key").unwrap();
+
+        let host = LspHost::new(dir.join("lsp.json"), vec![dir.join("bin")]);
+        let (sink, _rx) = channel();
+        let Started::Running { handle, .. } = host
+            .start("project:1", &root, "rust", "page-a", sink)
+            .unwrap()
+        else {
+            panic!()
+        };
+        lock(&host.inner)
+            .servers
+            .get_mut(&handle)
+            .unwrap()
+            .toolchain = vec![tool.clone()];
+        let answer = |id: u32| {
+            let uris: Vec<_> = [&named, &link, &elsewhere]
+                .iter()
+                .map(|p| serde_json::json!({"uri": format!("file://{}", p.display())}))
+                .collect();
+            serde_json::json!({"jsonrpc": "2.0", "id": id, "result": uris}).to_string()
+        };
+        // An answer to nothing that was asked frees nothing.
+        note_definition(&host.inner, handle, &answer(9));
+        assert!(host.read_foreign(handle, &named, 1024).is_err());
+
+        let request = r#"{"jsonrpc":"2.0","id":9,"method":"textDocument/definition","params":{}}"#;
+        host.send(handle, "page-a", request).unwrap();
+        note_definition(&host.inner, handle, &answer(9));
+        assert_eq!(
+            host.read_foreign(handle, &named, 1024).unwrap().content,
+            "pub fn std() {}\n"
+        );
+        assert!(
+            host.read_foreign(handle, &elsewhere, 1024).is_err(),
+            "named, but not a toolchain file"
+        );
+        assert!(
+            host.read_foreign(handle, &other, 1024).is_err(),
+            "never named"
+        );
+        assert!(
+            host.read_foreign(handle, &link, 1024).is_err(),
+            "a link, even though named"
+        );
+        assert!(matches!(
+            host.read_foreign(handle, &named, 4),
+            Err(FilesError::TooLarge { .. })
+        ));
+    }
+
+    #[test]
+    fn definition_requests_waiting_for_an_answer_are_capped() {
+        if Command::new("python3").arg("--version").output().is_err() {
+            return;
+        }
+        let (dir, root) = setup("pending");
+        let host = LspHost::new(dir.join("lsp.json"), vec![dir.join("bin")]);
+        let (sink, _rx) = channel();
+        let Started::Running { handle, .. } = host
+            .start("project:1", &root, "rust", "page-a", sink)
+            .unwrap()
+        else {
+            panic!()
+        };
+        // The stand-in echoes requests back, which answers nothing: they stay waiting.
+        let request = |id: usize| {
+            format!(
+                r#"{{"jsonrpc":"2.0","id":{id},"method":"textDocument/definition","params":{{}}}}"#
+            )
+        };
+        for id in 0..MAX_PENDING_DEFINITIONS {
+            host.send(handle, "page-a", &request(id)).unwrap();
+        }
+        assert!(
+            host.send(handle, "page-a", &request(MAX_PENDING_DEFINITIONS))
+                .is_err()
+        );
     }
 
     #[test]

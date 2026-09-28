@@ -231,6 +231,130 @@ pub fn resolve(language: &str, overrides: &Overrides, search: &[PathBuf]) -> Res
     }
 }
 
+/// How long asking a toolchain where it lives (`rustc --print sysroot`) may take.
+const ASK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// The folders outside every root whose files a server may point to as
+/// definitions (editor plan L11, narrowed by the ED6.2 security review): the
+/// server's own install (a Homebrew keg, a global `node_modules`) and its
+/// language's toolchain — Rust's sysroot and `~/.cargo` sources, Python's
+/// prefix, Xcode. Worked out here from the machine, never from what a server
+/// says: a project file can make a server name any path (`#[path = …]`), so a
+/// named path outside these folders is never made readable. Canonical paths.
+pub fn toolchain_roots(
+    server: &str,
+    program: &Path,
+    search: &[PathBuf],
+    home: Option<&Path>,
+) -> Vec<PathBuf> {
+    let mut roots = install_roots(program);
+    match server {
+        "rust-analyzer" => {
+            roots.extend(ask(search, "rustc", &["--print", "sysroot"]));
+            if let Some(home) = home {
+                for dir in [
+                    ".cargo/registry/src",
+                    ".cargo/git/checkouts",
+                    ".rustup/toolchains",
+                ] {
+                    roots.push(home.join(dir));
+                }
+            }
+        }
+        "pyright" => {
+            roots.extend(ask(
+                search,
+                "python3",
+                &[
+                    "-c",
+                    "import sys; print(sys.base_prefix); print(sys.prefix)",
+                ],
+            ));
+        }
+        "sourcekit" => {
+            roots.push(PathBuf::from("/Applications/Xcode.app"));
+            roots.push(PathBuf::from("/Library/Developer/CommandLineTools"));
+        }
+        _ => {}
+    }
+    let home = home.and_then(|h| h.canonicalize().ok());
+    let mut canonical: Vec<PathBuf> = roots
+        .into_iter()
+        .filter_map(|r| r.canonicalize().ok())
+        // A toolchain that reports `/`, the home folder or anything above it (a
+        // Python prefix of `$HOME`) would free every file there: such a root is dropped.
+        .filter(|r| r.parent().is_some() && !home.as_ref().is_some_and(|h| h.starts_with(r)))
+        .collect();
+    canonical.sort();
+    canonical.dedup();
+    canonical
+}
+
+/// The server's own install: the Homebrew keg (`…/Cellar/<name>`) or the
+/// global `node_modules` its program lives in (TypeScript's `lib.*.d.ts`,
+/// pyright's bundled typeshed).
+fn install_roots(program: &Path) -> Vec<PathBuf> {
+    let Ok(real) = program.canonicalize() else {
+        return Vec::new();
+    };
+    let mut roots = Vec::new();
+    for ancestor in real.ancestors() {
+        if ancestor.file_name().is_some_and(|n| n == "node_modules") {
+            roots.push(ancestor.to_path_buf());
+            break;
+        }
+        if ancestor
+            .parent()
+            .and_then(Path::file_name)
+            .is_some_and(|n| n == "Cellar")
+        {
+            roots.push(ancestor.to_path_buf());
+            break;
+        }
+    }
+    roots
+}
+
+/// The lines a toolchain program prints, as paths (nothing if it is missing,
+/// fails, or takes longer than [`ASK_TIMEOUT`]).
+fn ask(search: &[PathBuf], program: &str, args: &[&str]) -> Vec<PathBuf> {
+    let Some(program) = find_program(program, search) else {
+        return Vec::new();
+    };
+    let Ok(mut child) = std::process::Command::new(program)
+        .args(args)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+    else {
+        return Vec::new();
+    };
+    let deadline = std::time::Instant::now() + ASK_TIMEOUT;
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) if status.success() => break,
+            Ok(None) if std::time::Instant::now() < deadline => {
+                std::thread::sleep(std::time::Duration::from_millis(20));
+            }
+            _ => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Vec::new();
+            }
+        }
+    }
+    let mut out = String::new();
+    if let Some(mut stdout) = child.stdout.take() {
+        let _ = std::io::Read::read_to_string(&mut stdout, &mut out);
+    }
+    out.lines()
+        .map(str::trim)
+        .filter(|l| l.starts_with('/'))
+        .map(PathBuf::from)
+        .collect()
+}
+
 /// Where programs are looked for: `PATH`, then the usual install places a
 /// Finder-started app would otherwise miss.
 pub fn search_path(path_var: Option<&std::ffi::OsStr>, home: Option<&Path>) -> Vec<PathBuf> {
@@ -377,6 +501,42 @@ mod tests {
                 .unwrap_err()
                 .contains("lsp.json")
         );
+    }
+
+    #[test]
+    fn a_toolchain_root_at_or_above_home_is_dropped() {
+        let dir = std::env::temp_dir().join(format!("ax-lsp-home-{}", std::process::id()));
+        let home = dir.join("home");
+        std::fs::create_dir_all(home.join(".cargo/registry/src")).unwrap();
+        let program = home.join("bin/rust-analyzer");
+        let roots = toolchain_roots("rust-analyzer", &program, &[], Some(&home));
+        let home = home.canonicalize().unwrap();
+        assert!(roots.contains(&home.join(".cargo/registry/src")));
+        assert!(roots.iter().all(|r| !home.starts_with(r)), "{roots:?}");
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_servers_install_root_is_its_keg_or_its_node_modules() {
+        let base =
+            std::env::temp_dir().join(format!("axiomata-lsp-install-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        let keg = base.join("Cellar/pyright/1.1/libexec/lib/node_modules/pyright/index.js");
+        let brew = base.join("Cellar/rust-analyzer/2026/bin/rust-analyzer");
+        for file in [&keg, &brew] {
+            std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+            std::fs::write(file, "").unwrap();
+        }
+        let base = base.canonicalize().unwrap();
+        assert_eq!(
+            install_roots(&keg),
+            vec![base.join("Cellar/pyright/1.1/libexec/lib/node_modules")]
+        );
+        assert_eq!(
+            install_roots(&brew),
+            vec![base.join("Cellar/rust-analyzer")]
+        );
+        assert!(install_roots(Path::new("/nonexistent/x")).is_empty());
     }
 
     #[test]

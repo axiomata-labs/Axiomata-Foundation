@@ -155,3 +155,154 @@ fn pyright_reports_an_undefined_name() {
     println!("{diagnostics}");
     assert!(diagnostics.contains("undefined_name"), "{diagnostics}");
 }
+
+/// Sends a request and waits for its answer, answering the server's own requests meanwhile.
+fn ask(
+    host: &LspHost,
+    handle: u64,
+    rx: &mpsc::Receiver<String>,
+    id: u64,
+    method: &str,
+    params: serde_json::Value,
+) -> serde_json::Value {
+    host.send(
+        handle,
+        "live",
+        &serde_json::json!({"jsonrpc":"2.0","id":id,"method":method,"params":params}).to_string(),
+    )
+    .unwrap();
+    let deadline = Instant::now() + Duration::from_secs(120);
+    while Instant::now() < deadline {
+        let Ok(message) = rx.recv_timeout(Duration::from_secs(1)) else {
+            continue;
+        };
+        let value: serde_json::Value = serde_json::from_str(&message).unwrap();
+        if value.get("method").is_some() && value.get("id").is_some() {
+            host.send(
+                handle,
+                "live",
+                &serde_json::json!({"jsonrpc":"2.0","id":value["id"],"result":null}).to_string(),
+            )
+            .unwrap();
+            continue;
+        }
+        if value["id"] == id {
+            return value;
+        }
+    }
+    panic!("no answer to {method}");
+}
+
+#[test]
+#[ignore = "starts the real rust-analyzer"]
+fn rust_analyzer_hovers_and_its_std_definition_becomes_readable() {
+    let dir = scratch(
+        "rust-def",
+        &[
+            (
+                "Cargo.toml",
+                "[package]\nname = \"live\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+            ),
+            (
+                "src/main.rs",
+                "fn helper() {}\nfn main() {\n    helper();\n    let s = String::new();\n}\n",
+            ),
+        ],
+    );
+    let home = std::env::var_os("HOME").map(PathBuf::from);
+    let host = LspHost::new(
+        dir.join("no-lsp.json"),
+        search_path(std::env::var_os("PATH").as_deref(), home.as_deref()),
+    );
+    let root = Root::dir(&dir, LinkPolicy::Contained).unwrap();
+    let (tx, rx) = mpsc::channel::<String>();
+    let tx = Mutex::new(tx);
+    let Started::Running { handle, .. } = host
+        .start(
+            "project:live",
+            &root,
+            "rust",
+            "live",
+            Arc::new(move |m| drop(tx.lock().unwrap().send(m))),
+        )
+        .unwrap()
+    else {
+        panic!("rust-analyzer not running")
+    };
+    let root_uri = uri(&dir);
+    ask(
+        &host,
+        handle,
+        &rx,
+        1,
+        "initialize",
+        serde_json::json!({
+            "processId": null, "rootUri": root_uri, "workspaceFolders": [{"uri": root_uri, "name": "live"}],
+            "capabilities": {"general": {"positionEncodings": ["utf-16"]}}
+        }),
+    );
+    host.send(
+        handle,
+        "live",
+        r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#,
+    )
+    .unwrap();
+    let file = dir.join("src/main.rs");
+    let file_uri = uri(&file);
+    host.send(
+        handle,
+        "live",
+        &serde_json::json!({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{
+        "textDocument": {"uri": file_uri, "languageId": "rust", "version": 1,
+                         "text": std::fs::read_to_string(&file).unwrap()}}})
+        .to_string(),
+    )
+    .unwrap();
+
+    let at = |line: u32, character: u32| {
+        let position = serde_json::json!({"line": line, "character": character});
+        serde_json::json!({"textDocument": {"uri": file_uri}, "position": position})
+    };
+    // rust-analyzer answers once it has loaded the crate; ask until it knows.
+    let mut hover = serde_json::Value::Null;
+    for id in 10..40 {
+        hover = ask(&host, handle, &rx, id, "textDocument/hover", at(2, 5));
+        if !hover["result"].is_null() {
+            break;
+        }
+        std::thread::sleep(Duration::from_secs(1));
+    }
+    println!("hover: {}", hover["result"]["contents"]);
+    assert!(
+        hover["result"]["contents"]
+            .to_string()
+            .contains("fn helper"),
+        "{hover}"
+    );
+
+    let local = ask(&host, handle, &rx, 50, "textDocument/definition", at(2, 5));
+    assert!(local["result"].to_string().contains("main.rs"), "{local}");
+
+    let std_def = ask(&host, handle, &rx, 51, "textDocument/definition", at(3, 13));
+    println!("String -> {}", std_def["result"]);
+    let target = std_def["result"][0]["targetUri"]
+        .as_str()
+        .or(std_def["result"][0]["uri"].as_str());
+    let Some(target) = target else {
+        eprintln!(
+            "no std sources installed (rustup component add rust-src) — the foreign read is not checked"
+        );
+        return;
+    };
+    let path = axiomata_files::lsp::file_uri_path(target).unwrap();
+    assert!(!path.starts_with(&dir), "String lives outside the project");
+    let read = host
+        .read_foreign(handle, &path, 16 * 1024 * 1024)
+        .expect("the server named it");
+    assert!(
+        read.content.contains("pub struct String"),
+        "{}",
+        path.display()
+    );
+    host.stop(handle);
+}
