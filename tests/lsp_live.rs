@@ -193,31 +193,14 @@ fn ask(
     panic!("no answer to {method}");
 }
 
-#[test]
-#[ignore = "starts the real rust-analyzer"]
-fn rust_analyzer_hovers_and_its_std_definition_becomes_readable() {
-    let dir = scratch(
-        "rust-def",
-        &[
-            (
-                "Cargo.toml",
-                "[package]\nname = \"live\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
-            ),
-            (
-                "src/main.rs",
-                concat!(
-                    "fn helper() {}\nfn main() {\n    helper();\n    let s = String::new();\n}\n",
-                    "trait Speak { fn speak(&self); }\nstruct Dog;\nimpl Speak for Dog { fn speak(&self) {} }\n",
-                ),
-            ),
-        ],
-    );
+/// Starts rust-analyzer on the crate in `dir`, initialized, with `src/main.rs` open.
+fn open_rust(dir: &std::path::Path) -> (LspHost, u64, mpsc::Receiver<String>, String) {
     let home = std::env::var_os("HOME").map(PathBuf::from);
     let host = LspHost::new(
         dir.join("no-lsp.json"),
         search_path(std::env::var_os("PATH").as_deref(), home.as_deref()),
     );
-    let root = Root::dir(&dir, LinkPolicy::Contained).unwrap();
+    let root = Root::dir(dir, LinkPolicy::Contained).unwrap();
     let (tx, rx) = mpsc::channel::<String>();
     let tx = Mutex::new(tx);
     let Started::Running { handle, .. } = host
@@ -232,7 +215,7 @@ fn rust_analyzer_hovers_and_its_std_definition_becomes_readable() {
     else {
         panic!("rust-analyzer not running")
     };
-    let root_uri = uri(&dir);
+    let root_uri = uri(dir);
     ask(
         &host,
         handle,
@@ -241,7 +224,11 @@ fn rust_analyzer_hovers_and_its_std_definition_becomes_readable() {
         "initialize",
         serde_json::json!({
             "processId": null, "rootUri": root_uri, "workspaceFolders": [{"uri": root_uri, "name": "live"}],
-            "capabilities": {"general": {"positionEncodings": ["utf-16"]}}
+            "capabilities": {"general": {"positionEncodings": ["utf-16"]},
+                "textDocument": {"completion": {"completionItem": {
+                    "snippetSupport": true,
+                    "resolveSupport": {"properties": ["documentation", "detail", "additionalTextEdits"]}
+                }}}}
         }),
     );
     host.send(
@@ -261,6 +248,120 @@ fn rust_analyzer_hovers_and_its_std_definition_becomes_readable() {
         .to_string(),
     )
     .unwrap();
+
+    (host, handle, rx, file_uri)
+}
+
+#[test]
+#[ignore = "starts the real rust-analyzer"]
+fn rust_analyzer_completes_methods_and_an_auto_import() {
+    let dir = scratch(
+        "rust-complete",
+        &[
+            (
+                "Cargo.toml",
+                "[package]\nname = \"live\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+            ),
+            (
+                "src/main.rs",
+                "fn main() {\n    let v: Vec<u8> = Vec::new();\n    v.\n    let m = HashMa\n}\n",
+            ),
+        ],
+    );
+    let (host, handle, rx, file_uri) = open_rust(&dir);
+    let at = |line: u32, character: u32, trigger: Option<&str>| {
+        let context = match trigger {
+            Some(c) => serde_json::json!({"triggerKind": 2, "triggerCharacter": c}),
+            None => serde_json::json!({"triggerKind": 1}),
+        };
+        serde_json::json!({"textDocument": {"uri": file_uri},
+            "position": {"line": line, "character": character}, "context": context})
+    };
+    let labels = |answer: &serde_json::Value| -> Vec<String> {
+        let items = answer["result"]["items"]
+            .as_array()
+            .or(answer["result"].as_array())
+            .cloned()
+            .unwrap_or_default();
+        items
+            .iter()
+            .filter_map(|i| i["label"].as_str().map(str::to_string))
+            .collect()
+    };
+    // rust-analyzer answers once it has loaded the crate; ask until it knows `Vec`.
+    let mut methods = serde_json::Value::Null;
+    for id in 10..70 {
+        methods = ask(
+            &host,
+            handle,
+            &rx,
+            id,
+            "textDocument/completion",
+            at(2, 6, Some(".")),
+        );
+        if labels(&methods).iter().any(|l| l.starts_with("push")) {
+            break;
+        }
+        std::thread::sleep(Duration::from_secs(1));
+    }
+    assert!(
+        labels(&methods).iter().any(|l| l.starts_with("push")),
+        "{:?}",
+        labels(&methods)
+    );
+
+    let names = ask(
+        &host,
+        handle,
+        &rx,
+        80,
+        "textDocument/completion",
+        at(3, 18, None),
+    );
+    let items = names["result"]["items"]
+        .as_array()
+        .or(names["result"].as_array())
+        .cloned()
+        .unwrap_or_default();
+    let hash_map = items
+        .iter()
+        .find(|i| {
+            i["label"]
+                .as_str()
+                .is_some_and(|l| l.starts_with("HashMap"))
+        })
+        .cloned()
+        .unwrap_or_else(|| panic!("no HashMap in {:?}", labels(&names)));
+    let resolved = ask(&host, handle, &rx, 81, "completionItem/resolve", hash_map);
+    let imports = resolved["result"]["additionalTextEdits"].to_string();
+    println!("HashMap resolves to {imports}");
+    assert!(
+        imports.contains("use std::collections::HashMap"),
+        "{resolved}"
+    );
+    host.stop(handle);
+}
+
+#[test]
+#[ignore = "starts the real rust-analyzer"]
+fn rust_analyzer_hovers_and_its_std_definition_becomes_readable() {
+    let dir = scratch(
+        "rust-def",
+        &[
+            (
+                "Cargo.toml",
+                "[package]\nname = \"live\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+            ),
+            (
+                "src/main.rs",
+                concat!(
+                    "fn helper() {}\nfn main() {\n    helper();\n    let s = String::new();\n}\n",
+                    "trait Speak { fn speak(&self); }\nstruct Dog;\nimpl Speak for Dog { fn speak(&self) {} }\n",
+                ),
+            ),
+        ],
+    );
+    let (host, handle, rx, file_uri) = open_rust(&dir);
 
     let at = |line: u32, character: u32| {
         let position = serde_json::json!({"line": line, "character": character});

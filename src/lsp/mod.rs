@@ -80,6 +80,9 @@ pub const ALLOWED_METHODS: &[&str] = &[
     "textDocument/implementation",
     "textDocument/typeDefinition",
     "textDocument/references",
+    // ED6.4
+    "textDocument/completion",
+    "completionItem/resolve",
 ];
 
 /// The requests whose answers name places in files ([`LOCATION_METHODS`]): the
