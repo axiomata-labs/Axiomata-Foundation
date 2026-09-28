@@ -22,6 +22,7 @@ pub mod error;
 pub mod file;
 pub mod grants;
 pub mod index;
+pub mod lsp;
 mod pinned;
 pub mod root;
 pub mod search;

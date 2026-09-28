@@ -1,0 +1,711 @@
+//! Language servers for the editor (`docs/plans/editor.md`, ED6, L1–L4).
+//!
+//! This side does what the webview must not: it decides which program runs
+//! ([`servers`], L2), starts it in the root's folder, frames what goes in and
+//! out ([`framing`]), and stops it again. The protocol itself — initialize,
+//! document sync, requests — is the editor engine's (`src/editor/lsp/`, L1);
+//! messages pass through here whole, as JSON text.
+//!
+//! One server runs per (root, server id), started by the first file of its
+//! language in that root. The embedder counts the documents open on it
+//! ([`LspHost::opened`], [`LspHost::closed`]); ten minutes without any, it is
+//! shut down (L4). A single-file root (a dialog grant) gets none.
+//!
+//! **What the page may send is limited here, not in the page** (security review
+//! of ED6.1): only the methods the editor's client speaks ([`ALLOWED_METHODS`])
+//! and answers to the server's own requests pass, so a compromised webview
+//! cannot make a server run its own commands (`workspace/executeCommand` and
+//! the like). Every message, open and close must name the page that started
+//! the server; at most [`MAX_SERVERS`] run at once, and another page restarts a
+//! server at most every [`RESTART_MIN`].
+//!
+//! Every start names the page asking (a token the page picks once per load).
+//! The same page starting a server that already runs gets the running one —
+//! TypeScript and TSX files share one server. Another page restarts it: that
+//! page is a new client (a reload), and a server initialized by the old one
+//! would refuse a second `initialize`.
+
+pub mod framing;
+pub mod servers;
+
+use std::collections::HashMap;
+use std::io::{BufReader, Write};
+use std::path::{Path, PathBuf};
+use std::process::{Child, ChildStdin, Command, Stdio};
+use std::sync::{Arc, Mutex, MutexGuard, Weak};
+use std::thread;
+use std::time::{Duration, Instant};
+
+use serde::Serialize;
+
+use crate::error::FilesError;
+use crate::root::Root;
+use servers::{Overrides, Resolution};
+
+/// How long a server may sit with no open document before it is stopped (L4).
+pub const IDLE_LIMIT: Duration = Duration::from_secs(10 * 60);
+/// How often idle servers are looked for.
+const JANITOR_EVERY: Duration = Duration::from_secs(30);
+/// How long a server gets to exit after `shutdown`/`exit` before it is killed.
+const EXIT_GRACE: Duration = Duration::from_secs(2);
+/// Sent to the page when a server's output ends, so the client can tell the
+/// user and forget the server. `$/` is the protocol's prefix for
+/// implementation-specific messages.
+pub const EXITED_NOTIFICATION: &str =
+    r#"{"jsonrpc":"2.0","method":"$/axiomata/exited","params":{}}"#;
+
+/// Where a server's messages go (the embedder's channel to the page).
+pub type Sink = Arc<dyn Fn(String) + Send + Sync>;
+
+/// The client-to-server methods the page may send — what the editor's client
+/// speaks. Grows with each checkpoint that adds a request (hover, definition,
+/// …); anything else, above all a server's own commands, is refused.
+pub const ALLOWED_METHODS: &[&str] = &[
+    "initialize",
+    "initialized",
+    "shutdown",
+    "exit",
+    "$/cancelRequest",
+    "textDocument/didOpen",
+    "textDocument/didChange",
+    "textDocument/didClose",
+];
+
+/// Most servers running at once.
+pub const MAX_SERVERS: usize = 8;
+/// Shortest time between two starts of one server by different pages.
+pub const RESTART_MIN: Duration = Duration::from_secs(2);
+
+/// What [`LspHost::start`] did.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum Started {
+    /// Running: its handle, its id, and the root folder (the client's `rootUri`).
+    Running {
+        handle: u64,
+        server: String,
+        root_path: PathBuf,
+    },
+    /// No server for this language, or none in this kind of root.
+    None,
+    /// Turned off in `~/.axiomata/lsp.json`.
+    Disabled { server: String },
+    /// Not installed: how to get it (the quiet hint, L10).
+    Missing { server: String, install: String },
+}
+
+struct Server {
+    key: (String, &'static str),
+    /// The page that started it (see the module doc).
+    page: String,
+    root_path: PathBuf,
+    child: Child,
+    /// Shared so a write does not hold the host's lock (a full pipe would stall every command).
+    stdin: Arc<Mutex<ChildStdin>>,
+    open: usize,
+    idle_since: Option<Instant>,
+}
+
+#[derive(Default)]
+struct Inner {
+    next: u64,
+    servers: HashMap<u64, Server>,
+    /// When each (root, server) was last started, for [`RESTART_MIN`].
+    last_start: HashMap<(String, &'static str), Instant>,
+}
+
+/// Runs the editor's language servers.
+pub struct LspHost {
+    inner: Arc<Mutex<Inner>>,
+    overrides_file: PathBuf,
+    search: Vec<PathBuf>,
+    idle_limit: Duration,
+}
+
+impl LspHost {
+    /// A host that reads overrides from `overrides_file` and looks for programs in `search`.
+    pub fn new(overrides_file: PathBuf, search: Vec<PathBuf>) -> Self {
+        Self::with_idle_limit(overrides_file, search, IDLE_LIMIT)
+    }
+
+    /// [`LspHost::new`] with another idle limit (tests).
+    pub fn with_idle_limit(
+        overrides_file: PathBuf,
+        search: Vec<PathBuf>,
+        idle_limit: Duration,
+    ) -> Self {
+        let inner = Arc::new(Mutex::new(Inner::default()));
+        let weak = Arc::downgrade(&inner);
+        let every = JANITOR_EVERY.min(idle_limit);
+        thread::Builder::new()
+            .name("lsp-janitor".into())
+            .spawn(move || janitor(weak, idle_limit, every))
+            .expect("spawning the language-server janitor");
+        Self {
+            inner,
+            overrides_file,
+            search,
+            idle_limit,
+        }
+    }
+
+    /// Starts the server for `language` in `root` for `page`, sending its
+    /// messages to `sink` — or returns the one this page already runs there
+    /// (then `sink` is not used; the page's first sink still gets everything).
+    ///
+    /// Errors:
+    ///     [`FilesError::Io`] when the program cannot be started.
+    pub fn start(
+        &self,
+        root_id: &str,
+        root: &Root,
+        language: &str,
+        page: &str,
+        sink: Sink,
+    ) -> Result<Started, FilesError> {
+        if root.only_file().is_some() {
+            return Ok(Started::None);
+        }
+        let overrides =
+            Overrides::load(&self.overrides_file).map_err(|reason| FilesError::Refused {
+                path: self.overrides_file.clone(),
+                reason,
+            })?;
+        let (server, program, args) = match servers::resolve(language, &overrides, &self.search) {
+            Resolution::Found {
+                server,
+                program,
+                args,
+            } => (server, program, args),
+            Resolution::NoServer => return Ok(Started::None),
+            Resolution::Disabled { server } => {
+                return Ok(Started::Disabled {
+                    server: server.into(),
+                });
+            }
+            Resolution::Missing { server, install } => {
+                return Ok(Started::Missing {
+                    server: server.into(),
+                    install,
+                });
+            }
+        };
+        let key = (root_id.to_string(), server);
+        let mut inner = lock(&self.inner);
+        if let Some((handle, running)) = inner
+            .servers
+            .iter()
+            .find(|(_, s)| s.key == key && s.page == page)
+        {
+            return Ok(Started::Running {
+                handle: *handle,
+                server: server.to_string(),
+                root_path: running.root_path.clone(),
+            });
+        }
+        let restarting = inner.servers.values().any(|s| s.key == key);
+        if restarting
+            && inner
+                .last_start
+                .get(&key)
+                .is_some_and(|at| at.elapsed() < RESTART_MIN)
+        {
+            return Err(FilesError::Refused {
+                path: root.path().to_path_buf(),
+                reason: format!("the {server} language server is being restarted too often"),
+            });
+        }
+        if !restarting && inner.servers.len() >= MAX_SERVERS {
+            return Err(FilesError::Refused {
+                path: root.path().to_path_buf(),
+                reason: format!("{MAX_SERVERS} language servers are running already"),
+            });
+        }
+        let running: Vec<u64> = inner
+            .servers
+            .iter()
+            .filter(|(_, s)| s.key == key)
+            .map(|(id, _)| *id)
+            .collect();
+        for id in running {
+            if let Some(old) = inner.servers.remove(&id) {
+                stop(old);
+            }
+        }
+        let mut child = Command::new(&program)
+            .args(&args)
+            .current_dir(root.path())
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            // Servers log freely to stderr; nobody reads it, so it must not
+            // fill a pipe and block them.
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|source| FilesError::Io {
+                path: program.clone(),
+                source,
+            })?;
+        let stdin = child.stdin.take().expect("stdin was piped");
+        let stdout = child.stdout.take().expect("stdout was piped");
+        inner.next += 1;
+        let handle = inner.next;
+        inner.last_start.insert(key.clone(), Instant::now());
+        inner.servers.insert(
+            handle,
+            Server {
+                key,
+                page: page.to_string(),
+                root_path: root.path().to_path_buf(),
+                child,
+                stdin: Arc::new(Mutex::new(stdin)),
+                open: 0,
+                idle_since: Some(Instant::now()),
+            },
+        );
+        drop(inner);
+        let weak = Arc::downgrade(&self.inner);
+        thread::Builder::new()
+            .name(format!("lsp-{server}"))
+            .spawn(move || pump(BufReader::new(stdout), sink, weak, handle))
+            .map_err(|source| FilesError::Io {
+                path: program.clone(),
+                source,
+            })?;
+        Ok(Started::Running {
+            handle,
+            server: server.to_string(),
+            root_path: root.path().to_path_buf(),
+        })
+    }
+
+    /// Sends one JSON message from `page` to a running server it started.
+    ///
+    /// Errors:
+    ///     [`FilesError::Refused`] for a message over [`framing::MAX_MESSAGE_BYTES`],
+    ///     one that is not a JSON object, a method outside [`ALLOWED_METHODS`], a
+    ///     server that is not running or not this page's; [`FilesError::Io`] when
+    ///     writing fails.
+    pub fn send(&self, handle: u64, page: &str, message: &str) -> Result<(), FilesError> {
+        if message.len() > framing::MAX_MESSAGE_BYTES {
+            return Err(refused(handle, "a message larger than the limit"));
+        }
+        let value: serde_json::Value =
+            serde_json::from_str(message).map_err(|_| refused(handle, "not a JSON-RPC message"))?;
+        if !allowed(&value) {
+            return Err(refused(handle, "a message the editor does not send"));
+        }
+        let stdin = {
+            let inner = lock(&self.inner);
+            let server = inner
+                .servers
+                .get(&handle)
+                .filter(|s| s.page == page)
+                .ok_or_else(|| refused(handle, "no such language server for this page"))?;
+            Arc::clone(&server.stdin)
+        };
+        let mut stdin = stdin.lock().unwrap_or_else(|poison| poison.into_inner());
+        stdin
+            .write_all(&framing::encode(message))
+            .and_then(|()| stdin.flush())
+            .map_err(|source| FilesError::Io {
+                path: PathBuf::from(format!("language server {handle}")),
+                source,
+            })
+    }
+
+    /// A document was opened on `page`'s server: it is in use.
+    pub fn opened(&self, handle: u64, page: &str) {
+        let mut inner = lock(&self.inner);
+        if let Some(server) = inner.servers.get_mut(&handle).filter(|s| s.page == page) {
+            server.open += 1;
+            server.idle_since = None;
+        }
+    }
+
+    /// A document was closed on `page`'s server; with none left its idle time starts.
+    pub fn closed(&self, handle: u64, page: &str) {
+        let mut inner = lock(&self.inner);
+        if let Some(server) = inner.servers.get_mut(&handle).filter(|s| s.page == page) {
+            server.open = server.open.saturating_sub(1);
+            if server.open == 0 {
+                server.idle_since = Some(Instant::now());
+            }
+        }
+    }
+
+    /// Stops a server now.
+    pub fn stop(&self, handle: u64) {
+        let removed = lock(&self.inner).servers.remove(&handle);
+        if let Some(server) = removed {
+            stop(server);
+        }
+    }
+
+    /// Whether a server is running (tests, diagnostics).
+    pub fn is_running(&self, handle: u64) -> bool {
+        lock(&self.inner).servers.contains_key(&handle)
+    }
+
+    /// The idle limit this host applies.
+    pub fn idle_limit(&self) -> Duration {
+        self.idle_limit
+    }
+}
+
+impl Drop for LspHost {
+    fn drop(&mut self) {
+        let servers: Vec<Server> = lock(&self.inner).servers.drain().map(|(_, s)| s).collect();
+        for server in servers {
+            stop(server);
+        }
+    }
+}
+
+fn lock(inner: &Mutex<Inner>) -> MutexGuard<'_, Inner> {
+    inner.lock().unwrap_or_else(|poison| poison.into_inner())
+}
+
+/// Whether the page may send `message`: a request or notification of an
+/// allowed method, or an answer (`id` plus `result` or `error`) to a request the
+/// server made.
+fn allowed(message: &serde_json::Value) -> bool {
+    let Some(object) = message.as_object() else {
+        return false;
+    };
+    match object.get("method") {
+        Some(method) => method
+            .as_str()
+            .is_some_and(|m| ALLOWED_METHODS.contains(&m)),
+        None => {
+            object.contains_key("id")
+                && (object.contains_key("result") || object.contains_key("error"))
+        }
+    }
+}
+
+fn refused(handle: u64, reason: &str) -> FilesError {
+    FilesError::Refused {
+        path: PathBuf::from(format!("language server {handle}")),
+        reason: reason.to_string(),
+    }
+}
+
+/// Reads the server's messages into `sink` until its output ends, then tells
+/// the page and forgets the server (if it is still the same one).
+fn pump(
+    mut stdout: BufReader<std::process::ChildStdout>,
+    sink: Sink,
+    inner: Weak<Mutex<Inner>>,
+    handle: u64,
+) {
+    while let Ok(Some(message)) = framing::read_message(&mut stdout) {
+        sink(message);
+    }
+    sink(EXITED_NOTIFICATION.to_string());
+    if let Some(inner) = inner.upgrade() {
+        let gone = lock(&inner).servers.remove(&handle);
+        if let Some(mut server) = gone {
+            let _ = server.child.kill();
+            let _ = server.child.wait();
+        }
+    }
+}
+
+/// Asks a server to shut down and exit, and kills it if it does not.
+fn stop(server: Server) {
+    {
+        let mut stdin = server
+            .stdin
+            .lock()
+            .unwrap_or_else(|poison| poison.into_inner());
+        for message in [
+            r#"{"jsonrpc":"2.0","id":"axiomata-shutdown","method":"shutdown"}"#,
+            r#"{"jsonrpc":"2.0","method":"exit"}"#,
+        ] {
+            let _ = stdin.write_all(&framing::encode(message));
+        }
+        let _ = stdin.flush();
+    }
+    // The last clone closes the pipe; a write in flight still holds one.
+    drop(server.stdin);
+    let mut child = server.child;
+    thread::spawn(move || {
+        let deadline = Instant::now() + EXIT_GRACE;
+        while Instant::now() < deadline {
+            if matches!(child.try_wait(), Ok(Some(_))) {
+                return;
+            }
+            thread::sleep(Duration::from_millis(50));
+        }
+        let _ = child.kill();
+        let _ = child.wait();
+    });
+}
+
+/// Stops servers that sat without an open document for `idle_limit`.
+fn janitor(inner: Weak<Mutex<Inner>>, idle_limit: Duration, every: Duration) {
+    loop {
+        thread::sleep(every);
+        let Some(inner) = inner.upgrade() else {
+            return;
+        };
+        let idle: Vec<Server> = {
+            let mut guard = lock(&inner);
+            let ids: Vec<u64> = guard
+                .servers
+                .iter()
+                .filter(|(_, s)| {
+                    s.idle_since
+                        .is_some_and(|since| since.elapsed() >= idle_limit)
+                })
+                .map(|(id, _)| *id)
+                .collect();
+            ids.into_iter()
+                .filter_map(|id| guard.servers.remove(&id))
+                .collect()
+        };
+        for server in idle {
+            stop(server);
+        }
+    }
+}
+
+/// The override file's usual place under an Axiomata home.
+pub fn overrides_path(axiomata_home: &Path) -> PathBuf {
+    axiomata_home.join("lsp.json")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+    use std::sync::mpsc;
+
+    /// A tiny stand-in language server: answers every framed message by
+    /// echoing it back framed, and exits on `exit`.
+    const ECHO_SERVER: &str = r#"#!/usr/bin/env python3
+import sys
+while True:
+    length = None
+    while True:
+        line = sys.stdin.buffer.readline()
+        if not line:
+            sys.exit(0)
+        line = line.strip()
+        if not line:
+            break
+        name, _, value = line.decode().partition(":")
+        if name.lower() == "content-length":
+            length = int(value)
+    body = sys.stdin.buffer.read(length)
+    if b'"exit"' in body:
+        sys.exit(0)
+    sys.stdout.buffer.write(b"Content-Length: %d\r\n\r\n" % len(body) + body)
+    sys.stdout.buffer.flush()
+"#;
+
+    fn setup(name: &str) -> (PathBuf, Root) {
+        let dir =
+            std::env::temp_dir().join(format!("axiomata-lsp-host-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let bin = dir.join("bin");
+        std::fs::create_dir_all(&bin).unwrap();
+        let server = bin.join("rust-analyzer");
+        std::fs::write(&server, ECHO_SERVER).unwrap();
+        std::fs::set_permissions(&server, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let project = dir.join("project");
+        std::fs::create_dir_all(&project).unwrap();
+        let root = Root::dir(&project, crate::LinkPolicy::Contained).unwrap();
+        (dir, root)
+    }
+
+    fn channel() -> (Sink, mpsc::Receiver<String>) {
+        let (tx, rx) = mpsc::channel();
+        let tx = Mutex::new(tx);
+        (Arc::new(move |m| drop(tx.lock().unwrap().send(m))), rx)
+    }
+
+    #[test]
+    fn a_server_starts_in_the_root_and_messages_pass_through_framed() {
+        if Command::new("python3").arg("--version").output().is_err() {
+            eprintln!("python3 not installed — skipping");
+            return;
+        }
+        let (dir, root) = setup("pass");
+        let host = LspHost::new(dir.join("lsp.json"), vec![dir.join("bin")]);
+        let (sink, rx) = channel();
+        let started = host
+            .start("project:1", &root, "rust", "page-a", sink)
+            .unwrap();
+        let Started::Running {
+            handle,
+            server,
+            root_path,
+        } = started
+        else {
+            panic!("{started:?}")
+        };
+        assert_eq!(server, "rust-analyzer");
+        assert_eq!(root_path, root.path());
+        host.send(
+            handle,
+            "page-a",
+            r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"x":"Grüße"}}"#,
+        )
+        .unwrap();
+        let echoed = rx.recv_timeout(Duration::from_secs(5)).unwrap();
+        assert!(echoed.contains("Grüße"));
+        assert!(host.send(handle, "page-a", "not json").is_err());
+        assert!(host.send(handle, "page-a", "[1]").is_err());
+        let command = r#"{"jsonrpc":"2.0","id":2,"method":"workspace/executeCommand","params":{}}"#;
+        assert!(
+            host.send(handle, "page-a", command).is_err(),
+            "a server's own commands are refused"
+        );
+        let initialized = r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#;
+        assert!(
+            host.send(handle, "page-b", initialized).is_err(),
+            "another page cannot write"
+        );
+        assert!(
+            host.send(
+                handle,
+                "page-a",
+                r#"{"jsonrpc":"2.0","id":7,"result":null}"#
+            )
+            .is_ok()
+        );
+
+        host.stop(handle);
+        // A real server answers `shutdown` (the stand-in echoes it); the page
+        // ignores that answer. Then the output ends and the page is told.
+        let mut last = String::new();
+        while last != EXITED_NOTIFICATION {
+            last = rx.recv_timeout(Duration::from_secs(5)).unwrap();
+        }
+        assert!(!host.is_running(handle));
+    }
+
+    #[test]
+    fn the_same_page_shares_a_server_and_another_page_restarts_it() {
+        if Command::new("python3").arg("--version").output().is_err() {
+            return;
+        }
+        let (dir, root) = setup("restart");
+        let host = LspHost::new(dir.join("lsp.json"), vec![dir.join("bin")]);
+        let (sink, _rx) = channel();
+        let Started::Running { handle: first, .. } = host
+            .start("project:1", &root, "rust", "page-a", sink.clone())
+            .unwrap()
+        else {
+            panic!()
+        };
+        let Started::Running { handle: same, .. } = host
+            .start("project:1", &root, "rust", "page-a", sink.clone())
+            .unwrap()
+        else {
+            panic!()
+        };
+        assert_eq!(first, same, "the same page gets the running server");
+        assert!(
+            host.start("project:1", &root, "rust", "page-b", sink.clone())
+                .is_err(),
+            "a restart right after the start is refused"
+        );
+        thread::sleep(RESTART_MIN);
+        let Started::Running { handle: second, .. } = host
+            .start("project:1", &root, "rust", "page-b", sink)
+            .unwrap()
+        else {
+            panic!()
+        };
+        assert_ne!(first, second, "a reloaded page restarts it");
+        assert!(!host.is_running(first) && host.is_running(second));
+    }
+
+    #[test]
+    fn no_more_than_the_limit_of_servers_run_at_once() {
+        if Command::new("python3").arg("--version").output().is_err() {
+            return;
+        }
+        let (dir, root) = setup("cap");
+        let host = LspHost::new(dir.join("lsp.json"), vec![dir.join("bin")]);
+        let (sink, _rx) = channel();
+        for i in 0..MAX_SERVERS {
+            let started = host.start(
+                &format!("project:{i}"),
+                &root,
+                "rust",
+                "page-a",
+                sink.clone(),
+            );
+            assert!(matches!(started, Ok(Started::Running { .. })), "{i}");
+        }
+        assert!(
+            host.start("project:extra", &root, "rust", "page-a", sink)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn a_server_without_open_documents_stops_after_the_idle_limit() {
+        if Command::new("python3").arg("--version").output().is_err() {
+            return;
+        }
+        let (dir, root) = setup("idle");
+        let host = LspHost::with_idle_limit(
+            dir.join("lsp.json"),
+            vec![dir.join("bin")],
+            Duration::from_millis(200),
+        );
+        let (sink, _rx) = channel();
+        let Started::Running { handle, .. } = host
+            .start("project:1", &root, "rust", "page-a", sink)
+            .unwrap()
+        else {
+            panic!()
+        };
+        host.opened(handle, "page-a");
+        thread::sleep(Duration::from_millis(600));
+        assert!(host.is_running(handle), "an open document keeps it");
+        host.closed(handle, "page-a");
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while host.is_running(handle) && Instant::now() < deadline {
+            thread::sleep(Duration::from_millis(50));
+        }
+        assert!(!host.is_running(handle));
+    }
+
+    #[test]
+    fn missing_disabled_single_file_and_unknown_languages_start_nothing() {
+        let (dir, root) = setup("none");
+        let host = LspHost::new(dir.join("lsp.json"), vec![dir.join("bin")]);
+        let (sink, _rx) = channel();
+        assert!(matches!(
+            host.start("project:1", &root, "python", "page-a", sink.clone()).unwrap(),
+            Started::Missing { server, .. } if server == "pyright"
+        ));
+        assert_eq!(
+            host.start("project:1", &root, "cobol", "page-a", sink.clone())
+                .unwrap(),
+            Started::None
+        );
+        std::fs::write(
+            dir.join("lsp.json"),
+            r#"{"servers": {"rust-analyzer": false}}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            host.start("project:1", &root, "rust", "page-a", sink.clone())
+                .unwrap(),
+            Started::Disabled { .. }
+        ));
+        std::fs::write(root.path().join("one.rs"), "fn main() {}").unwrap();
+        let single = Root::single_file(&root.path().join("one.rs")).unwrap();
+        assert_eq!(
+            host.start("grant:1", &single, "rust", "page-a", sink)
+                .unwrap(),
+            Started::None
+        );
+    }
+}
