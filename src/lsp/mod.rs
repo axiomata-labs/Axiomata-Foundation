@@ -76,12 +76,25 @@ pub const ALLOWED_METHODS: &[&str] = &[
     // ED6.2
     "textDocument/hover",
     "textDocument/definition",
+    // ED6.3
+    "textDocument/implementation",
+    "textDocument/typeDefinition",
+    "textDocument/references",
+];
+
+/// The requests whose answers name places in files ([`LOCATION_METHODS`]): the
+/// files they name outside the roots become readable (L11, ED6.3).
+pub const LOCATION_METHODS: &[&str] = &[
+    "textDocument/definition",
+    "textDocument/implementation",
+    "textDocument/typeDefinition",
+    "textDocument/references",
 ];
 
 /// Most files outside the roots one server may make readable (L11).
 const MAX_FOREIGN: usize = 4096;
-/// Most definition requests of one server waiting for their answer.
-const MAX_PENDING_DEFINITIONS: usize = 256;
+/// Most location requests of one server waiting for their answer.
+const MAX_PENDING_LOCATIONS: usize = 256;
 
 /// Most servers running at once.
 pub const MAX_SERVERS: usize = 8;
@@ -116,9 +129,9 @@ struct Server {
     stdin: Arc<Mutex<ChildStdin>>,
     open: usize,
     idle_since: Option<Instant>,
-    /// Ids of `textDocument/definition` requests in flight — their answers are read here.
-    definition_ids: HashSet<String>,
-    /// Files the server named in a definition answer: readable, read-only (L11).
+    /// Ids of location requests ([`LOCATION_METHODS`]) in flight — their answers are read here.
+    location_ids: HashSet<String>,
+    /// Files the server named in a location answer: readable, read-only (L11).
     foreign: HashSet<PathBuf>,
     /// The only folders outside the roots such a file may lie in
     /// ([`servers::toolchain_roots`]).
@@ -281,7 +294,7 @@ impl LspHost {
                 stdin: Arc::new(Mutex::new(stdin)),
                 open: 0,
                 idle_since: Some(Instant::now()),
-                definition_ids: HashSet::new(),
+                location_ids: HashSet::new(),
                 foreign: HashSet::new(),
                 toolchain,
             },
@@ -325,14 +338,16 @@ impl LspHost {
                 .get_mut(&handle)
                 .filter(|s| s.page == page)
                 .ok_or_else(|| refused(handle, "no such language server for this page"))?;
-            if value.get("method").and_then(serde_json::Value::as_str)
-                == Some("textDocument/definition")
+            if value
+                .get("method")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|m| LOCATION_METHODS.contains(&m))
                 && let Some(id) = value.get("id")
             {
-                if server.definition_ids.len() >= MAX_PENDING_DEFINITIONS {
-                    return Err(refused(handle, "too many definition requests waiting"));
+                if server.location_ids.len() >= MAX_PENDING_LOCATIONS {
+                    return Err(refused(handle, "too many location requests waiting"));
                 }
-                server.definition_ids.insert(id.to_string());
+                server.location_ids.insert(id.to_string());
             }
             Arc::clone(&server.stdin)
         };
@@ -367,7 +382,7 @@ impl LspHost {
     }
 
     /// Reads a file outside every root that server `handle` named in a
-    /// definition answer (L11) — read-only, a regular file reached without any
+    /// location answer (L11) — read-only, a regular file reached without any
     /// symbolic link, at most `max_bytes`, UTF-8.
     ///
     /// Errors:
@@ -518,7 +533,7 @@ fn pump(
 ) {
     while let Ok(Some(message)) = framing::read_message(&mut stdout) {
         if let Some(inner) = inner.upgrade() {
-            note_definition(&inner, handle, &message);
+            note_locations(&inner, handle, &message);
         }
         sink(message);
     }
@@ -532,13 +547,13 @@ fn pump(
     }
 }
 
-/// If `message` answers one of the server's definition requests, makes the
+/// If `message` answers one of the server's location requests, makes the
 /// files it names readable (L11). Parses only while such a request is open.
-fn note_definition(inner: &Mutex<Inner>, handle: u64, message: &str) {
+fn note_locations(inner: &Mutex<Inner>, handle: u64, message: &str) {
     let waiting = lock(inner)
         .servers
         .get(&handle)
-        .is_some_and(|s| !s.definition_ids.is_empty());
+        .is_some_and(|s| !s.location_ids.is_empty());
     if !waiting {
         return;
     }
@@ -555,7 +570,7 @@ fn note_definition(inner: &Mutex<Inner>, handle: u64, message: &str) {
     let Some(server) = guard.servers.get_mut(&handle) else {
         return;
     };
-    if !server.definition_ids.remove(&id) {
+    if !server.location_ids.remove(&id) {
         return;
     }
     let mut paths = Vec::new();
@@ -574,7 +589,7 @@ fn note_definition(inner: &Mutex<Inner>, handle: u64, message: &str) {
     }
 }
 
-/// The file paths of the `uri`/`targetUri` fields in a definition answer
+/// The file paths of the `uri`/`targetUri` fields in a location answer
 /// (`Location`, `Location[]` or `LocationLink[]`).
 fn collect_locations(value: &serde_json::Value, out: &mut Vec<PathBuf>) {
     match value {
@@ -882,12 +897,12 @@ while True:
             serde_json::json!({"jsonrpc": "2.0", "id": id, "result": uris}).to_string()
         };
         // An answer to nothing that was asked frees nothing.
-        note_definition(&host.inner, handle, &answer(9));
+        note_locations(&host.inner, handle, &answer(9));
         assert!(host.read_foreign(handle, &named, 1024).is_err());
 
         let request = r#"{"jsonrpc":"2.0","id":9,"method":"textDocument/definition","params":{}}"#;
         host.send(handle, "page-a", request).unwrap();
-        note_definition(&host.inner, handle, &answer(9));
+        note_locations(&host.inner, handle, &answer(9));
         assert_eq!(
             host.read_foreign(handle, &named, 1024).unwrap().content,
             "pub fn std() {}\n"
@@ -911,7 +926,49 @@ while True:
     }
 
     #[test]
-    fn definition_requests_waiting_for_an_answer_are_capped() {
+    fn every_location_answer_frees_named_files_but_a_hover_does_not() {
+        if Command::new("python3").arg("--version").output().is_err() {
+            return;
+        }
+        let (dir, root) = setup("kinds");
+        let tool = dir.join("toolchain");
+        std::fs::create_dir_all(&tool).unwrap();
+        let tool = tool.canonicalize().unwrap();
+        let host = LspHost::new(dir.join("lsp.json"), vec![dir.join("bin")]);
+        let (sink, _rx) = channel();
+        let Started::Running { handle, .. } = host
+            .start("project:1", &root, "rust", "page-a", sink)
+            .unwrap()
+        else {
+            panic!()
+        };
+        lock(&host.inner)
+            .servers
+            .get_mut(&handle)
+            .unwrap()
+            .toolchain = vec![tool.clone()];
+        let methods = [
+            "textDocument/implementation",
+            "textDocument/typeDefinition",
+            "textDocument/references",
+            "textDocument/hover",
+        ];
+        for (id, method) in methods.iter().enumerate() {
+            let file = tool.join(format!("{id}.rs"));
+            std::fs::write(&file, "x").unwrap();
+            let request =
+                serde_json::json!({"jsonrpc": "2.0", "id": id, "method": method, "params": {}});
+            host.send(handle, "page-a", &request.to_string()).unwrap();
+            let uri = format!("file://{}", file.display());
+            let answer = serde_json::json!({"jsonrpc": "2.0", "id": id, "result": [{"uri": uri}]});
+            note_locations(&host.inner, handle, &answer.to_string());
+            let readable = host.read_foreign(handle, &file, 1024).is_ok();
+            assert_eq!(readable, *method != "textDocument/hover", "{method}");
+        }
+    }
+
+    #[test]
+    fn location_requests_waiting_for_an_answer_are_capped() {
         if Command::new("python3").arg("--version").output().is_err() {
             return;
         }
@@ -930,11 +987,11 @@ while True:
                 r#"{{"jsonrpc":"2.0","id":{id},"method":"textDocument/definition","params":{{}}}}"#
             )
         };
-        for id in 0..MAX_PENDING_DEFINITIONS {
+        for id in 0..MAX_PENDING_LOCATIONS {
             host.send(handle, "page-a", &request(id)).unwrap();
         }
         assert!(
-            host.send(handle, "page-a", &request(MAX_PENDING_DEFINITIONS))
+            host.send(handle, "page-a", &request(MAX_PENDING_LOCATIONS))
                 .is_err()
         );
     }

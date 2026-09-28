@@ -205,7 +205,10 @@ fn rust_analyzer_hovers_and_its_std_definition_becomes_readable() {
             ),
             (
                 "src/main.rs",
-                "fn helper() {}\nfn main() {\n    helper();\n    let s = String::new();\n}\n",
+                concat!(
+                    "fn helper() {}\nfn main() {\n    helper();\n    let s = String::new();\n}\n",
+                    "trait Speak { fn speak(&self); }\nstruct Dog;\nimpl Speak for Dog { fn speak(&self) {} }\n",
+                ),
             ),
         ],
     );
@@ -282,6 +285,25 @@ fn rust_analyzer_hovers_and_its_std_definition_becomes_readable() {
 
     let local = ask(&host, handle, &rx, 50, "textDocument/definition", at(2, 5));
     assert!(local["result"].to_string().contains("main.rs"), "{local}");
+
+    // ED6.3: the uses of `helper` (its declaration too), the implementations of `Speak`.
+    let mut uses = at(2, 5);
+    uses["context"] = serde_json::json!({"includeDeclaration": true});
+    let uses = ask(&host, handle, &rx, 52, "textDocument/references", uses);
+    assert_eq!(uses["result"].as_array().map(Vec::len), Some(2), "{uses}");
+    let impls = ask(
+        &host,
+        handle,
+        &rx,
+        53,
+        "textDocument/implementation",
+        at(5, 7),
+    );
+    println!("Speak implemented at {}", impls["result"]);
+    let impl_line = impls["result"][0]["range"]["start"]["line"]
+        .as_u64()
+        .or(impls["result"][0]["targetSelectionRange"]["start"]["line"].as_u64());
+    assert_eq!(impl_line, Some(7), "{impls}");
 
     let std_def = ask(&host, handle, &rx, 51, "textDocument/definition", at(3, 13));
     println!("String -> {}", std_def["result"]);
