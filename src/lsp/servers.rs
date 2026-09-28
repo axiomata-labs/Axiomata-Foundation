@@ -139,11 +139,15 @@ pub enum Override {
     Command { command: Vec<String> },
 }
 
-/// The override file: `{"servers": {"<server id>": false | {"command": [...]}}}`.
+/// The override file: `{"servers": {"<server id>": false | {"command": [...]}},
+/// "formatters": {"<formatter id>": false | {"command": [...]}}}` (a formatter's
+/// command may name the file as `{file}`, `crate::format`).
 #[derive(Debug, Default, Deserialize)]
 pub struct Overrides {
     #[serde(default)]
     servers: std::collections::HashMap<String, Override>,
+    #[serde(default)]
+    formatters: std::collections::HashMap<String, Override>,
 }
 
 impl Overrides {
@@ -160,6 +164,11 @@ impl Overrides {
 
     fn get(&self, server: &str) -> Option<&Override> {
         self.servers.get(server)
+    }
+
+    /// What the file says about one formatter (editor plan L13).
+    pub fn formatter(&self, id: &str) -> Option<&Override> {
+        self.formatters.get(id)
     }
 }
 
@@ -368,6 +377,8 @@ pub fn search_path(path_var: Option<&std::ffi::OsStr>, home: Option<&Path>) -> V
     if let Some(home) = home {
         extra.push(home.join(".cargo/bin"));
         extra.push(home.join(".local/bin"));
+        // The owner's Neovim tools (editor plan L15), last: prettier, stylua, language servers.
+        extra.push(home.join(".local/share/nvim/mason/bin"));
     }
     for dir in extra {
         if !dirs.contains(&dir) {
@@ -378,7 +389,7 @@ pub fn search_path(path_var: Option<&std::ffi::OsStr>, home: Option<&Path>) -> V
 }
 
 /// An absolute program path as given, or the first executable of that name in `search`.
-fn find_program(program: &str, search: &[PathBuf]) -> Option<PathBuf> {
+pub(crate) fn find_program(program: &str, search: &[PathBuf]) -> Option<PathBuf> {
     let direct = Path::new(program);
     if direct.is_absolute() {
         return is_executable(direct).then(|| direct.to_path_buf());
@@ -552,7 +563,8 @@ mod tests {
                 "/opt/homebrew/bin",
                 "/usr/local/bin",
                 "/h/.cargo/bin",
-                "/h/.local/bin"
+                "/h/.local/bin",
+                "/h/.local/share/nvim/mason/bin",
             ]
             .map(PathBuf::from)
             .to_vec()

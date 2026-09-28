@@ -228,7 +228,8 @@ fn open_rust(dir: &std::path::Path) -> (LspHost, u64, mpsc::Receiver<String>, St
                 "textDocument": {"completion": {"completionItem": {
                     "snippetSupport": true,
                     "resolveSupport": {"properties": ["documentation", "detail", "additionalTextEdits"]}
-                }}}}
+                }}, "rename": {"prepareSupport": true}},
+                "workspace": {"workspaceEdit": {"documentChanges": true, "resourceOperations": []}}}
         }),
     );
     host.send(
@@ -427,5 +428,65 @@ fn rust_analyzer_hovers_and_its_std_definition_becomes_readable() {
         "{}",
         path.display()
     );
+    host.stop(handle);
+}
+
+#[test]
+#[ignore = "starts the real rust-analyzer"]
+fn rust_analyzer_renames_across_files_but_not_a_module_file() {
+    let dir = scratch(
+        "rust-rename",
+        &[
+            (
+                "Cargo.toml",
+                "[package]\nname = \"live\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+            ),
+            (
+                "src/main.rs",
+                "mod util;\nfn main() {\n    util::helper();\n}\n",
+            ),
+            ("src/util.rs", "pub fn helper() {}\n"),
+        ],
+    );
+    let (host, handle, rx, file_uri) = open_rust(&dir);
+    let at = |line: u32, character: u32| {
+        let position = serde_json::json!({"line": line, "character": character});
+        serde_json::json!({"textDocument": {"uri": file_uri}, "position": position})
+    };
+    // Ask until the crate is loaded and `helper` is known.
+    let mut prepared = serde_json::Value::Null;
+    for id in 10..70 {
+        prepared = ask(
+            &host,
+            handle,
+            &rx,
+            id,
+            "textDocument/prepareRename",
+            at(2, 12),
+        );
+        if prepared["result"].is_object() {
+            break;
+        }
+        std::thread::sleep(Duration::from_secs(1));
+    }
+    assert!(prepared["result"].is_object(), "{prepared}");
+    let mut params = at(2, 12);
+    params["newName"] = serde_json::json!("assist");
+    let renamed = ask(&host, handle, &rx, 80, "textDocument/rename", params);
+    let text = renamed["result"].to_string();
+    println!("rename: {text}");
+    assert!(
+        text.contains("main.rs") && text.contains("util.rs"),
+        "{renamed}"
+    );
+    assert!(!text.contains("\"kind\""), "no file operations: {renamed}");
+
+    // Renaming the module would rename its file: without resource operations the server refuses.
+    let mut module = at(0, 5);
+    module["newName"] = serde_json::json!("tools");
+    let refused = ask(&host, handle, &rx, 81, "textDocument/rename", module);
+    println!("module rename: {refused}");
+    let moves_files = refused["result"].to_string().contains("\"kind\"");
+    assert!(!moves_files, "{refused}");
     host.stop(handle);
 }

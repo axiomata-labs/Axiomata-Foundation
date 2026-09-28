@@ -20,6 +20,7 @@
 pub mod dir;
 pub mod error;
 pub mod file;
+pub mod format;
 pub mod grants;
 pub mod index;
 pub mod lsp;

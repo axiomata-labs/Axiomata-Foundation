@@ -83,6 +83,10 @@ pub const ALLOWED_METHODS: &[&str] = &[
     // ED6.4
     "textDocument/completion",
     "completionItem/resolve",
+    // ED6.5
+    "textDocument/formatting",
+    "textDocument/prepareRename",
+    "textDocument/rename",
 ];
 
 /// The requests whose answers name places in files ([`LOCATION_METHODS`]): the
