@@ -15,7 +15,12 @@
 //! of ED6.1): only the methods the editor's client speaks ([`ALLOWED_METHODS`])
 //! and answers to the server's own requests pass, so a compromised webview
 //! cannot make a server run its own commands (`workspace/executeCommand` and
-//! the like). Every message, open and close must name the page that started
+//! the like). The one exception is a code action's command (ED6.7, L18): it
+//! passes only as an echo of a command the server itself offered in its answer
+//! to the latest `textDocument/codeAction` — read here, like the location
+//! answers — and each offer only once. A `codeAction/resolve` answer offers
+//! nothing: the page chooses what is resolved, and a server that echoes it back
+//! would otherwise "offer" whatever the page made up (ED6.7 security review). Every message, open and close must name the page that started
 //! the server; at most [`MAX_SERVERS`] run at once, and another page restarts a
 //! server at most every [`RESTART_MIN`].
 //!
@@ -89,7 +94,17 @@ pub const ALLOWED_METHODS: &[&str] = &[
     "textDocument/rename",
     // ED6.6
     "textDocument/signatureHelp",
+    // ED6.7 — `workspace/executeCommand` only for an offered command (L18, [`LspHost::send`]).
+    "textDocument/codeAction",
+    "codeAction/resolve",
+    "workspace/executeCommand",
 ];
+
+/// The request whose answers offer commands: only those may be executed (L18, ED6.7).
+const CODE_ACTION: &str = "textDocument/codeAction";
+
+/// The one method that runs a server's command.
+const EXECUTE_COMMAND: &str = "workspace/executeCommand";
 
 /// The requests whose answers name places in files ([`LOCATION_METHODS`]): the
 /// files they name outside the roots become readable (L11, ED6.3).
@@ -102,8 +117,10 @@ pub const LOCATION_METHODS: &[&str] = &[
 
 /// Most files outside the roots one server may make readable (L11).
 const MAX_FOREIGN: usize = 4096;
-/// Most location requests of one server waiting for their answer.
-const MAX_PENDING_LOCATIONS: usize = 256;
+/// Most location and code-action requests of one server waiting for their answer.
+const MAX_PENDING_ANSWERS: usize = 256;
+/// Most commands one server may have on offer at once (L18).
+const MAX_OFFERS: usize = 256;
 
 /// Most servers running at once.
 pub const MAX_SERVERS: usize = 8;
@@ -138,13 +155,72 @@ struct Server {
     stdin: Arc<Mutex<ChildStdin>>,
     open: usize,
     idle_since: Option<Instant>,
-    /// Ids of location requests ([`LOCATION_METHODS`]) in flight — their answers are read here.
-    location_ids: HashSet<String>,
+    /// Ids of requests in flight whose answers are read here, and what each asked.
+    watched: HashMap<String, Watch>,
+    /// Commands the server offered in a code-action answer, not yet executed (L18).
+    offers: Vec<Offer>,
+    /// How many code-action requests were sent: the latest one's answer counts ([`Watch::Actions`]).
+    action_requests: u64,
     /// Files the server named in a location answer: readable, read-only (L11).
     foreign: HashSet<PathBuf>,
     /// The only folders outside the roots such a file may lie in
     /// ([`servers::toolchain_roots`]).
     toolchain: Vec<PathBuf>,
+}
+
+/// What an answer being waited for will carry.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Watch {
+    /// Places in files ([`LOCATION_METHODS`]): the ones outside the roots become readable (L11).
+    Locations,
+    /// Code actions (`textDocument/codeAction`, the n-th sent): the answer to the
+    /// latest one replaces the commands on offer; an older one arriving late is ignored.
+    Actions(u64),
+}
+
+/// A command a server offered (`Command.command` and its `arguments`, missing = null).
+#[derive(Debug, Clone)]
+struct Offer {
+    command: String,
+    arguments: serde_json::Value,
+}
+
+impl PartialEq for Offer {
+    fn eq(&self, other: &Self) -> bool {
+        self.command == other.command && same_json(&self.arguments, &other.arguments)
+    }
+}
+
+/// JSON equality as the page can keep it: the page parses the offer in
+/// JavaScript, which has one kind of number — `1.0` comes back as `1`, a large
+/// integer rounded to the nearest double — so numbers compare as doubles.
+fn same_json(a: &serde_json::Value, b: &serde_json::Value) -> bool {
+    use serde_json::Value;
+    match (a, b) {
+        (Value::Number(x), Value::Number(y)) => x.as_f64() == y.as_f64(),
+        (Value::Array(x), Value::Array(y)) => {
+            x.len() == y.len() && x.iter().zip(y).all(|(x, y)| same_json(x, y))
+        }
+        (Value::Object(x), Value::Object(y)) => {
+            x.len() == y.len()
+                && x.iter()
+                    .all(|(key, x)| y.get(key).is_some_and(|y| same_json(x, y)))
+        }
+        _ => a == b,
+    }
+}
+
+impl Offer {
+    /// The command a `Command` object names, if it is one.
+    fn of(command: &serde_json::Value) -> Option<Self> {
+        Some(Self {
+            command: command.get("command")?.as_str()?.to_string(),
+            arguments: command
+                .get("arguments")
+                .cloned()
+                .unwrap_or(serde_json::Value::Null),
+        })
+    }
 }
 
 #[derive(Default)]
@@ -305,7 +381,9 @@ impl LspHost {
                 stdin: Arc::new(Mutex::new(stdin)),
                 open: 0,
                 idle_since: Some(Instant::now()),
-                location_ids: HashSet::new(),
+                watched: HashMap::new(),
+                offers: Vec::new(),
+                action_requests: 0,
                 foreign: HashSet::new(),
                 toolchain,
             },
@@ -349,16 +427,26 @@ impl LspHost {
                 .get_mut(&handle)
                 .filter(|s| s.page == page)
                 .ok_or_else(|| refused(handle, "no such language server for this page"))?;
-            if value
-                .get("method")
-                .and_then(serde_json::Value::as_str)
-                .is_some_and(|m| LOCATION_METHODS.contains(&m))
+            let method = value.get("method").and_then(serde_json::Value::as_str);
+            if method == Some(EXECUTE_COMMAND) {
+                take_offer(&mut server.offers, value.get("params"))
+                    .ok_or_else(|| refused(handle, "a command the server did not offer"))?;
+            }
+            let watch = match method {
+                Some(m) if LOCATION_METHODS.contains(&m) => Some(Watch::Locations),
+                Some(CODE_ACTION) => {
+                    server.action_requests += 1;
+                    Some(Watch::Actions(server.action_requests))
+                }
+                _ => None,
+            };
+            if let Some(watch) = watch
                 && let Some(id) = value.get("id")
             {
-                if server.location_ids.len() >= MAX_PENDING_LOCATIONS {
-                    return Err(refused(handle, "too many location requests waiting"));
+                if server.watched.len() >= MAX_PENDING_ANSWERS {
+                    return Err(refused(handle, "too many requests waiting for an answer"));
                 }
-                server.location_ids.insert(id.to_string());
+                server.watched.insert(id.to_string(), watch);
             }
             Arc::clone(&server.stdin)
         };
@@ -544,7 +632,7 @@ fn pump(
 ) {
     while let Ok(Some(message)) = framing::read_message(&mut stdout) {
         if let Some(inner) = inner.upgrade() {
-            note_locations(&inner, handle, &message);
+            note_answer(&inner, handle, &message);
         }
         sink(message);
     }
@@ -558,13 +646,23 @@ fn pump(
     }
 }
 
-/// If `message` answers one of the server's location requests, makes the
-/// files it names readable (L11). Parses only while such a request is open.
-fn note_locations(inner: &Mutex<Inner>, handle: u64, message: &str) {
+/// Removes the offer an `executeCommand`'s `params` name — exactly (L18) —
+/// and returns it; `None` when nothing on offer matches.
+fn take_offer(offers: &mut Vec<Offer>, params: Option<&serde_json::Value>) -> Option<Offer> {
+    let wanted = Offer::of(params?)?;
+    let at = offers.iter().position(|offer| *offer == wanted)?;
+    Some(offers.remove(at))
+}
+
+/// If `message` answers a request being watched ([`Watch`]), reads what it
+/// carries: the files a location answer names become readable (L11), the
+/// commands of a code-action answer go on offer (L18). Parses only while such
+/// a request is open.
+fn note_answer(inner: &Mutex<Inner>, handle: u64, message: &str) {
     let waiting = lock(inner)
         .servers
         .get(&handle)
-        .is_some_and(|s| !s.location_ids.is_empty());
+        .is_some_and(|s| !s.watched.is_empty());
     if !waiting {
         return;
     }
@@ -581,7 +679,31 @@ fn note_locations(inner: &Mutex<Inner>, handle: u64, message: &str) {
     let Some(server) = guard.servers.get_mut(&handle) else {
         return;
     };
-    if !server.location_ids.remove(&id) {
+    let Some(watch) = server.watched.remove(&id) else {
+        return;
+    };
+    let result = value.get("result").unwrap_or(&serde_json::Value::Null);
+    if let Watch::Actions(nth) = watch {
+        if nth != server.action_requests {
+            return;
+        }
+        server.offers.clear();
+        let items = match result {
+            serde_json::Value::Array(items) => items.as_slice(),
+            single => std::slice::from_ref(single),
+        };
+        for item in items {
+            if server.offers.len() >= MAX_OFFERS {
+                break;
+            }
+            // A `Command` names its command as a string; a `CodeAction` carries a `Command` object.
+            let offer = match item.get("command") {
+                Some(serde_json::Value::String(_)) => Offer::of(item),
+                Some(command) => Offer::of(command),
+                None => None,
+            };
+            server.offers.extend(offer);
+        }
         return;
     }
     let mut paths = Vec::new();
@@ -908,12 +1030,12 @@ while True:
             serde_json::json!({"jsonrpc": "2.0", "id": id, "result": uris}).to_string()
         };
         // An answer to nothing that was asked frees nothing.
-        note_locations(&host.inner, handle, &answer(9));
+        note_answer(&host.inner, handle, &answer(9));
         assert!(host.read_foreign(handle, &named, 1024).is_err());
 
         let request = r#"{"jsonrpc":"2.0","id":9,"method":"textDocument/definition","params":{}}"#;
         host.send(handle, "page-a", request).unwrap();
-        note_locations(&host.inner, handle, &answer(9));
+        note_answer(&host.inner, handle, &answer(9));
         assert_eq!(
             host.read_foreign(handle, &named, 1024).unwrap().content,
             "pub fn std() {}\n"
@@ -972,7 +1094,7 @@ while True:
             host.send(handle, "page-a", &request.to_string()).unwrap();
             let uri = format!("file://{}", file.display());
             let answer = serde_json::json!({"jsonrpc": "2.0", "id": id, "result": [{"uri": uri}]});
-            note_locations(&host.inner, handle, &answer.to_string());
+            note_answer(&host.inner, handle, &answer.to_string());
             let readable = host.read_foreign(handle, &file, 1024).is_ok();
             assert_eq!(readable, *method != "textDocument/hover", "{method}");
         }
@@ -998,11 +1120,11 @@ while True:
                 r#"{{"jsonrpc":"2.0","id":{id},"method":"textDocument/definition","params":{{}}}}"#
             )
         };
-        for id in 0..MAX_PENDING_LOCATIONS {
+        for id in 0..MAX_PENDING_ANSWERS {
             host.send(handle, "page-a", &request(id)).unwrap();
         }
         assert!(
-            host.send(handle, "page-a", &request(MAX_PENDING_LOCATIONS))
+            host.send(handle, "page-a", &request(MAX_PENDING_ANSWERS))
                 .is_err()
         );
     }
@@ -1091,5 +1213,95 @@ while True:
                 .unwrap(),
             Started::None
         );
+    }
+
+    #[test]
+    fn only_commands_the_server_offered_run_and_each_only_once() {
+        if Command::new("python3").arg("--version").output().is_err() {
+            return;
+        }
+        let (dir, root) = setup("offers");
+        let host = LspHost::new(dir.join("lsp.json"), vec![dir.join("bin")]);
+        let (sink, _rx) = channel();
+        let Started::Running { handle, .. } = host
+            .start("project:1", &root, "rust", "page-a", sink)
+            .unwrap()
+        else {
+            panic!()
+        };
+        let execute = |params: serde_json::Value| {
+            let message = serde_json::json!({
+                "jsonrpc": "2.0", "id": 100, "method": "workspace/executeCommand", "params": params,
+            });
+            host.send(handle, "page-a", &message.to_string())
+        };
+        // The server answers `id` (a request of `method` sent first) with `result`.
+        let answer = |id: u64, method: &str, result: serde_json::Value| {
+            let request =
+                serde_json::json!({"jsonrpc": "2.0", "id": id, "method": method, "params": {}});
+            host.send(handle, "page-a", &request.to_string()).unwrap();
+            let answer = serde_json::json!({"jsonrpc": "2.0", "id": id, "result": result});
+            note_answer(&host.inner, handle, &answer.to_string());
+        };
+
+        assert!(execute(serde_json::json!({"command": "fix", "arguments": [1]})).is_err());
+
+        // A bare `Command` and a `CodeAction` carrying one are both offered.
+        answer(
+            1,
+            "textDocument/codeAction",
+            serde_json::json!([
+                {"title": "a", "command": "fix", "arguments": [1.0, {"k": "v"}]},
+                {"title": "b", "kind": "quickfix", "command": {"title": "b", "command": "organize"}},
+            ]),
+        );
+        // `1.0` comes back from the page as `1`.
+        assert!(
+            execute(serde_json::json!({"command": "fix", "arguments": [1, {"k": "v"}]})).is_ok()
+        );
+        assert!(
+            execute(serde_json::json!({"command": "fix", "arguments": [1, {"k": "v"}]})).is_err(),
+            "an offer runs once"
+        );
+        assert!(execute(serde_json::json!({"command": "organize", "arguments": []})).is_err());
+        assert!(execute(serde_json::json!({"command": "organize"})).is_ok());
+
+        // A new code-action answer replaces what was on offer.
+        answer(
+            2,
+            "textDocument/codeAction",
+            serde_json::json!([{"title": "c", "command": "old"}]),
+        );
+        answer(3, "textDocument/codeAction", serde_json::json!([]));
+        assert!(execute(serde_json::json!({"command": "old"})).is_err());
+        // A resolve answer offers nothing: the page chose what was resolved, and a server may echo it.
+        answer(
+            4,
+            "codeAction/resolve",
+            serde_json::json!({"title": "d", "command": {"title": "d", "command": "made-up", "arguments": ["x"]}}),
+        );
+        assert!(execute(serde_json::json!({"command": "made-up", "arguments": ["x"]})).is_err());
+
+        // Two requests out: the older one's late answer does not replace the newer one's offers.
+        for id in [6, 7] {
+            let request = serde_json::json!({"jsonrpc": "2.0", "id": id, "method": "textDocument/codeAction", "params": {}});
+            host.send(handle, "page-a", &request.to_string()).unwrap();
+        }
+        let reply = |id: u64, command: &str| {
+            let answer = serde_json::json!({"jsonrpc": "2.0", "id": id, "result": [{"title": "t", "command": command}]});
+            note_answer(&host.inner, handle, &answer.to_string());
+        };
+        reply(7, "fresh");
+        reply(6, "stale");
+        assert!(execute(serde_json::json!({"command": "stale"})).is_err());
+        assert!(execute(serde_json::json!({"command": "fresh"})).is_ok());
+
+        // An answer to anything else offers nothing.
+        answer(
+            5,
+            "textDocument/hover",
+            serde_json::json!({"title": "e", "command": "sneaky"}),
+        );
+        assert!(execute(serde_json::json!({"command": "sneaky"})).is_err());
     }
 }

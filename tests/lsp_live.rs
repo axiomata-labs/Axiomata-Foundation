@@ -195,6 +195,17 @@ fn ask(
 
 /// Starts rust-analyzer on the crate in `dir`, initialized, with `src/main.rs` open.
 fn open_rust(dir: &std::path::Path) -> (LspHost, u64, mpsc::Receiver<String>, String) {
+    open_server(dir, "rust", "rust", "src/main.rs")
+}
+
+/// Starts `language`'s server in `dir`, initialized with the editor's capabilities
+/// for these checks, with `rel` open; returns the host, the handle, the messages and `rel`'s URI.
+fn open_server(
+    dir: &std::path::Path,
+    language: &str,
+    language_id: &str,
+    rel: &str,
+) -> (LspHost, u64, mpsc::Receiver<String>, String) {
     let home = std::env::var_os("HOME").map(PathBuf::from);
     let host = LspHost::new(
         dir.join("no-lsp.json"),
@@ -203,17 +214,17 @@ fn open_rust(dir: &std::path::Path) -> (LspHost, u64, mpsc::Receiver<String>, St
     let root = Root::dir(dir, LinkPolicy::Contained).unwrap();
     let (tx, rx) = mpsc::channel::<String>();
     let tx = Mutex::new(tx);
-    let Started::Running { handle, .. } = host
+    let started = host
         .start(
             "project:live",
             &root,
-            "rust",
+            language,
             "live",
             Arc::new(move |m| drop(tx.lock().unwrap().send(m))),
         )
-        .unwrap()
-    else {
-        panic!("rust-analyzer not running")
+        .unwrap();
+    let Started::Running { handle, .. } = started else {
+        panic!("{language} server not running: {started:?}")
     };
     let root_uri = uri(dir);
     ask(
@@ -228,8 +239,15 @@ fn open_rust(dir: &std::path::Path) -> (LspHost, u64, mpsc::Receiver<String>, St
                 "textDocument": {"completion": {"completionItem": {
                     "snippetSupport": true,
                     "resolveSupport": {"properties": ["documentation", "detail", "additionalTextEdits"]}
-                }}, "rename": {"prepareSupport": true}},
-                "workspace": {"workspaceEdit": {"documentChanges": true, "resourceOperations": []}}}
+                }}, "rename": {"prepareSupport": true},
+                "codeAction": {
+                    "codeActionLiteralSupport": {"codeActionKind": {"valueSet":
+                        ["", "quickfix", "refactor", "source", "source.organizeImports"]}},
+                    "isPreferredSupport": true, "disabledSupport": true, "dataSupport": true,
+                    "resolveSupport": {"properties": ["edit"]}
+                }},
+                "workspace": {"workspaceEdit": {"documentChanges": true, "resourceOperations": []},
+                    "applyEdit": true, "executeCommand": {}}}
         }),
     );
     host.send(
@@ -238,13 +256,13 @@ fn open_rust(dir: &std::path::Path) -> (LspHost, u64, mpsc::Receiver<String>, St
         r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#,
     )
     .unwrap();
-    let file = dir.join("src/main.rs");
+    let file = dir.join(rel);
     let file_uri = uri(&file);
     host.send(
         handle,
         "live",
         &serde_json::json!({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{
-        "textDocument": {"uri": file_uri, "languageId": "rust", "version": 1,
+        "textDocument": {"uri": file_uri, "languageId": language_id, "version": 1,
                          "text": std::fs::read_to_string(&file).unwrap()}}})
         .to_string(),
     )
@@ -540,5 +558,141 @@ fn rust_analyzer_shows_a_signature_while_arguments_are_typed() {
         .as_u64()
         .or(help["result"]["activeParameter"].as_u64());
     assert_eq!(active, Some(1), "{help}");
+    host.stop(handle);
+}
+
+#[test]
+#[ignore = "starts the real rust-analyzer"]
+fn rust_analyzer_offers_an_import_and_resolves_its_edit() {
+    let dir = scratch(
+        "rust-actions",
+        &[
+            (
+                "Cargo.toml",
+                "[package]\nname = \"live\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+            ),
+            (
+                "src/main.rs",
+                "fn main() {\n    let m: HashMap<u8, u8> = HashMap::new();\n}\n",
+            ),
+        ],
+    );
+    let (host, handle, rx, file_uri) = open_rust(&dir);
+    let params = serde_json::json!({"textDocument": {"uri": file_uri},
+        "range": {"start": {"line": 1, "character": 11}, "end": {"line": 1, "character": 11}},
+        "context": {"diagnostics": [], "triggerKind": 1}});
+    // rust-analyzer offers the import once it has loaded the crate.
+    let mut import = None;
+    for id in 10..70 {
+        let answer = ask(
+            &host,
+            handle,
+            &rx,
+            id,
+            "textDocument/codeAction",
+            params.clone(),
+        );
+        import = answer["result"].as_array().and_then(|actions| {
+            actions
+                .iter()
+                .find(|a| {
+                    a["title"]
+                        .as_str()
+                        .is_some_and(|t| t.contains("std::collections::HashMap"))
+                })
+                .cloned()
+        });
+        if import.is_some() {
+            break;
+        }
+        std::thread::sleep(Duration::from_secs(1));
+    }
+    let import = import.expect("no import offered");
+    println!("offered: {import}");
+    let resolved = ask(&host, handle, &rx, 80, "codeAction/resolve", import);
+    let edit = resolved["result"]["edit"].to_string();
+    println!("resolves to {edit}");
+    assert!(edit.contains("use std::collections::HashMap"), "{resolved}");
+    host.stop(handle);
+}
+
+#[test]
+#[ignore = "starts the real typescript-language-server"]
+fn typescript_refactors_through_an_offered_command_only() {
+    let dir = scratch(
+        "ts-actions",
+        &[("main.ts", "const total = 1 + 2;\nconsole.log(total);\n")],
+    );
+    let (host, handle, rx, file_uri) = open_server(&dir, "typescript", "typescript", "main.ts");
+    let execute = |id: u64, command: &serde_json::Value| {
+        let mut params = serde_json::json!({"command": command["command"]});
+        if let Some(arguments) = command.get("arguments") {
+            params["arguments"] = arguments.clone();
+        }
+        let message = serde_json::json!({"jsonrpc": "2.0", "id": id,
+            "method": "workspace/executeCommand", "params": params});
+        host.send(handle, "live", &message.to_string())
+    };
+    // Nothing offered yet: refused before the server sees it.
+    let invented = serde_json::json!({"command": "_typescript.applyRefactoring", "arguments": [{"file": "/etc/hosts"}]});
+    assert!(execute(5, &invented).is_err());
+
+    // `1 + 2` selected: the refactorings (extract to constant, …) run as commands.
+    let mut action = None;
+    for id in 10..40 {
+        let answer = ask(
+            &host,
+            handle,
+            &rx,
+            id,
+            "textDocument/codeAction",
+            serde_json::json!({
+            "textDocument": {"uri": file_uri},
+            "range": {"start": {"line": 0, "character": 14}, "end": {"line": 0, "character": 19}},
+            "context": {"diagnostics": [], "triggerKind": 1}}),
+        );
+        println!("offered: {}", answer["result"]);
+        action = answer["result"].as_array().and_then(|actions| {
+            actions
+                .iter()
+                .find(|a| {
+                    a["command"]["command"] == "_typescript.applyRefactoring"
+                        && a["kind"] == "refactor.extract.constant"
+                })
+                .cloned()
+        });
+        if action.is_some() {
+            break;
+        }
+        std::thread::sleep(Duration::from_millis(500));
+    }
+    let action = action.expect("no refactoring offered as a command");
+    let command = &action["command"];
+    execute(50, command).unwrap();
+    // The server sends its edit back as a request of its own; the editor applies it.
+    let deadline = Instant::now() + Duration::from_secs(60);
+    let mut edit = None;
+    let mut done = false;
+    while Instant::now() < deadline && !(done && edit.is_some()) {
+        let Ok(message) = rx.recv_timeout(Duration::from_secs(1)) else {
+            continue;
+        };
+        let value: serde_json::Value = serde_json::from_str(&message).unwrap();
+        if value["method"] == "workspace/applyEdit" {
+            edit = Some(value["params"]["edit"].to_string());
+            let applied = serde_json::json!({"jsonrpc": "2.0", "id": value["id"], "result": {"applied": true}});
+            host.send(handle, "live", &applied.to_string()).unwrap();
+        } else if value.get("method").is_some() && value.get("id").is_some() {
+            let empty = serde_json::json!({"jsonrpc": "2.0", "id": value["id"], "result": null});
+            host.send(handle, "live", &empty.to_string()).unwrap();
+        } else if value["id"] == 50 {
+            done = true;
+        }
+    }
+    let edit = edit.expect("no workspace/applyEdit from the command");
+    println!("{} applies {edit}", action["title"]);
+    assert!(edit.contains("const newLocal = 1 + 2"), "{edit}");
+    // Each offer runs once.
+    assert!(execute(51, command).is_err());
     host.stop(handle);
 }
