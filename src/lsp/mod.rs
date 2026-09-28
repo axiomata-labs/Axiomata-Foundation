@@ -87,6 +87,8 @@ pub const ALLOWED_METHODS: &[&str] = &[
     "textDocument/formatting",
     "textDocument/prepareRename",
     "textDocument/rename",
+    // ED6.6
+    "textDocument/signatureHelp",
 ];
 
 /// The requests whose answers name places in files ([`LOCATION_METHODS`]): the

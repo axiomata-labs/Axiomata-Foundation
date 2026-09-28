@@ -490,3 +490,55 @@ fn rust_analyzer_renames_across_files_but_not_a_module_file() {
     assert!(!moves_files, "{refused}");
     host.stop(handle);
 }
+
+#[test]
+#[ignore = "starts the real rust-analyzer"]
+fn rust_analyzer_shows_a_signature_while_arguments_are_typed() {
+    let dir = scratch(
+        "rust-signature",
+        &[
+            (
+                "Cargo.toml",
+                "[package]\nname = \"live\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+            ),
+            (
+                "src/main.rs",
+                "fn add(left: u32, right: u32) -> u32 { left + right }\nfn main() {\n    add(1, \n}\n",
+            ),
+        ],
+    );
+    let (host, handle, rx, file_uri) = open_rust(&dir);
+    let at = |character: u32, trigger: &str| {
+        serde_json::json!({"textDocument": {"uri": file_uri},
+            "position": {"line": 2, "character": character},
+            "context": {"triggerKind": 2, "triggerCharacter": trigger, "isRetrigger": false}})
+    };
+    let mut help = serde_json::Value::Null;
+    for id in 10..70 {
+        help = ask(
+            &host,
+            handle,
+            &rx,
+            id,
+            "textDocument/signatureHelp",
+            at(11, ","),
+        );
+        if help["result"]["signatures"].is_array() {
+            break;
+        }
+        std::thread::sleep(Duration::from_secs(1));
+    }
+    println!("signature: {}", help["result"]);
+    let signature = &help["result"]["signatures"][0];
+    assert!(
+        signature["label"]
+            .as_str()
+            .is_some_and(|l| l.contains("left: u32")),
+        "{help}"
+    );
+    let active = signature["activeParameter"]
+        .as_u64()
+        .or(help["result"]["activeParameter"].as_u64());
+    assert_eq!(active, Some(1), "{help}");
+    host.stop(handle);
+}
