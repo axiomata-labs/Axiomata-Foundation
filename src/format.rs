@@ -84,12 +84,23 @@ struct Slot<'a>(&'a Limiter);
 
 impl Limiter {
     fn take(&self) -> Option<Slot<'_>> {
-        self.running
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |n| {
-                (n < self.limit).then_some(n + 1)
-            })
-            .ok()
-            .map(|_| Slot(self))
+        // A compare-and-swap loop rather than `fetch_update`: newer toolchains rename that to `try_update`
+        // and warn about the old name, older ones know only the old name — this builds clean on both.
+        let mut seen = self.running.load(Ordering::Acquire);
+        loop {
+            if seen >= self.limit {
+                return None;
+            }
+            match self.running.compare_exchange_weak(
+                seen,
+                seen + 1,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            ) {
+                Ok(_) => return Some(Slot(self)),
+                Err(now) => seen = now,
+            }
+        }
     }
 }
 
