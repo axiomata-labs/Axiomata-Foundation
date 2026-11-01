@@ -551,6 +551,29 @@ fn reads_an_image_and_refuses_unknown_types_before_touching_disk() {
 }
 
 #[test]
+fn reads_audio_and_refuses_unknown_types_before_touching_disk() {
+    let fx = Fixture::new();
+    let bytes: Vec<u8> = (0..=255).collect();
+    fs::write(fx.dir.join("episode.MP3"), &bytes).unwrap();
+    let root = fx.root(LinkPolicy::Strict);
+    let audio = read_audio(&root, "episode.MP3", MAX_AUDIO_BYTES).unwrap();
+    assert_eq!((audio.mime, audio.bytes), ("audio/mpeg", bytes));
+    assert_eq!(kind(read_audio(&root, "episode.MP3", 10)), "TooLarge");
+    assert_eq!(
+        kind(read_audio(&root, "notes.md", MAX_AUDIO_BYTES)),
+        "Refused"
+    );
+    assert_eq!(
+        kind(read_audio(&root, "../outside.mp3", MAX_AUDIO_BYTES)),
+        "Refused"
+    );
+    assert_eq!(
+        kind(read_audio(&root, "missing.m4a", MAX_AUDIO_BYTES)),
+        "NotFound"
+    );
+}
+
+#[test]
 fn image_from_bytes_encodes_known_types_and_refuses_the_rest() {
     use base64::Engine as _;
     let bytes: Vec<u8> = (0..=255).collect();

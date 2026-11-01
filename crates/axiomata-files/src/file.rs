@@ -29,6 +29,9 @@ pub const MAX_WRITE_BYTES: u64 = MAX_READ_BYTES;
 /// Largest image [`read_image`] inlines. Photos routinely exceed a MiB;
 /// base64 inflates this by a third over IPC, still small for a local call.
 pub const MAX_IMAGE_BYTES: u64 = 8 * 1024 * 1024;
+/// Largest audio file [`read_audio`] returns: a half-hour podcast episode at 64 kbps is about 15 MiB; a longer or
+/// richer file belongs in a player of its own, not over IPC.
+pub const MAX_AUDIO_BYTES: u64 = 64 * 1024 * 1024;
 
 /// An opaque fingerprint of a file's content: its length and a 64-bit
 /// FNV-1a hash, rendered as `<len>-<hash>`. Content-based on purpose — a
@@ -91,6 +94,16 @@ pub struct Image {
     /// One of the MIME types [`image_mime`] maps an extension onto.
     pub mime: &'static str,
     pub base64: String,
+}
+
+/// An audio file's bytes and type, for a player.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Audio {
+    /// The relative path as requested, with `/` separators.
+    pub rel: String,
+    /// One of the MIME types [`audio_mime`] maps an extension onto.
+    pub mime: &'static str,
+    pub bytes: Vec<u8>,
 }
 
 /// Reads a UTF-8 text file of at most `max_bytes`.
@@ -237,6 +250,27 @@ pub fn read_image(root: &Root, rel: &str, max_bytes: u64) -> Result<Image, Files
     Ok(encode_image(rel, mime, &bytes))
 }
 
+/// Reads an audio file of at most `max_bytes` through the pinned walk, as [`read_image`] reads a picture.
+///
+/// Errors:
+///     [`FilesError::Refused`] for an extension [`audio_mime`] does not know
+///     (checked before the file system is touched), [`FilesError::NotFound`],
+///     [`FilesError::TooLarge`], and every guard failure of [`Root::resolve`].
+pub fn read_audio(root: &Root, rel: &str, max_bytes: u64) -> Result<Audio, FilesError> {
+    let mime = audio_mime(rel)
+        .ok_or_else(|| refused(rel, "not a supported audio type (mp3/m4a/wav/flac/ogg)"))?;
+    let resolved = root.resolve_entry(rel)?;
+    if !resolved.exists {
+        return Err(FilesError::NotFound { path: rel.into() });
+    }
+    let (bytes, _) = read_capped(root, rel, &resolved.target, max_bytes)?;
+    Ok(Audio {
+        rel: normalise(rel),
+        mime,
+        bytes,
+    })
+}
+
 /// Bytes that came from somewhere other than a root — a git blob (M7.3 H8) —
 /// as the same [`Image`] `read_image` returns, or `None` for an extension
 /// [`image_mime`] does not know.
@@ -301,6 +335,20 @@ pub fn image_mime(rel: &str) -> Option<&'static str> {
         "tif" | "tiff" => "image/tiff",
         "heic" | "heif" => "image/heic",
         "avif" => "image/avif",
+        _ => return None,
+    })
+}
+
+/// Maps an extension onto the audio types a web view's `<audio>` plays (WebKit: MP3, AAC in M4A, WAV, FLAC; Ogg
+/// where the system has it).
+pub fn audio_mime(rel: &str) -> Option<&'static str> {
+    let ext = Path::new(rel).extension()?.to_str()?.to_ascii_lowercase();
+    Some(match ext.as_str() {
+        "mp3" => "audio/mpeg",
+        "m4a" | "aac" => "audio/mp4",
+        "wav" => "audio/wav",
+        "flac" => "audio/flac",
+        "ogg" | "oga" | "opus" => "audio/ogg",
         _ => return None,
     })
 }
