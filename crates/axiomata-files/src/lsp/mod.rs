@@ -528,7 +528,17 @@ impl LspHost {
             return Err(not_plain());
         }
         // Where the open file really is: a link in a parent folder would show here.
+        #[cfg(target_os = "macos")]
         let actual = rustix::fs::getpath(&fd).map_err(|err| io(err.into()))?;
+        // Linux has no `F_GETPATH`: its `/proc` names the open file the same way.
+        #[cfg(not(target_os = "macos"))]
+        let actual = {
+            use std::os::fd::AsRawFd;
+            use std::os::unix::ffi::OsStringExt;
+            let link =
+                std::fs::read_link(format!("/proc/self/fd/{}", fd.as_raw_fd())).map_err(io)?;
+            std::ffi::CString::new(link.into_os_string().into_vec()).map_err(|_| not_plain())?
+        };
         if Path::new(std::ffi::OsStr::from_bytes(actual.as_bytes())) != path {
             return Err(not_plain());
         }
