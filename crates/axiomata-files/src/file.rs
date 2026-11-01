@@ -345,7 +345,9 @@ pub fn audio_mime(rel: &str) -> Option<&'static str> {
     let ext = Path::new(rel).extension()?.to_str()?.to_ascii_lowercase();
     Some(match ext.as_str() {
         "mp3" => "audio/mpeg",
-        "m4a" | "aac" => "audio/mp4",
+        "m4a" => "audio/mp4",
+        // A bare .aac is an ADTS stream, not an MP4 container.
+        "aac" => "audio/aac",
         "wav" => "audio/wav",
         "flac" => "audio/flac",
         "ogg" | "oga" | "opus" => "audio/ogg",
