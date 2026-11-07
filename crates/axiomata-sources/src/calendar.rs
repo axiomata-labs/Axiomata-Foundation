@@ -68,6 +68,11 @@ pub struct Collection {
 /// One occurrence of an event (a repeating event is one per occurrence).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Event {
+    /// EventKit's identifier of the event (the same for every occurrence of a repeating one).
+    pub id: String,
+    /// Whether it may be moved or renamed without touching anyone else: a writable calendar, no attendees, no
+    /// repetition (§8k Q5).
+    pub changeable: bool,
     pub title: String,
     pub start: Moment,
     pub end: Moment,
@@ -88,6 +93,8 @@ pub struct Due {
 /// A reminder.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Reminder {
+    /// EventKit's identifier of the reminder.
+    pub id: String,
     pub title: String,
     pub due: Option<Due>,
     pub list: String,
@@ -105,6 +112,12 @@ pub enum CalendarError {
     TimedOut,
     /// Not on macOS.
     Unsupported,
+    /// The event, reminder, calendar or list is not there (any more).
+    NotFound,
+    /// The calendar or list takes no changes.
+    ReadOnly,
+    /// EventKit refused to save; its own description.
+    Refused(String),
 }
 
 impl fmt::Display for CalendarError {
@@ -121,6 +134,9 @@ impl fmt::Display for CalendarError {
             Self::Invalid(why) => write!(f, "{why}"),
             Self::TimedOut => write!(f, "EventKit did not answer in time"),
             Self::Unsupported => write!(f, "calendars are read on macOS only"),
+            Self::NotFound => write!(f, "it is not there (any more)"),
+            Self::ReadOnly => write!(f, "that calendar or list takes no changes"),
+            Self::Refused(why) => write!(f, "the calendar refused it: {why}"),
         }
     }
 }
@@ -262,6 +278,14 @@ fn weekday(eventkit: i64) -> u32 {
     }
 }
 
+mod write;
+
+pub use write::{
+    Created, Frequency, MAX_INTERVAL, NewEvent, NewReminder, Repeat, RepeatEnd, Snapshot,
+    complete_reminder, create_event, create_reminder, default_collection, event_snapshot,
+    move_event, reminder_done, remove_event, remove_reminder,
+};
+
 #[cfg(target_os = "macos")]
 mod imp {
     use std::sync::mpsc;
@@ -339,14 +363,14 @@ mod imp {
 
     /// The Gregorian calendar in the Mac's time zone: the dates going in and out are Gregorian whatever calendar the
     /// owner's Mac shows (a Buddhist year would be read as a date two thousand years ahead).
-    fn gregorian() -> Retained<NSCalendar> {
+    pub(super) fn gregorian() -> Retained<NSCalendar> {
         // SAFETY: a static string of Foundation's.
         let gregorian = unsafe { NSCalendarIdentifierGregorian };
         NSCalendar::calendarWithIdentifier(gregorian).unwrap_or_else(NSCalendar::currentCalendar)
     }
 
     /// A store this app may read `kind` from.
-    fn store(kind: Kind) -> Result<Retained<EKEventStore>, CalendarError> {
+    pub(super) fn store(kind: Kind) -> Result<Retained<EKEventStore>, CalendarError> {
         if status(kind) != Status::Granted {
             return Err(CalendarError::AccessDenied(kind));
         }
@@ -391,7 +415,10 @@ mod imp {
     }
 
     /// The start of `day` on the owner's clock.
-    fn start_of(calendar: &NSCalendar, day: super::Day) -> Result<Retained<NSDate>, CalendarError> {
+    pub(super) fn start_of(
+        calendar: &NSCalendar,
+        day: super::Day,
+    ) -> Result<Retained<NSDate>, CalendarError> {
         let parts = NSDateComponents::new();
         parts.setYear(day.year as isize);
         parts.setMonth(day.month as isize);
@@ -407,7 +434,11 @@ mod imp {
         Ok(date)
     }
 
-    fn days_later(calendar: &NSCalendar, date: &NSDate, days: i64) -> Option<Retained<NSDate>> {
+    pub(super) fn days_later(
+        calendar: &NSCalendar,
+        date: &NSDate,
+        days: i64,
+    ) -> Option<Retained<NSDate>> {
         calendar.dateByAddingUnit_value_toDate_options(
             NSCalendarUnit::Day,
             days as isize,
@@ -416,7 +447,7 @@ mod imp {
         )
     }
 
-    fn moment(calendar: &NSCalendar, date: &NSDate) -> Moment {
+    pub(super) fn moment(calendar: &NSCalendar, date: &NSDate) -> Moment {
         let units = NSCalendarUnit::Year
             | NSCalendarUnit::Month
             | NSCalendarUnit::Day
@@ -469,14 +500,24 @@ mod imp {
                         .location()
                         .map(|location| clean(&location.to_string()))
                         .filter(|location| !location.is_empty());
+                    let calendar_item = event.calendar();
+                    let writable = calendar_item
+                        .as_ref()
+                        .is_some_and(|calendar| calendar.allowsContentModifications());
                     Event {
+                        id: event
+                            .eventIdentifier()
+                            .map(|id| id.to_string())
+                            .unwrap_or_default(),
+                        changeable: writable
+                            && !event.hasAttendees()
+                            && !event.hasRecurrenceRules(),
                         title: clean(&event.title().to_string()),
                         start: moment(&calendar, &event.startDate()),
                         end: moment(&calendar, &event.endDate()),
                         all_day: event.isAllDay(),
                         location,
-                        calendar: event
-                            .calendar()
+                        calendar: calendar_item
                             .map(|calendar| clean(&calendar.title().to_string()))
                             .unwrap_or_default(),
                     }
@@ -544,10 +585,11 @@ mod imp {
     }
 
     /// A reminder as plain values.
-    fn plain(calendar: &NSCalendar, reminder: &EKReminder) -> Reminder {
+    pub(super) fn plain(calendar: &NSCalendar, reminder: &EKReminder) -> Reminder {
         // SAFETY: reading properties of an object the caller holds, on the queue that handed it over.
         unsafe {
             Reminder {
+                id: reminder.calendarItemIdentifier().to_string(),
                 title: clean(&reminder.title().to_string()),
                 due: reminder
                     .dueDateComponents()
