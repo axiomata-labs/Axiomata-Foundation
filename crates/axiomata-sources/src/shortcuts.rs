@@ -1,4 +1,4 @@
-//! The owner's shortcuts (Lirvel `docs/plans/companion.md` §8k Q8): their names, and running one — through Apple's
+//! The owner's shortcuts (§8k Q8): their names, and running one — through Apple's
 //! own `shortcuts` command, the name as one argument, an input as a file of its own, never through a shell. What a
 //! shortcut does is the owner's: a caller runs only those the owner allowed, each after a yes.
 

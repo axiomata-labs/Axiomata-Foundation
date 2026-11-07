@@ -1,5 +1,5 @@
-//! Noticing external changes to open files (E5 of `docs/plans/editor.md`
-//! §ED0): an agent writing into the file the owner has open is the case this
+//! Noticing external changes to open files (E5 of
+//! milestone ED0): an agent writing into the file the owner has open is the case this
 //! exists for.
 //!
 //! Three choices shape it:

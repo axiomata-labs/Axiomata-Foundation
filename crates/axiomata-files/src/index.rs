@@ -1,4 +1,4 @@
-//! The file names of a root, for quick open (`docs/plans/editor.md`, ED4, W8,
+//! The file names of a root, for quick open (ED4, W8,
 //! W14): one walk that returns every file's path relative to the root, for
 //! the view to match against as the owner types. Names only — nothing is
 //! read — so the walk goes by path like the memory router's, not through

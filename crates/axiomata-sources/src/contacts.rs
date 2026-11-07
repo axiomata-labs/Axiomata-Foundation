@@ -1,4 +1,4 @@
-//! The owner's contacts (Lirvel `docs/plans/companion.md` §8l Q4/Q15): found by name, with their addresses and
+//! The owner's contacts (§8l Q4/Q15): found by name, with their addresses and
 //! numbers and what each is called ("privat", "Arbeit"), and their birthday — through the Contacts framework, read
 //! only. Contacts the owner closed are not among what is found; a caller writes only to an address found here (or to
 //! the sender of a mail it answers), never to one a text named.

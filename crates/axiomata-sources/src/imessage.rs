@@ -1,4 +1,4 @@
-//! Sending an iMessage (Lirvel `docs/plans/companion.md` §8l S4c, Q16): to one number or address, through Messages'
+//! Sending an iMessage (§8l S4c, Q16): to one number or address, through Messages'
 //! own scripting — a constant script, the values only as its arguments — and over iMessage only: one who cannot be
 //! reached there gets nothing, never an SMS in its place. Reading messages is not here (that is stage 5).
 

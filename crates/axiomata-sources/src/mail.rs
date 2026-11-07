@@ -1,4 +1,4 @@
-//! The owner's mail as Mail.app holds it (Lirvel `docs/plans/companion.md` §8j S2d, Q8/Q20): the inboxes of all
+//! The owner's mail as Mail.app holds it (§8j S2d, Q8/Q20): the inboxes of all
 //! accounts, read through Apple events — JavaScript for Automation, measured 2026-11-07 at about 2 s for two weeks of
 //! headers and 0.3 s for one message — never Mail's own files (that would need Full Disk Access, C22). The script is a
 //! constant; what varies goes in as its arguments, never into its text, and comes back as JSON, so a message cannot

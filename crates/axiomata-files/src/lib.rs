@@ -1,5 +1,5 @@
 //! The file service behind Axiomata-OS's file app and its own editor
-//! (`docs/plans/editor.md`, milestone ED0).
+//! (milestone ED0).
 //!
 //! Everything a webview may touch on disk goes through a [`Root`]: a
 //! canonical directory (or, for a single file picked in the open dialog, that

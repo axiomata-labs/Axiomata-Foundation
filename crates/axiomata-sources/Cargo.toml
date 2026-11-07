@@ -3,6 +3,7 @@ name = "axiomata-sources"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
 description = "What an app of the Axiomata family may read on the Mac — calendars, reminders, files, mail — behind one fence: a fixed baseline no app can lift, and the owner's own list. Knows nothing of models."
 
 [dependencies]

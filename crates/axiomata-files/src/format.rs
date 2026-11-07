@@ -1,6 +1,5 @@
-//! Formatting a file with its language's own formatter (`docs/plans/editor.md`,
-//! ED6.5, L13) — the pattern of the owner's Neovim setup (conform.nvim):
-//! `ruff`, `rustfmt`, `prettier`, `stylua`, `shfmt`, each with a line width of
+//! Formatting a file with its language's own formatter (ED6.5, L13) — the pattern
+//! of the owner's Neovim setup (conform.nvim): `ruff`, `rustfmt`, `prettier`, `stylua`, `shfmt`, each with a line width of
 //! 120 where it takes one. Where no formatter fits, the page falls back to the
 //! language server's own formatting.
 //!

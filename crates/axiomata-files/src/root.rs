@@ -1,4 +1,4 @@
-//! Roots and the path guard (decisions E1/E2 of `docs/plans/editor.md` §ED0).
+//! Roots and the path guard (decisions E1/E2 of milestone ED0).
 //!
 //! A [`Root`] is a directory whose canonical path was fixed when it was
 //! built. [`Root::resolve`] turns a relative path into the location to act on

@@ -1,4 +1,4 @@
-//! Searching the files of a root (`docs/plans/editor.md`, ED5, T4, T5, T14):
+//! Searching the files of a root (ED5, T4, T5, T14):
 //! the project search behind the file app's Search tab and the IDE's Search
 //! pane.
 //!

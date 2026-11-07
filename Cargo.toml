@@ -5,6 +5,7 @@ members = ["crates/*"]
 [workspace.package]
 edition = "2024"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/axiomata-labs/Axiomata-Foundation"
 
 # The versions as Axiomata-OS has them, so the apps built on these crates share one version of each.
 [workspace.dependencies]

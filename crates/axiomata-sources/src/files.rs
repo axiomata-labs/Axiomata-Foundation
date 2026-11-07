@@ -1,4 +1,4 @@
-//! The owner's files (Lirvel `docs/plans/companion.md` §8j S2c, Q17): found through Spotlight (`mdfind`), read as text —
+//! The owner's files (§8j S2c, Q17): found through Spotlight (`mdfind`), read as text —
 //! plain text, Markdown, code and PDFs. Everything goes through the [`Fence`]: a found file it closes is dropped before
 //! anyone sees its name, and a file is read only after the fence judged the place its opened descriptor really is.
 

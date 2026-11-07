@@ -8,7 +8,7 @@ Guidance for coding agents in this repository (Claude Code reads it through `CLA
   `openat(O_NOFOLLOW)` (`pinned.rs`), roots are strict or contained, versioned reads and writes, the language-server
   table and the tools' environment. Used by Axiomata-OS (the editor, the core, the CLI, the app) and by Glut
   (`../Axiomata-Glut`, its file tools and LSP errors); later by the Studio as an app of its own.
-- `crates/axiomata-sources` — what an app may read on the Mac (Lirvel `docs/plans/companion.md` §8j): the `fence`
+- `crates/axiomata-sources` — what an app may read on the Mac: the `fence`
   (a fixed baseline no app lifts — only inside home, never `Library`, hidden files, Photos libraries, key files,
   password exports — plus the owner's closed folders; a path is judged as written and as it really is) and the
   sources behind it (`calendar`: EventKit, read only; `files`: Spotlight and fenced text and PDF reads; `mail`: Mail.app's inboxes through a constant JXA script, values only

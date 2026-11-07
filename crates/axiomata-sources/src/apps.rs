@@ -1,4 +1,4 @@
-//! The apps on the Mac and web addresses (Lirvel `docs/plans/companion.md` §8k Q7/Q18): which apps there are — from
+//! The apps on the Mac and web addresses (§8k Q7/Q18): which apps there are — from
 //! `/Applications`, `/System/Applications` and `~/Applications` — open one by its bundle identifier, never by a path
 //! a caller names; open an `https` address in the browser; quit gently what was opened. A fixed list of apps is never
 //! opened: shells and terminals, script and automation tools, System Settings, the keychain and passwords, and tools

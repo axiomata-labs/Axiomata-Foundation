@@ -1,5 +1,5 @@
-//! Reading, writing and deleting files under a [`Root`] (E3/E4 of
-//! `docs/plans/editor.md` §ED0).
+//! Reading, writing and deleting files under a [`Root`] (E3/E4
+//! of milestone ED0).
 //!
 //! Writes are atomic: the content goes to a temp file next to the target,
 //! opened with `O_EXCL` (a planted symlink at the temp path is never
@@ -22,7 +22,7 @@ use crate::root::{Root, validate_components};
 /// Largest file the editor reads at all.
 pub const MAX_READ_BYTES: u64 = 16 * 1024 * 1024;
 /// Above this a read is flagged [`TextFile::large`]; the editor edits such a
-/// file in its light mode, without syntax colours (`docs/plans/editor.md`, T2).
+/// file in its light mode, without syntax colours (T2).
 pub const LARGE_FILE_BYTES: u64 = 2 * 1024 * 1024;
 /// Largest content the editor writes — everything it can read, it can edit (T2).
 pub const MAX_WRITE_BYTES: u64 = MAX_READ_BYTES;

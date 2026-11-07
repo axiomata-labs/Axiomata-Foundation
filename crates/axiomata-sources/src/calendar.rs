@@ -1,4 +1,4 @@
-//! The owner's calendars and reminders, read through EventKit (Lirvel `docs/plans/companion.md` §8j S2b, Q15/Q16).
+//! The owner's calendars and reminders, read through EventKit (§8j S2b, Q15/Q16).
 //! Read only. Times come out in the Mac's own time zone as the owner reads them on a clock, and a day goes in as a
 //! date — the system does the time-zone arithmetic, never the caller. A calendar or list the owner closed is never
 //! asked for, and access is only asked for when the owner switches a source on ([`ask`]), never in passing.

@@ -1,4 +1,4 @@
-//! The fence around what may be read (Lirvel `docs/plans/companion.md` C22, §8j Q13): a fixed baseline — the places
+//! The fence around what may be read (C22, §8j Q13): a fixed baseline — the places
 //! where keys, passwords and other programs' private data live — and the owner's own folders on top. A path is judged
 //! as written and as it really is (every link resolved), so a link in an open folder never leads into a closed one.
 //! What is closed is not seen at all: a caller drops it before anything else looks at it.

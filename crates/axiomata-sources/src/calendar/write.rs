@@ -1,4 +1,4 @@
-//! Reversible writes to the calendars and reminders (Lirvel `docs/plans/companion.md` §8k Q5): create an event (also a
+//! Reversible writes to the calendars and reminders (§8k Q5): create an event (also a
 //! repeating one) or a reminder, tick a reminder off or open it again, move or rename an event that touches nobody
 //! else — and take back what was created, as long as it is unchanged. Nothing here deletes what the owner made, and
 //! nothing writes into a calendar or list the owner closed. The caller has its own "yes"; this only does.

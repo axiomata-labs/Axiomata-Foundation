@@ -1,5 +1,5 @@
 //! Grants: files and folders the owner picked in the open dialog (E7 of
-//! `docs/plans/editor.md` §ED0).
+//! milestone ED0).
 //!
 //! Picking something outside every registered root is the only way a new
 //! place on disk becomes reachable, and the pick happens in a native dialog

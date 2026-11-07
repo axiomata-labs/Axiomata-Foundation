@@ -1,4 +1,4 @@
-//! Language servers for the editor (`docs/plans/editor.md`, ED6, L1–L4).
+//! Language servers for the editor (ED6, L1–L4).
 //!
 //! This side does what the webview must not: it decides which program runs
 //! ([`servers`], L2), starts it in the root's folder, frames what goes in and

@@ -1,6 +1,5 @@
-//! Directories inside a root, for the file app's tree (`docs/plans/editor.md`,
-//! ED4, W6, W13): listing one folder, making a folder, renaming an entry, and
-//! counting or removing a whole folder.
+//! Directories inside a root, for the file app's tree (ED4, W6, W13): listing one folder, making a folder,
+//! renaming an entry, and counting or removing a whole folder.
 //!
 //! The same discipline as [`crate::pinned`]: nothing is looked up by name
 //! twice. A folder is reached by walking from the root's directory one
