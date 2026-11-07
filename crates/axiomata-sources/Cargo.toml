@@ -14,6 +14,8 @@ serde_json.workspace = true
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 block2 = "0.6"
-objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSDate", "NSArray", "NSEnumerator", "NSError", "NSCalendar", "NSPredicate", "NSData"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSDate", "NSArray", "NSEnumerator", "NSError", "NSCalendar", "NSPredicate", "NSData", "NSBundle"] }
+# The apps that run, to quit one gently (`apps.rs`): no Apple events, no permission.
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSRunningApplication"] }
 objc2-event-kit = { version = "0.3", default-features = false, features = ["std", "block2", "EKEventStore", "EKEvent", "EKCalendarItem", "EKCalendar", "EKReminder", "EKSource", "EKTypes", "EKObject", "EKAlarm", "EKRecurrenceRule", "EKRecurrenceEnd"] }
 objc2-pdf-kit = { version = "0.3", default-features = false, features = ["std", "PDFDocument", "PDFPage"] }

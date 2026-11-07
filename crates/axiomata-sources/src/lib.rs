@@ -3,9 +3,11 @@
 //! every app and cannot be lifted, the owner's own list comes on top. Nothing here knows of models: what an app tells
 //! one, and how it frames it, is the app's.
 
+pub mod apps;
 pub mod calendar;
 pub mod fence;
 pub mod files;
 pub mod mail;
+pub mod shortcuts;
 
 pub use fence::{Baseline, Fence, baseline};
