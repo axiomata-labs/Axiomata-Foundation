@@ -8,6 +8,8 @@ description = "What an app of the Axiomata family may read on the Mac — calend
 [dependencies]
 # The real place of an open file (`F_GETPATH`) and `O_NOFOLLOW`, as `axiomata-files` uses them.
 rustix.workspace = true
+# Mail's answers come back as JSON (`mail.rs`).
+serde_json.workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"

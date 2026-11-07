@@ -11,7 +11,8 @@ Guidance for coding agents in this repository (Claude Code reads it through `CLA
 - `crates/axiomata-sources` — what an app may read on the Mac (Lirvel `docs/plans/companion.md` §8j): the `fence`
   (a fixed baseline no app lifts — only inside home, never `Library`, hidden files, Photos libraries, key files,
   password exports — plus the owner's closed folders; a path is judged as written and as it really is) and the
-  sources behind it (`calendar`: EventKit, read only; `files`: Spotlight and fenced text and PDF reads). It knows nothing of models. Used by Lirvel.
+  sources behind it (`calendar`: EventKit, read only; `files`: Spotlight and fenced text and PDF reads; `mail`: Mail.app's inboxes through a constant JXA script, values only
+  as arguments, JSON back, closed accounts and senders dropped here). It knows nothing of models. Used by Lirvel.
 - Next to move in when the Studio leaves Axiomata: the terminal emulator (`axiomata-terminal`).
 
 The apps build these crates from this folder (path dependencies): a change here takes effect in each app at its next

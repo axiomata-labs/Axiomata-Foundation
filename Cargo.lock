@@ -52,6 +52,7 @@ dependencies = [
  "objc2-foundation",
  "objc2-pdf-kit",
  "rustix",
+ "serde_json",
 ]
 
 [[package]]
