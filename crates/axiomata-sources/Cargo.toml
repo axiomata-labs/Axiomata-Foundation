@@ -6,9 +6,12 @@ license.workspace = true
 description = "What an app of the Axiomata family may read on the Mac — calendars, reminders, files, mail — behind one fence: a fixed baseline no app can lift, and the owner's own list. Knows nothing of models."
 
 [dependencies]
+# The real place of an open file (`F_GETPATH`) and `O_NOFOLLOW`, as `axiomata-files` uses them.
+rustix.workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 block2 = "0.6"
-objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSDate", "NSArray", "NSEnumerator", "NSError", "NSCalendar", "NSPredicate"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSDate", "NSArray", "NSEnumerator", "NSError", "NSCalendar", "NSPredicate", "NSData"] }
 objc2-event-kit = { version = "0.3", default-features = false, features = ["std", "block2", "EKEventStore", "EKEvent", "EKCalendarItem", "EKCalendar", "EKReminder", "EKSource", "EKTypes", "EKObject"] }
+objc2-pdf-kit = { version = "0.3", default-features = false, features = ["std", "PDFDocument", "PDFPage"] }

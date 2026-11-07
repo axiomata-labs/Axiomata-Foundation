@@ -5,5 +5,6 @@
 
 pub mod calendar;
 pub mod fence;
+pub mod files;
 
 pub use fence::{Baseline, Fence, baseline};
