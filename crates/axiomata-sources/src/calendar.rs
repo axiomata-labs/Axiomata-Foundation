@@ -63,6 +63,8 @@ pub struct Collection {
     pub title: String,
     /// The account it lives in ("iCloud", "Google", "Auf meinem Mac").
     pub account: String,
+    /// It takes new entries and changes (not a subscribed or a read-only shared one).
+    pub writable: bool,
 }
 
 /// One occurrence of an event (a repeating event is one per occurrence).
@@ -230,8 +232,9 @@ fn valid(day: Day) -> bool {
         && (1..=31).contains(&day.day)
 }
 
-/// `text` on one line, without control characters, at most [`MAX_TEXT_CHARS`].
-fn clean(text: &str) -> String {
+/// `text` on one line, without control characters and what shows nothing, at most [`MAX_TEXT_CHARS`] — as every
+/// title here is told; a name to compare with one of them is cleaned the same way.
+pub fn clean(text: &str) -> String {
     let line: String = text
         .chars()
         .filter(|c| !invisible(*c))
@@ -392,6 +395,7 @@ mod imp {
                         .source()
                         .map(|source| clean(&source.title().to_string()))
                         .unwrap_or_default(),
+                    writable: calendar.allowsContentModifications(),
                 })
                 .collect())
         }

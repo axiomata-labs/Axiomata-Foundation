@@ -433,7 +433,11 @@ mod imp {
                     ),
                     RepeatEnd::Until(until) => {
                         let last = start_of(&calendar, until)?;
-                        let last = days_later(&calendar, &last, 1).unwrap_or(last);
+                        // The last day whole, and not a moment more: EventKit counts an occurrence that starts
+                        // at the end date itself, so the end lies a second before the next day.
+                        let last = days_later(&calendar, &last, 1)
+                            .map(|next| next.dateByAddingTimeInterval(-1.0))
+                            .unwrap_or(last);
                         Some(EKRecurrenceEnd::recurrenceEndWithEndDate(&last))
                     }
                 };
@@ -635,6 +639,7 @@ mod imp {
                     .source()
                     .map(|source| super::super::clean(&source.title().to_string()))
                     .unwrap_or_default(),
+                writable: calendar.allowsContentModifications(),
             }))
         }
     }
