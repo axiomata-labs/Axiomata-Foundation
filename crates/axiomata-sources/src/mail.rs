@@ -181,6 +181,45 @@ function run(argv) {
       return { sender: m.sender() || '', subject: m.subject() || '', content: (m.content() || '').slice(0, 400000) };
     }));
   }
+  if (what === 'reply') {
+    // argv: account, id, text, send ("1") or open a window ("0")
+    const box = inboxes(mail)[argv[1]];
+    if (!box) throw new Error('no inbox');
+    const found = box.messages.whose({ id: Number(argv[2]) });
+    if (found.length === 0) throw new Error('no message');
+    const original = found[0];
+    const send = argv[4] === '1';
+    const reply = original.reply({ openingWindow: !send, replyToAll: false });
+    reply.content = argv[3];
+    const to = reply.toRecipients().map(r => r.address());
+    if (to.length !== 1) throw new Error('not one recipient');
+    // A Reply-To pointing elsewhere would carry the answer to a stranger: only the sender gets it.
+    const raw = original.sender() || '';
+    const angled = raw.match(/<([^<>]+)>/);
+    const sender = (angled ? angled[1] : raw).trim().toLowerCase();
+    if (to[0].trim().toLowerCase() !== sender) {
+      if (!send) reply.close({ saving: 'no' });
+      throw new Error('reply-to differs');
+    }
+    // Read before sending: the sent message is gone, and a throw after it left would invite a second send.
+    const subject = reply.subject() || '';
+    if (send) reply.send();
+    return JSON.stringify({ to: to[0], subject: subject });
+  }
+  if (what === 'new') {
+    // argv: account name or "", to, subject, text, send ("1") or open a window ("0")
+    const send = argv[5] === '1';
+    const message = mail.OutgoingMessage({ subject: argv[3], content: argv[4], visible: !send });
+    mail.outgoingMessages.push(message);
+    if (argv[1] !== '') {
+      const account = mail.accounts.byName(argv[1]);
+      const address = account.emailAddresses()[0];
+      message.sender = account.fullName() + ' <' + address + '>';
+    }
+    message.toRecipients.push(mail.Recipient({ address: argv[2] }));
+    if (send) message.send();
+    return JSON.stringify({ to: argv[2], subject: argv[3] });
+  }
   throw new Error('unknown request');
 }
 "#;
@@ -242,6 +281,132 @@ pub struct Message {
     pub subject: String,
     /// Its text, at most [`MAX_TEXT_CHARS`].
     pub text: String,
+}
+
+/// What was sent, or opened as a draft.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Sent {
+    /// The one recipient's address.
+    pub to: String,
+    pub subject: String,
+}
+
+/// The longest text sent or drafted.
+pub const MAX_SEND_CHARS: usize = 20_000;
+/// The longest subject.
+const MAX_SUBJECT_CHARS: usize = 200;
+
+/// Whether `text` may go out as written: not empty, not too long, nothing that shows nothing.
+fn sendable(text: &str, max: usize) -> bool {
+    !text.trim().is_empty()
+        && text.chars().count() <= max
+        && !text
+            .chars()
+            .any(|c| (c.is_control() && c != '\n') || invisible(c))
+}
+
+/// Whether `address` is one plain mail address.
+pub fn plain_address(address: &str) -> bool {
+    let Some((name, domain)) = address.rsplit_once('@') else {
+        return false;
+    };
+    !name.is_empty()
+        && !name.starts_with('-')
+        && !name.contains('@')
+        && domain.contains('.')
+        && !domain.starts_with('.')
+        && !domain.ends_with('.')
+        && address.chars().count() <= MAX_LINE_CHARS
+        && !address.chars().any(|c| {
+            c.is_whitespace()
+                || c.is_control()
+                || invisible(c)
+                || matches!(c, '<' | '>' | ',' | ';' | '"')
+        })
+}
+
+/// Answers message `id` in the inbox of `account` with `text` — to its sender alone, as a real answer — and sends it,
+/// or (`send` false) opens it in a window for the owner to send. Not to a closed account or sender.
+///
+/// # Errors
+///
+/// [`MailError::Invalid`] for a text or a message that may not be answered, else see [`MailError`].
+pub fn reply(
+    account: &str,
+    id: i64,
+    text: &str,
+    send: bool,
+    closed: &Closed<'_>,
+) -> Result<Sent, MailError> {
+    if !sendable(text, MAX_SEND_CHARS) {
+        return Err(MailError::Invalid(
+            "the text is empty, too long, or holds hidden characters",
+        ));
+    }
+    // The message must be one the owner may read: its sender checked against the closed ones as it is now.
+    let found = messages(account, &[id], closed)?;
+    if !matches!(found.first(), Some(Some(_))) {
+        return Err(MailError::Invalid("there is no such message"));
+    }
+    let answer = run(
+        &[
+            "reply",
+            account,
+            &id.to_string(),
+            text,
+            if send { "1" } else { "0" },
+        ],
+        TIMEOUT,
+    )?;
+    parse_sent(&answer)
+}
+
+/// Sends a new message to `to` with `subject` and `text` from `account` (`None`: Mail's default) — or (`send` false)
+/// opens it in a window for the owner to send.
+///
+/// # Errors
+///
+/// [`MailError::Invalid`] for an address, subject or text that may not go out, else see [`MailError`].
+pub fn send_new(
+    account: Option<&str>,
+    to: &str,
+    subject: &str,
+    text: &str,
+    send: bool,
+) -> Result<Sent, MailError> {
+    if !plain_address(to) {
+        return Err(MailError::Invalid("no plain address"));
+    }
+    if !sendable(text, MAX_SEND_CHARS)
+        || !sendable(subject, MAX_SUBJECT_CHARS)
+        || subject.contains('\n')
+    {
+        return Err(MailError::Invalid(
+            "the subject or text is empty, too long, or holds hidden characters",
+        ));
+    }
+    let account = account.unwrap_or_default();
+    let answer = run(
+        &[
+            "new",
+            account,
+            to,
+            subject,
+            text,
+            if send { "1" } else { "0" },
+        ],
+        TIMEOUT,
+    )?;
+    parse_sent(&answer)
+}
+
+fn parse_sent(answer: &str) -> Result<Sent, MailError> {
+    let row: serde_json::Value =
+        serde_json::from_str(answer).map_err(|e| MailError::Failed(e.to_string()))?;
+    Ok(Sent {
+        to: line(row["to"].as_str().unwrap_or_default()).to_lowercase(),
+        subject: line(row["subject"].as_str().unwrap_or_default()),
+    })
 }
 
 /// The messages `ids` in the inbox of `account`, in their order; `None` for one that is not there, or that the owner
@@ -553,6 +718,26 @@ mod tests {
             vec![None, None]
         );
         assert!(messages("iCloud", &[1; MAX_TEXTS + 1], &Closed::default()).is_err());
+    }
+
+    #[test]
+    fn only_a_plain_address_and_a_plain_text_go_out() {
+        assert!(plain_address("jonas@example.com"));
+        for bad in [
+            "jonas",
+            "a@b",
+            "a b@c.de",
+            "a@b.de, c@d.de",
+            "Jonas <a@b.de>",
+            "a@b@c.de",
+            "x@y.de\u{202e}",
+        ] {
+            assert!(!plain_address(bad), "{bad}");
+        }
+        assert!(send_new(None, "a@b", "s", "t", false).is_err());
+        assert!(send_new(None, "a@b.de", "s\nBcc: x", "t", false).is_err());
+        assert!(send_new(None, "a@b.de", "s", "t\u{200b}", false).is_err());
+        assert!(reply("iCloud", 1, "", false, &Closed::default()).is_err());
     }
 
     #[test]

@@ -32,7 +32,9 @@ pub enum Status {
 }
 
 /// A date on the owner's calendar.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 pub struct Day {
     pub year: i32,
     pub month: u32,
@@ -46,7 +48,9 @@ impl fmt::Display for Day {
 }
 
 /// A moment on the owner's clock.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
 pub struct Moment {
     pub day: Day,
     pub hour: u32,
@@ -75,6 +79,12 @@ pub struct Event {
     /// Whether it may be moved or renamed without touching anyone else: a writable calendar, no attendees, no
     /// repetition (§8k Q5).
     pub changeable: bool,
+    /// It repeats: a delete takes this occurrence or the whole series.
+    pub repeats: bool,
+    /// It has guests: deleting it would send them a cancellation — never done here.
+    pub guests: bool,
+    /// Its calendar takes changes.
+    pub writable: bool,
     pub title: String,
     pub start: Moment,
     pub end: Moment,
@@ -287,6 +297,10 @@ pub use write::{
     Created, Frequency, MAX_INTERVAL, NewEvent, NewReminder, Repeat, RepeatEnd, Snapshot,
     complete_reminder, create_event, create_reminder, default_collection, event_snapshot,
     move_event, reminder_done, remove_event, remove_reminder,
+};
+pub use write::{
+    DeletedEvent, DeletedReminder, Scope, delete_event, delete_reminder, restore_event,
+    restore_reminder,
 };
 
 #[cfg(target_os = "macos")]
@@ -516,6 +530,9 @@ mod imp {
                         changeable: writable
                             && !event.hasAttendees()
                             && !event.hasRecurrenceRules(),
+                        repeats: event.hasRecurrenceRules() || event.isDetached(),
+                        guests: event.hasAttendees(),
+                        writable,
                         title: clean(&event.title().to_string()),
                         start: moment(&calendar, &event.startDate()),
                         end: moment(&calendar, &event.endDate()),

@@ -10,12 +10,16 @@ description = "What an app of the Axiomata family may read on the Mac — calend
 rustix.workspace = true
 # Mail's answers come back as JSON (`mail.rs`).
 serde_json.workspace = true
+# What a delete keeps, to bring it back, travels as JSON (`calendar::delete`).
+serde.workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 block2 = "0.6"
-objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSDate", "NSArray", "NSEnumerator", "NSError", "NSCalendar", "NSPredicate", "NSData", "NSBundle"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSDate", "NSArray", "NSEnumerator", "NSError", "NSCalendar", "NSPredicate", "NSData", "NSBundle", "NSValue"] }
 # The apps that run, to quit one gently (`apps.rs`): no Apple events, no permission.
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSRunningApplication"] }
-objc2-event-kit = { version = "0.3", default-features = false, features = ["std", "block2", "EKEventStore", "EKEvent", "EKCalendarItem", "EKCalendar", "EKReminder", "EKSource", "EKTypes", "EKObject", "EKAlarm", "EKRecurrenceRule", "EKRecurrenceEnd"] }
+# The owner's contacts, read only (`contacts.rs`).
+objc2-contacts = { version = "0.3", default-features = false, features = ["std", "block2", "CNContact", "CNContactStore", "CNContact_Predicates", "CNLabeledValue", "CNPhoneNumber"] }
+objc2-event-kit = { version = "0.3", default-features = false, features = ["std", "block2", "EKEventStore", "EKEvent", "EKCalendarItem", "EKCalendar", "EKReminder", "EKSource", "EKTypes", "EKObject", "EKAlarm", "EKRecurrenceRule", "EKRecurrenceEnd", "EKRecurrenceDayOfWeek"] }
 objc2-pdf-kit = { version = "0.3", default-features = false, features = ["std", "PDFDocument", "PDFPage"] }

@@ -5,8 +5,10 @@
 
 pub mod apps;
 pub mod calendar;
+pub mod contacts;
 pub mod fence;
 pub mod files;
+pub mod imessage;
 pub mod mail;
 pub mod shortcuts;
 
