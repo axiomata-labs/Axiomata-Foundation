@@ -102,6 +102,23 @@ pub fn get(id: &str, closed: &[String]) -> Result<Option<Contact>, ContactsError
     imp::get(id)
 }
 
+/// The contact a number or mail address (as Messages keeps it) belongs to; `None` when it is nobody's, or a closed
+/// one's.
+///
+/// # Errors
+///
+/// [`ContactsError::Invalid`] for no number or address, [`ContactsError::AccessDenied`] without access.
+pub fn of_handle(handle: &str, closed: &[String]) -> Result<Option<Contact>, ContactsError> {
+    let handle = handle.trim();
+    if handle.is_empty()
+        || handle.chars().count() > MAX_FIELD_CHARS
+        || handle.chars().any(|c| c.is_control() || invisible(c))
+    {
+        return Err(ContactsError::Invalid("no number or address"));
+    }
+    Ok(imp::of_handle(handle)?.filter(|contact| !closed.contains(&contact.id)))
+}
+
 /// `text` on one line, without what shows nothing, cut.
 fn line(text: &str) -> String {
     let line: String = text
@@ -129,6 +146,7 @@ mod imp {
         CNAuthorizationStatus, CNContact, CNContactBirthdayKey, CNContactEmailAddressesKey,
         CNContactFamilyNameKey, CNContactGivenNameKey, CNContactIdentifierKey,
         CNContactPhoneNumbersKey, CNContactStore, CNEntityType, CNKeyDescriptor, CNLabeledValue,
+        CNPhoneNumber,
     };
     use objc2_foundation::{NSArray, NSDateComponentUndefined, NSError, NSString};
 
@@ -262,6 +280,27 @@ mod imp {
         }
     }
 
+    pub(super) fn of_handle(handle: &str) -> Result<Option<Contact>, ContactsError> {
+        let store = store()?;
+        // SAFETY: as in `find`; the number object lives across the call.
+        unsafe {
+            let predicate = if handle.contains('@') {
+                CNContact::predicateForContactsMatchingEmailAddress(&NSString::from_str(handle))
+            } else {
+                let Some(number) =
+                    CNPhoneNumber::phoneNumberWithStringValue(&NSString::from_str(handle))
+                else {
+                    return Ok(None);
+                };
+                CNContact::predicateForContactsMatchingPhoneNumber(&number)
+            };
+            let found = store
+                .unifiedContactsMatchingPredicate_keysToFetch_error(&predicate, &keys())
+                .map_err(|err| ContactsError::Failed(err.localizedDescription().to_string()))?;
+            Ok(found.iter().next().map(|contact| plain(&contact)))
+        }
+    }
+
     pub(super) fn get(id: &str) -> Result<Option<Contact>, ContactsError> {
         let store = store()?;
         // SAFETY: as in `find`.
@@ -290,6 +329,9 @@ mod imp {
     pub(super) fn get(_: &str) -> Result<Option<Contact>, ContactsError> {
         Err(ContactsError::Unsupported)
     }
+    pub(super) fn of_handle(_: &str) -> Result<Option<Contact>, ContactsError> {
+        Err(ContactsError::Unsupported)
+    }
 }
 
 #[cfg(test)]
@@ -306,6 +348,10 @@ mod tests {
             );
         }
         assert_eq!(get("x", &["x".into()]), Ok(None));
+        assert_eq!(
+            of_handle(" ", &[]),
+            Err(ContactsError::Invalid("no number or address"))
+        );
     }
 
     #[test]

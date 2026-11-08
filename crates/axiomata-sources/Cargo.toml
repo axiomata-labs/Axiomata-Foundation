@@ -13,6 +13,8 @@ rustix.workspace = true
 serde_json.workspace = true
 # What a delete keeps, to bring it back, travels as JSON (`calendar::delete`).
 serde.workspace = true
+# Messages' store, `chat.db`, opened read only (`imessage.rs`).
+rusqlite.workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"

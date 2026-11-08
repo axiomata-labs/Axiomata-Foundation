@@ -1,6 +1,10 @@
-//! Sending an iMessage (§8l S4c, Q16): to one number or address, through Messages'
-//! own scripting — a constant script, the values only as its arguments — and over iMessage only: one who cannot be
-//! reached there gets nothing, never an SMS in its place. Reading messages is not here (that is stage 5).
+//! iMessages (§8l S4c, §8m S5b). Sending to one number or address, through Messages' own scripting — a constant
+//! script, the values only as its arguments — and over iMessage only: one who cannot be reached there gets nothing,
+//! never an SMS in its place. Reading from Messages' own store, `~/Library/Messages/chat.db`, opened read only where it
+//! is (macOS lets an app read it only with Full Disk Access, which the owner grants by hand): the text of each message
+//! — decoded from Messages' archived form when it has no plain one —, who and when, and only the kind of an
+//! attachment, never the attachment. Reactions and the group's own notices are left out, and so is whoever the
+//! caller closed.
 
 use crate::calendar::invisible;
 
@@ -20,6 +24,8 @@ pub enum MessageError {
     TimedOut,
     /// Messages failed — the recipient may not be on iMessage; only the error's number, never its text.
     Failed(String),
+    /// Messages' store cannot be read: the app has no Full Disk Access.
+    NoDiskAccess,
 }
 
 impl std::fmt::Display for MessageError {
@@ -33,6 +39,10 @@ impl std::fmt::Display for MessageError {
             MessageError::Failed(why) => write!(
                 f,
                 "the message was not sent ({why}); the recipient may not be on iMessage"
+            ),
+            MessageError::NoDiskAccess => write!(
+                f,
+                "the messages cannot be read: allow Full Disk Access in System Settings → Privacy & Security"
             ),
         }
     }
@@ -154,6 +164,322 @@ fn run(_handle: &str, _text: &str) -> Result<(), MessageError> {
     Err(MessageError::Failed("macOS only".into()))
 }
 
+/// The most messages one read returns.
+pub const MAX_READ: usize = 50;
+/// The most messages of the time asked for one read looks through.
+const MAX_SCANNED: i64 = 5000;
+/// Seconds from 1970 to 2001, where Messages' clock starts.
+const APPLE_EPOCH: i64 = 978_307_200;
+/// The longest text kept of a message.
+const MAX_READ_CHARS: usize = 2000;
+/// How Messages marks a group chat (`chat.style`).
+const GROUP_STYLE: i64 = 43;
+/// The longest number or address kept.
+const MAX_HANDLE_CHARS: usize = 64;
+/// The digits a number needs to be compared by its national part only.
+const MIN_TAIL_DIGITS: usize = 9;
+
+/// A message as read.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Received {
+    pub id: i64,
+    /// The chat it is in.
+    pub chat: i64,
+    /// The group's name, for a message in a group chat (empty when the group has none).
+    pub group: Option<String>,
+    /// In a chat of two the other one's number or address (also for the owner's own messages); in a group the
+    /// sender's (empty for the owner's own).
+    pub handle: String,
+    pub from_me: bool,
+    /// Seconds since 1970.
+    pub at: i64,
+    /// Its text, on as many lines as it has; empty when it is only an attachment.
+    pub text: String,
+    /// The kind of its attachment, when it has one: "photo", "video", "voice", "file".
+    pub attachment: Option<&'static str>,
+    /// It came over iMessage, whose sender is the account's: an SMS forwarded to the Mac may carry any number.
+    pub imessage: bool,
+}
+
+/// What a read found.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Found {
+    /// The messages, the newest first.
+    pub messages: Vec<Received>,
+    /// Only the newest messages of the time asked were looked through: older ones may fit too.
+    pub capped: bool,
+}
+
+/// What to read.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Query {
+    /// Only these numbers and addresses (one person's); empty for every one.
+    pub handles: Vec<String>,
+    /// Only what came since then, seconds since 1970.
+    pub since: i64,
+    /// Only messages whose text holds this, ignoring case.
+    pub about: Option<String>,
+    /// At most this many, the newest; at most [`MAX_READ`].
+    pub limit: usize,
+}
+
+/// Where Messages keeps its messages.
+pub fn store_path() -> Option<std::path::PathBuf> {
+    std::env::home_dir().map(|home| home.join("Library/Messages/chat.db"))
+}
+
+/// Whether this app may read Messages' store: it has Full Disk Access.
+pub fn readable() -> bool {
+    open().and_then(|db| query_one(&db)).is_ok()
+}
+
+fn query_one(db: &rusqlite::Connection) -> Result<(), MessageError> {
+    db.query_row("SELECT 1 FROM message LIMIT 1", [], |_| Ok(()))
+        .or_else(|err| match err {
+            rusqlite::Error::QueryReturnedNoRows => Ok(()),
+            err => Err(store_error(&err)),
+        })
+}
+
+/// Messages' store, read only where it is: its journal (WAL) is read too, nothing is written.
+fn open() -> Result<rusqlite::Connection, MessageError> {
+    use rusqlite::OpenFlags;
+    let path = store_path().ok_or(MessageError::NoDiskAccess)?;
+    // Whether the app may look at all: without Full Disk Access even the file's size is refused.
+    if let Err(err) = std::fs::File::open(&path) {
+        return Err(match err.kind() {
+            std::io::ErrorKind::PermissionDenied => MessageError::NoDiskAccess,
+            _ => MessageError::Failed("Messages keeps no messages on this Mac".into()),
+        });
+    }
+    let db = rusqlite::Connection::open_with_flags(
+        &path,
+        OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
+    )
+    .map_err(|err| store_error(&err))?;
+    db.busy_timeout(std::time::Duration::from_secs(2))
+        .map_err(|err| store_error(&err))?;
+    // Read only twice over: no statement of this connection may write.
+    db.pragma_update(None, "query_only", true)
+        .map_err(|err| store_error(&err))?;
+    Ok(db)
+}
+
+/// A failure of the store as the caller is told it: no access, or only that it failed — the file itself could be
+/// opened before, so a failure here is no missing Full Disk Access unless the system says so.
+fn store_error(err: &rusqlite::Error) -> MessageError {
+    let text = err.to_string().to_lowercase();
+    if text.contains("authoriz") || text.contains("not permitted") {
+        MessageError::NoDiskAccess
+    } else {
+        MessageError::Failed("Messages' store could not be read".into())
+    }
+}
+
+/// Reads what `query` asks for, the newest first; never a message of a `closed` number or address.
+///
+/// # Errors
+///
+/// [`MessageError::NoDiskAccess`] without Full Disk Access, [`MessageError::Failed`] when the store fails.
+pub fn read(query: &Query, closed: &[String]) -> Result<Found, MessageError> {
+    read_from(&open()?, query, closed)
+}
+
+/// [`read`] on the store `db`.
+fn read_from(
+    db: &rusqlite::Connection,
+    query: &Query,
+    closed: &[String],
+) -> Result<Found, MessageError> {
+    let since = (query.since - APPLE_EPOCH)
+        .max(0)
+        .saturating_mul(1_000_000_000);
+    let mut rows = db
+        .prepare(
+            "SELECT m.ROWID, m.text, m.attributedBody, m.date, m.is_from_me, COALESCE(h.id, ''), c.ROWID, c.style,
+                    COALESCE(c.display_name, ''), COALESCE(c.chat_identifier, ''),
+                    (SELECT a.mime_type FROM message_attachment_join j JOIN attachment a ON a.ROWID = j.attachment_id
+                     WHERE j.message_id = m.ROWID LIMIT 1),
+                    m.cache_has_attachments, COALESCE(m.service, '')
+             FROM message m
+             JOIN chat_message_join cm ON cm.message_id = m.ROWID
+             JOIN chat c ON c.ROWID = cm.chat_id
+             LEFT JOIN handle h ON h.ROWID = m.handle_id
+             WHERE m.date >= ?1 AND m.associated_message_type = 0 AND m.item_type = 0
+             ORDER BY m.date DESC LIMIT ?2",
+        )
+        .map_err(|err| store_error(&err))?;
+    let limit = query.limit.clamp(1, MAX_READ);
+    let about = query.about.as_ref().map(|about| about.to_lowercase());
+    let mut found = Vec::new();
+    let mut seen: i64 = 0;
+    let mut scanned = rows
+        .query(rusqlite::params![since, MAX_SCANNED])
+        .map_err(|err| store_error(&err))?;
+    while let Some(row) = scanned.next().map_err(|err| store_error(&err))? {
+        seen += 1;
+        let get = |n: usize| -> Option<String> { row.get::<_, Option<String>>(n).ok().flatten() };
+        let style: i64 = row.get(7).unwrap_or(0);
+        let group = style == GROUP_STYLE;
+        let sender = get(5).unwrap_or_default();
+        let handle = if group || !sender.is_empty() {
+            sender
+        } else {
+            get(9).unwrap_or_default()
+        };
+        let handle: String = clean(&handle).chars().take(MAX_HANDLE_CHARS).collect();
+        if !handle.is_empty() && closed.iter().any(|closed| same_handle(closed, &handle)) {
+            continue;
+        }
+        if !query.handles.is_empty()
+            && !query
+                .handles
+                .iter()
+                .any(|wanted| same_handle(wanted, &handle))
+        {
+            continue;
+        }
+        let text = get(1)
+            .filter(|text| !text.trim().is_empty())
+            .or_else(|| {
+                row.get::<_, Option<Vec<u8>>>(2)
+                    .ok()
+                    .flatten()
+                    .and_then(|blob| body_text(&blob))
+            })
+            .map(|text| clean(&text))
+            .unwrap_or_default();
+        let has_attachment = row.get::<_, Option<i64>>(11).ok().flatten().unwrap_or(0) != 0;
+        let attachment = has_attachment.then(|| kind_of(get(10).as_deref().unwrap_or("")));
+        if text.is_empty() && attachment.is_none() {
+            continue;
+        }
+        if let Some(about) = &about
+            && !text.to_lowercase().contains(about.as_str())
+        {
+            continue;
+        }
+        let date: i64 = row.get(3).unwrap_or(0);
+        // Older stores count seconds, newer ones nanoseconds.
+        let seconds = if date > 1_000_000_000_000 {
+            date / 1_000_000_000
+        } else {
+            date
+        };
+        found.push(Received {
+            id: row.get(0).unwrap_or(0),
+            chat: row.get(6).unwrap_or(0),
+            group: group.then(|| clean(&get(8).unwrap_or_default())),
+            handle,
+            from_me: row.get::<_, i64>(4).unwrap_or(0) != 0,
+            at: seconds + APPLE_EPOCH,
+            text,
+            attachment,
+            imessage: get(12).is_some_and(|service| service.eq_ignore_ascii_case("iMessage")),
+        });
+        if found.len() >= limit {
+            break;
+        }
+    }
+    Ok(Found {
+        capped: found.len() < limit && seen >= MAX_SCANNED,
+        messages: found,
+    })
+}
+
+/// Whether two numbers or addresses are the same one's: an address ignoring case; two numbers with their country
+/// code all their digits; a number written without one ("0171 1234567") by its last nine digits against the other
+/// ("+491711234567") — never a short one.
+pub fn same_handle(a: &str, b: &str) -> bool {
+    if a.contains('@') || b.contains('@') {
+        return a.trim().eq_ignore_ascii_case(b.trim());
+    }
+    // Digits, and whether they begin with the country ("+49", "0049").
+    let number = |text: &str| -> (String, bool) {
+        let text = text.trim();
+        let digits: String = text.chars().filter(char::is_ascii_digit).collect();
+        if text.starts_with('+') {
+            (digits, true)
+        } else if let Some(rest) = digits.strip_prefix("00") {
+            (rest.to_owned(), true)
+        } else {
+            (digits, false)
+        }
+    };
+    let ((a, a_country), (b, b_country)) = (number(a), number(b));
+    if a.len() < 7 || b.len() < 7 {
+        return false;
+    }
+    if a_country && b_country {
+        return a == b;
+    }
+    if a.len() < MIN_TAIL_DIGITS || b.len() < MIN_TAIL_DIGITS {
+        return a == b;
+    }
+    a[a.len() - MIN_TAIL_DIGITS..] == b[b.len() - MIN_TAIL_DIGITS..]
+}
+
+/// What kind of attachment a MIME type is.
+fn kind_of(mime: &str) -> &'static str {
+    if mime.starts_with("image/") {
+        "photo"
+    } else if mime.starts_with("video/") {
+        "video"
+    } else if mime.starts_with("audio/") {
+        "voice"
+    } else {
+        "file"
+    }
+}
+
+/// A message's text without what shows nothing and without the placeholder of an inline attachment, cut.
+fn clean(text: &str) -> String {
+    text.chars()
+        .filter(|&c| !invisible(c) && c != '\u{fffc}' && (!c.is_control() || c == '\n'))
+        .take(MAX_READ_CHARS)
+        .collect::<String>()
+        .trim()
+        .to_owned()
+}
+
+/// The text of a message in Messages' archived form (`attributedBody`, an `NSAttributedString` in Apple's
+/// typedstream): the string that follows the class name `NSString` — after the type mark `+` its length (one byte,
+/// or `0x81` and two bytes, or `0x82` and four, little endian), then its UTF-8. `None` when it holds none.
+pub fn body_text(blob: &[u8]) -> Option<String> {
+    const CLASS: &[u8] = b"NSString";
+    let at = blob
+        .windows(CLASS.len())
+        .position(|window| window == CLASS)?
+        + CLASS.len();
+    // The `+` that opens the string comes a few bytes after the class name.
+    let plus = blob
+        .get(at..(at + 16).min(blob.len()))?
+        .iter()
+        .position(|&b| b == b'+')?
+        + at
+        + 1;
+    let (length, start) = match *blob.get(plus)? {
+        0x81 => (
+            usize::from(u16::from_le_bytes([
+                *blob.get(plus + 1)?,
+                *blob.get(plus + 2)?,
+            ])),
+            plus + 3,
+        ),
+        0x82 => {
+            let bytes: [u8; 4] = blob.get(plus + 1..plus + 5)?.try_into().ok()?;
+            (u32::from_le_bytes(bytes) as usize, plus + 5)
+        }
+        // Any other mark above 0x7f is no length.
+        0x80..=0xff => return None,
+        short => (usize::from(short), plus + 1),
+    };
+    let text = blob.get(start..start.checked_add(length)?)?;
+    String::from_utf8(text.to_vec())
+        .ok()
+        .filter(|text| !text.is_empty())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -182,5 +508,169 @@ mod tests {
         assert!(send("+49 171 1234567", "").is_err());
         assert!(send("+49 171 1234567", "Hallo\u{200b}").is_err());
         assert!(send("jonas", "Hallo").is_err());
+    }
+
+    /// An attributed body as Messages archives it: the class name, a few type bytes, `+`, the length, the text.
+    fn archived(text: &str) -> Vec<u8> {
+        let mut blob =
+            b"\x04\x0bstreamtyped\x81\xe8\x03\x84\x01@\x84\x84\x84\x12NSAttributedString\x00"
+                .to_vec();
+        blob.extend_from_slice(
+            b"\x84\x84\x08NSObject\x00\x85\x92\x84\x84\x84\x08NSString\x01\x94\x84\x01+",
+        );
+        let bytes = text.as_bytes();
+        match bytes.len() {
+            0..=0x7f => blob.push(bytes.len() as u8),
+            len if len <= 0xffff => {
+                blob.push(0x81);
+                blob.extend_from_slice(&(len as u16).to_le_bytes());
+            }
+            len => {
+                blob.push(0x82);
+                blob.extend_from_slice(&(len as u32).to_le_bytes());
+            }
+        }
+        blob.extend_from_slice(bytes);
+        blob.extend_from_slice(b"\x86\x84\x02iI\x01");
+        blob
+    }
+
+    #[test]
+    fn the_text_of_an_archived_body_is_read_whatever_its_length() {
+        assert_eq!(
+            body_text(&archived("Hallo 👋")).as_deref(),
+            Some("Hallo 👋")
+        );
+        let long = "x".repeat(300);
+        assert_eq!(body_text(&archived(&long)), Some(long));
+        let longer = "y".repeat(70_000);
+        assert_eq!(body_text(&archived(&longer)), Some(longer));
+        assert_eq!(body_text(b"no string here"), None);
+        // A mark that is no length, and a class name at the very end.
+        let mut odd = archived("x");
+        let at = odd.iter().position(|&b| b == b'+').unwrap() + 1;
+        odd[at] = 0x85;
+        assert_eq!(body_text(&odd), None);
+        assert_eq!(body_text(b"NSString\x01+\x02hi"), Some("hi".into()));
+        // A length past the end is no text.
+        let mut cut = archived("Hallo");
+        cut.truncate(cut.len() - 9);
+        assert_eq!(body_text(&cut), None);
+        assert_eq!(clean("Foto \u{fffc} da\u{200b}"), "Foto  da");
+    }
+
+    #[test]
+    fn a_number_is_the_same_one_however_it_is_written() {
+        assert!(same_handle("0171 1234567", "+491711234567"));
+        assert!(same_handle("0049 171 1234567", "+491711234567"));
+        assert!(same_handle("Jonas@Example.com", "jonas@example.com"));
+        assert!(!same_handle("+491711234567", "+491711234568"));
+        // Another country is another one, and a short number is only itself.
+        assert!(!same_handle("+49 171 1234567", "+43 171 1234567"));
+        assert!(!same_handle("1234567", "+491711234567"));
+        assert!(same_handle("1234567", "123 4567"));
+        assert!(!same_handle("123", "0123"));
+        assert!(!same_handle("jonas@example.com", "+491711234567"));
+    }
+
+    /// A store with Messages' tables as far as `read` uses them.
+    fn store() -> rusqlite::Connection {
+        let db = rusqlite::Connection::open_in_memory().unwrap();
+        db.execute_batch(
+            "CREATE TABLE handle (ROWID INTEGER PRIMARY KEY, id TEXT);
+             CREATE TABLE chat (ROWID INTEGER PRIMARY KEY, style INTEGER, display_name TEXT, chat_identifier TEXT);
+             CREATE TABLE message (ROWID INTEGER PRIMARY KEY, text TEXT, attributedBody BLOB, date INTEGER,
+                 is_from_me INTEGER, handle_id INTEGER, associated_message_type INTEGER, item_type INTEGER,
+                 cache_has_attachments INTEGER, service TEXT);
+             CREATE TABLE chat_message_join (chat_id INTEGER, message_id INTEGER);
+             CREATE TABLE attachment (ROWID INTEGER PRIMARY KEY, mime_type TEXT);
+             CREATE TABLE message_attachment_join (message_id INTEGER, attachment_id INTEGER);
+             INSERT INTO handle VALUES (1, '+491711234567'), (2, '+491607654321');
+             INSERT INTO chat VALUES (1, 45, NULL, '+491711234567'), (2, 43, 'Familie', 'chat123');
+             INSERT INTO attachment VALUES (1, 'image/jpeg');",
+        )
+        .unwrap();
+        let day = 815_000_000_i64 * 1_000_000_000;
+        let add = |id: i64,
+                       chat: i64,
+                       handle: i64,
+                       from_me: bool,
+                       text: Option<&str>,
+                       blob: Option<Vec<u8>>| {
+            db.execute(
+                "INSERT INTO message VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0, 0, 0, 'iMessage')",
+                rusqlite::params![id, text, blob, day + id * 60_000_000_000, from_me, handle],
+            )
+            .unwrap();
+            db.execute("INSERT INTO chat_message_join VALUES (?1, ?2)", [chat, id])
+                .unwrap();
+        };
+        add(1, 1, 1, false, Some("Kommst du morgen?"), None);
+        add(2, 1, 0, true, None, Some(archived("Ja, gern!")));
+        add(3, 2, 2, false, Some("Frühstück um 9?"), None);
+        add(4, 2, 0, true, Some("Bin dabei"), None);
+        add(5, 1, 1, false, None, None);
+        db.execute_batch(
+            "UPDATE message SET cache_has_attachments = 1 WHERE ROWID = 5;
+             INSERT INTO message_attachment_join VALUES (5, 1);
+             INSERT INTO message VALUES (6, 'Gefällt mir', NULL, 0, 0, 1, 2000, 0, 0, 'iMessage');
+             INSERT INTO chat_message_join VALUES (1, 6);
+             UPDATE message SET service = 'SMS' WHERE ROWID = 3;",
+        )
+        .unwrap();
+        db
+    }
+
+    #[test]
+    fn the_store_is_read_newest_first_without_reactions_and_closed_ones() {
+        let db = store();
+        let all = Query {
+            limit: MAX_READ,
+            ..Query::default()
+        };
+        let found = read_from(&db, &all, &[]).unwrap();
+        let ids: Vec<i64> = found.messages.iter().map(|m| m.id).collect();
+        assert_eq!(ids, [5, 4, 3, 2, 1], "reactions are left out");
+        let by_id = |id: i64| found.messages.iter().find(|m| m.id == id).unwrap().clone();
+        // The owner's own in a chat of two names the other one; in a group, nobody.
+        assert_eq!(by_id(2).handle, "+491711234567");
+        assert_eq!(by_id(2).text, "Ja, gern!");
+        assert!(by_id(2).from_me);
+        assert_eq!(by_id(4).handle, "");
+        assert_eq!(by_id(3).group.as_deref(), Some("Familie"));
+        assert!(!by_id(3).imessage, "an SMS is no iMessage");
+        assert_eq!(by_id(5).attachment, Some("photo"));
+        assert_eq!(by_id(1).at, 815_000_060 + APPLE_EPOCH);
+        // One person's, a word, and never a closed one.
+        let jonas = Query {
+            handles: vec!["0171 1234567".into()],
+            ..all.clone()
+        };
+        assert_eq!(read_from(&db, &jonas, &[]).unwrap().messages.len(), 3);
+        let word = Query {
+            about: Some("FRÜHSTÜCK".into()),
+            ..all.clone()
+        };
+        assert_eq!(read_from(&db, &word, &[]).unwrap().messages[0].id, 3);
+        let closed = read_from(&db, &all, &["+49 171 1234567".into()]).unwrap();
+        assert!(closed.messages.iter().all(|m| m.chat == 2));
+        assert!(!closed.capped);
+    }
+
+    #[test]
+    #[ignore = "reads this Mac's messages; run by hand with Full Disk Access — prints only counts"]
+    fn on_this_mac() {
+        let query = Query {
+            since: 0,
+            limit: MAX_READ,
+            ..Query::default()
+        };
+        let found = read(&query, &[]).unwrap().messages;
+        let decoded = found.iter().filter(|m| !m.text.is_empty()).count();
+        let over_imessage = found.iter().filter(|m| m.imessage).count();
+        eprintln!(
+            "{} messages read, {decoded} with text, {over_imessage} over iMessage",
+            found.len()
+        );
     }
 }

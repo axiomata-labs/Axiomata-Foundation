@@ -30,3 +30,6 @@ rustix = { version = "1.1", default-features = false, features = ["std", "fs"] }
 # FSEvents on macOS. What an event *means* (modified/deleted/created, judged
 # by content version after a debounce) is our own code in `watch.rs`.
 notify = "8"
+# Reading Messages' own store, `chat.db`, read only (`axiomata-sources::imessage`, Lirvel §8m S5b). The version
+# Axiomata-OS and Lirvel use, bundled: one SQLite in every app built on these crates.
+rusqlite = { version = "0.32", features = ["bundled"] }
