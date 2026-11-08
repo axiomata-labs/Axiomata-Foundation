@@ -592,11 +592,11 @@ mod tests {
         .unwrap();
         let day = 815_000_000_i64 * 1_000_000_000;
         let add = |id: i64,
-                       chat: i64,
-                       handle: i64,
-                       from_me: bool,
-                       text: Option<&str>,
-                       blob: Option<Vec<u8>>| {
+                   chat: i64,
+                   handle: i64,
+                   from_me: bool,
+                   text: Option<&str>,
+                   blob: Option<Vec<u8>>| {
             db.execute(
                 "INSERT INTO message VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0, 0, 0, 'iMessage')",
                 rusqlite::params![id, text, blob, day + id * 60_000_000_000, from_me, handle],
