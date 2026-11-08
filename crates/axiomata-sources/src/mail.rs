@@ -326,7 +326,8 @@ pub fn plain_address(address: &str) -> bool {
 }
 
 /// Answers message `id` in the inbox of `account` with `text` — to its sender alone, as a real answer — and sends it,
-/// or (`send` false) opens it in a window for the owner to send. Not to a closed account or sender.
+/// or (`send` false) opens it in a window for the owner to send. Not to a closed account or sender, and only while
+/// its sender is still `expected_to`, the one the owner was told.
 ///
 /// # Errors
 ///
@@ -334,6 +335,7 @@ pub fn plain_address(address: &str) -> bool {
 pub fn reply(
     account: &str,
     id: i64,
+    expected_to: &str,
     text: &str,
     send: bool,
     closed: &Closed<'_>,
@@ -345,8 +347,15 @@ pub fn reply(
     }
     // The message must be one the owner may read: its sender checked against the closed ones as it is now.
     let found = messages(account, &[id], closed)?;
-    if !matches!(found.first(), Some(Some(_))) {
+    let Some(Some(message)) = found.first() else {
         return Err(MailError::Invalid("there is no such message"));
+    };
+    // The answer goes to the sender (the script refuses a differing Reply-To): the one the owner was told, still.
+    if !message
+        .from_address
+        .eq_ignore_ascii_case(expected_to.trim())
+    {
+        return Err(MailError::Invalid("that message is from someone else now"));
     }
     let answer = run(
         &[
@@ -737,7 +746,7 @@ mod tests {
         assert!(send_new(None, "a@b", "s", "t", false).is_err());
         assert!(send_new(None, "a@b.de", "s\nBcc: x", "t", false).is_err());
         assert!(send_new(None, "a@b.de", "s", "t\u{200b}", false).is_err());
-        assert!(reply("iCloud", 1, "", false, &Closed::default()).is_err());
+        assert!(reply("iCloud", 1, "x@example.com", "", false, &Closed::default()).is_err());
     }
 
     #[test]
