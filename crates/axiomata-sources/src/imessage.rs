@@ -1,5 +1,6 @@
-//! iMessages (§8l S4c, §8m S5b). Sending to one number or address, through Messages' own scripting — a constant
-//! script, the values only as its arguments — and over iMessage only: one who cannot be reached there gets nothing,
+//! iMessages (§8l S4c, §8m S5b). Sending to one number or address, or into an existing group chat by its id (Lirvel
+//! #160), through Messages' own scripting — a constant script, the values only as its arguments — and over iMessage
+//! only: one who cannot be reached there gets nothing,
 //! never an SMS in its place. Reading from Messages' own store, `~/Library/Messages/chat.db`, opened read only where it
 //! is (macOS lets an app read it only with Full Disk Access, which the owner grants by hand): the text of each message
 //! — decoded from Messages' archived form when it has no plain one —, who and when, and only the kind of an
@@ -65,6 +66,144 @@ on run argv
 end run
 "#;
 
+/// The script for a group chat: its id and the text are the arguments; an existing chat only, never a new one.
+#[cfg(target_os = "macos")]
+const GROUP_SCRIPT: &str = r#"
+on run argv
+  set theChat to item 1 of argv
+  set theText to item 2 of argv
+  tell application "Messages"
+    send theText to chat id theChat
+  end tell
+  return "sent"
+end run
+"#;
+
+/// The longest id of a chat taken.
+const MAX_GUID_CHARS: usize = 80;
+
+/// Whether `guid` is the id of an iMessage chat as Messages keeps it (`iMessage;+;chat123…`, newer Macs `any;+;…`):
+/// never an SMS one, and nothing `osascript` could read as an option.
+pub fn plain_chat_guid(guid: &str) -> bool {
+    let mut parts = guid.split(';');
+    let (Some(service), Some(kind), Some(id), None) =
+        (parts.next(), parts.next(), parts.next(), parts.next())
+    else {
+        return false;
+    };
+    matches!(service, "iMessage" | "any")
+        && kind == "+"
+        && guid.len() <= MAX_GUID_CHARS
+        && id.starts_with("chat")
+        && id.len() > 4
+        && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+}
+
+/// A group chat as Messages keeps it: what a message into it goes by, and who reads it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Group {
+    /// The chat's row, as [`Received::chat`] names it.
+    pub chat: i64,
+    /// Messages' id of the chat, [`plain_chat_guid`].
+    pub guid: String,
+    /// Its name; empty when it has none.
+    pub name: String,
+    /// The others in it, by number or address.
+    pub members: Vec<String>,
+}
+
+/// The most members of a group told.
+const MAX_MEMBERS: usize = 100;
+
+/// The group chat of row `chat`; `None` when there is none, it is no group, or not an iMessage one.
+///
+/// # Errors
+///
+/// [`MessageError::NoDiskAccess`] without Full Disk Access, [`MessageError::Failed`] when the store fails.
+pub fn group(chat: i64) -> Result<Option<Group>, MessageError> {
+    group_from(&open()?, chat)
+}
+
+/// [`group`] on the store `db`.
+fn group_from(db: &rusqlite::Connection, chat: i64) -> Result<Option<Group>, MessageError> {
+    let row = db.query_row(
+        "SELECT COALESCE(guid, ''), style, COALESCE(display_name, ''), COALESCE(service_name, '')
+         FROM chat WHERE ROWID = ?1",
+        [chat],
+        |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, i64>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+            ))
+        },
+    );
+    let (guid, style, name, service) = match row {
+        Ok(row) => row,
+        Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+        Err(err) => return Err(store_error(&err)),
+    };
+    // The id's prefix is no proof: newer Macs write "any;" for SMS and RCS groups too — the chat's service decides.
+    if style != GROUP_STYLE || !plain_chat_guid(&guid) || service != "iMessage" {
+        return Ok(None);
+    }
+    let mut statement = db
+        .prepare(
+            "SELECT COALESCE(h.id, '') FROM chat_handle_join j JOIN handle h ON h.ROWID = j.handle_id
+             WHERE j.chat_id = ?1 ORDER BY h.ROWID LIMIT ?2",
+        )
+        .map_err(|err| store_error(&err))?;
+    let members = statement
+        .query_map(rusqlite::params![chat, MAX_MEMBERS as i64], |row| {
+            row.get::<_, String>(0)
+        })
+        .map_err(|err| store_error(&err))?
+        .filter_map(Result::ok)
+        .map(|handle| {
+            clean(&handle)
+                .chars()
+                .take(MAX_HANDLE_CHARS)
+                .collect::<String>()
+        })
+        .filter(|handle| !handle.is_empty())
+        .collect();
+    Ok(Some(Group {
+        chat,
+        guid,
+        name: clean(&name),
+        members,
+    }))
+}
+
+/// Sends `text` into the existing group chat `guid` over iMessage.
+///
+/// # Errors
+///
+/// [`MessageError::Invalid`] for a chat id or text that may not go out, else see [`MessageError`].
+pub fn send_to_group(guid: &str, text: &str) -> Result<(), MessageError> {
+    if !plain_chat_guid(guid) {
+        return Err(MessageError::Invalid("no iMessage group chat"));
+    }
+    check_text(text)?;
+    run_script(GROUP_SCRIPT, guid, text)
+}
+
+/// Whether `text` may go out: not empty, not too long, nothing hidden in it.
+fn check_text(text: &str) -> Result<(), MessageError> {
+    if text.trim().is_empty()
+        || text.chars().count() > MAX_TEXT_CHARS
+        || text
+            .chars()
+            .any(|c| (c.is_control() && c != '\n') || invisible(c))
+    {
+        return Err(MessageError::Invalid(
+            "the text is empty, too long, or holds hidden characters",
+        ));
+    }
+    Ok(())
+}
+
 /// Whether `handle` is one phone number (a digit, `+` or `(` first, then digits, spaces, dashes, brackets) or one mail
 /// address — never anything `osascript` could read as an option.
 pub fn plain_handle(handle: &str) -> bool {
@@ -89,29 +228,31 @@ pub fn send(handle: &str, text: &str) -> Result<(), MessageError> {
     if !plain_handle(handle) {
         return Err(MessageError::Invalid("no plain number or address"));
     }
-    if text.trim().is_empty()
-        || text.chars().count() > MAX_TEXT_CHARS
-        || text
-            .chars()
-            .any(|c| (c.is_control() && c != '\n') || invisible(c))
-    {
-        return Err(MessageError::Invalid(
-            "the text is empty, too long, or holds hidden characters",
-        ));
-    }
+    check_text(text)?;
     run(handle.trim(), text)
 }
 
 #[cfg(target_os = "macos")]
 fn run(handle: &str, text: &str) -> Result<(), MessageError> {
+    run_script(SCRIPT, handle, text)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn run(_handle: &str, _text: &str) -> Result<(), MessageError> {
+    Err(MessageError::Failed("macOS only".into()))
+}
+
+/// Runs `script` with its two arguments, waiting at most [`TIMEOUT`].
+#[cfg(target_os = "macos")]
+fn run_script(script: &str, first: &str, text: &str) -> Result<(), MessageError> {
     use std::io::Read as _;
     use std::process::{Command, Stdio};
     use std::time::{Duration, Instant};
 
     let mut child = Command::new("/usr/bin/osascript")
         .arg("-e")
-        .arg(SCRIPT)
-        .arg(handle)
+        .arg(script)
+        .arg(first)
         .arg(text)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
@@ -160,7 +301,7 @@ fn run(handle: &str, text: &str) -> Result<(), MessageError> {
 }
 
 #[cfg(not(target_os = "macos"))]
-fn run(_handle: &str, _text: &str) -> Result<(), MessageError> {
+fn run_script(_script: &str, _first: &str, _text: &str) -> Result<(), MessageError> {
     Err(MessageError::Failed("macOS only".into()))
 }
 
@@ -573,12 +714,50 @@ mod tests {
         assert!(!same_handle("jonas@example.com", "+491711234567"));
     }
 
+    #[test]
+    fn only_an_imessage_group_chats_id_goes_to_messages() {
+        assert!(plain_chat_guid("iMessage;+;chat123456789"));
+        assert!(plain_chat_guid("any;+;chat0A1b-2"));
+        // An SMS group, a chat of two, an option, a script.
+        assert!(!plain_chat_guid("SMS;+;chat123"));
+        assert!(!plain_chat_guid("iMessage;-;+491711234567"));
+        assert!(!plain_chat_guid("-e;+;chat1"));
+        assert!(!plain_chat_guid("iMessage;+;chat1\" & quit"));
+        assert!(!plain_chat_guid("iMessage;+;chat"));
+        assert!(!plain_chat_guid("iMessage;+;chat1;x"));
+        assert_eq!(
+            send_to_group("SMS;+;chat1", "Hallo"),
+            Err(MessageError::Invalid("no iMessage group chat"))
+        );
+        assert!(matches!(
+            send_to_group("iMessage;+;chat1", "  "),
+            Err(MessageError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn a_group_is_read_with_its_id_name_and_members_never_an_sms_one() {
+        let db = store();
+        let family = group_from(&db, 2).unwrap().unwrap();
+        assert_eq!(family.guid, "iMessage;+;chat123");
+        assert_eq!(family.name, "Familie");
+        assert_eq!(family.members, ["+491711234567", "+491607654321"]);
+        // A chat of two is no group; an SMS group is none she writes into; a gone one is none.
+        assert_eq!(group_from(&db, 1).unwrap(), None);
+        assert_eq!(group_from(&db, 3).unwrap(), None);
+        // An "any;" id of an SMS group is none either: the chat's service decides.
+        assert_eq!(group_from(&db, 4).unwrap(), None);
+        assert_eq!(group_from(&db, 99).unwrap(), None);
+    }
+
     /// A store with Messages' tables as far as `read` uses them.
     fn store() -> rusqlite::Connection {
         let db = rusqlite::Connection::open_in_memory().unwrap();
         db.execute_batch(
             "CREATE TABLE handle (ROWID INTEGER PRIMARY KEY, id TEXT);
-             CREATE TABLE chat (ROWID INTEGER PRIMARY KEY, style INTEGER, display_name TEXT, chat_identifier TEXT);
+             CREATE TABLE chat (ROWID INTEGER PRIMARY KEY, style INTEGER, display_name TEXT, chat_identifier TEXT,
+                 guid TEXT, service_name TEXT);
+             CREATE TABLE chat_handle_join (chat_id INTEGER, handle_id INTEGER);
              CREATE TABLE message (ROWID INTEGER PRIMARY KEY, text TEXT, attributedBody BLOB, date INTEGER,
                  is_from_me INTEGER, handle_id INTEGER, associated_message_type INTEGER, item_type INTEGER,
                  cache_has_attachments INTEGER, service TEXT);
@@ -586,7 +765,11 @@ mod tests {
              CREATE TABLE attachment (ROWID INTEGER PRIMARY KEY, mime_type TEXT);
              CREATE TABLE message_attachment_join (message_id INTEGER, attachment_id INTEGER);
              INSERT INTO handle VALUES (1, '+491711234567'), (2, '+491607654321');
-             INSERT INTO chat VALUES (1, 45, NULL, '+491711234567'), (2, 43, 'Familie', 'chat123');
+             INSERT INTO chat VALUES (1, 45, NULL, '+491711234567', 'iMessage;-;+491711234567', 'iMessage'),
+                 (2, 43, 'Familie', 'chat123', 'iMessage;+;chat123', 'iMessage'),
+                 (3, 43, 'Verein', 'chat9', 'SMS;+;chat9', 'SMS'),
+                 (4, 43, 'Nachbarn', 'chat4', 'any;+;chat4', 'SMS');
+             INSERT INTO chat_handle_join VALUES (2, 1), (2, 2), (3, 1), (4, 2);
              INSERT INTO attachment VALUES (1, 'image/jpeg');",
         )
         .unwrap();
