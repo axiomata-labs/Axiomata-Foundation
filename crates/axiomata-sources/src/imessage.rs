@@ -82,6 +82,23 @@ on run argv
 end run
 "#;
 
+/// The script for an RCS message over the iPhone: the handle and the text are its arguments. A number whose chat runs
+/// over RCS gets it there: sent as SMS instead, it arrives, but Messages marks it red, "Nicht zugestellt", because no
+/// report comes back (owner, 2026-11-12) — and that red misleads whoever reads the chat afterwards.
+#[cfg(target_os = "macos")]
+const RCS_SCRIPT: &str = r#"
+on run argv
+  set theHandle to item 1 of argv
+  set theText to item 2 of argv
+  tell application "Messages"
+    set theService to 1st account whose service type = RCS
+    set theBuddy to participant theHandle of theService
+    send theText to theBuddy
+  end tell
+  return "sent"
+end run
+"#;
+
 /// The script for a group chat: its id and the text are the arguments; an existing chat only, never a new one.
 #[cfg(target_os = "macos")]
 const GROUP_SCRIPT: &str = r#"
@@ -238,7 +255,7 @@ pub fn plain_handle(handle: &str) -> bool {
 /// How a message to one person went out.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Delivery {
-    /// It went as a text message over the iPhone, not over iMessage.
+    /// It went as a text message over the iPhone (SMS or RCS), not over iMessage.
     pub sms: bool,
     /// Messages' store says it was sent; `false` when the store could not be read (no Full Disk Access) or Messages
     /// had not answered yet — then it was handed over, nothing more is known.
@@ -261,7 +278,8 @@ enum Fate {
 }
 
 /// Sends `text` to `handle` as the owner's Messages would: over iMessage, as a text message over the iPhone when the
-/// number only ever had text messages or iMessage cannot deliver it.
+/// number only ever had text messages or iMessage cannot deliver it — over RCS first when the number has had RCS,
+/// as an SMS when RCS cannot take it.
 ///
 /// # Errors
 ///
@@ -274,9 +292,11 @@ pub fn send(handle: &str, text: &str) -> Result<Delivery, MessageError> {
     check_text(text)?;
     let handle = handle.trim();
     // A number that only ever had text messages gets one: iMessage would fail on it, red, after a while.
-    let only_sms =
-        !handle.contains('@') && services(handle).is_ok_and(|(imessage, sms)| sms && !imessage);
-    if !only_sms {
+    let known = services(handle).ok();
+    let only_text = !handle.contains('@')
+        && known.is_some_and(|(imessage, sms, rcs)| (sms || rcs) && !imessage);
+    let rcs_first = known.is_some_and(|(_, _, rcs)| rcs);
+    if !only_text {
         let before = last_row();
         match run_script_of(Way::IMessage, handle, text) {
             Ok(()) => match watch(handle, text, before) {
@@ -314,6 +334,38 @@ pub fn send(handle: &str, text: &str) -> Result<Delivery, MessageError> {
             "iMessage could not deliver it, and an address takes no text message".into(),
         ));
     }
+    if rcs_first {
+        let before = last_row();
+        let ran = run_script_of(Way::Rcs, handle, text);
+        match ran {
+            Err(MessageError::TimedOut) => return Err(MessageError::TimedOut),
+            Err(MessageError::NotAllowed) => return Err(MessageError::NotAllowed),
+            _ => {}
+        }
+        // Even when the script failed, Messages may have taken it: watched before anything goes again.
+        match watch(handle, text, before) {
+            Fate::Sent => {
+                return Ok(Delivery {
+                    sms: true,
+                    confirmed: true,
+                });
+            }
+            // Red over RCS is no proof it did not arrive (the very case above): no second copy as SMS.
+            Fate::Failed(code) => {
+                return Err(MessageError::Failed(format!(
+                    "RCS reports it not delivered (error {code}); not sent again as SMS, so no copy goes twice"
+                )));
+            }
+            Fate::Waiting if ran.is_ok() => {
+                return Ok(Delivery {
+                    sms: true,
+                    confirmed: false,
+                });
+            }
+            // No RCS account on this Mac, and nothing of it in the store: as an SMS.
+            Fate::Waiting => {}
+        }
+    }
     let before = last_row();
     run_script_of(Way::Sms, handle, text)?;
     match watch(handle, text, before) {
@@ -332,11 +384,12 @@ pub fn send(handle: &str, text: &str) -> Result<Delivery, MessageError> {
     }
 }
 
-/// The two ways a message to one person goes.
+/// The ways a message to one person goes.
 #[derive(Clone, Copy)]
 enum Way {
     IMessage,
     Sms,
+    Rcs,
 }
 
 #[cfg(target_os = "macos")]
@@ -344,6 +397,7 @@ fn run_script_of(way: Way, handle: &str, text: &str) -> Result<(), MessageError>
     match way {
         Way::IMessage => run_script(SCRIPT, handle, text),
         Way::Sms => run_script(SMS_SCRIPT, handle, text),
+        Way::Rcs => run_script(RCS_SCRIPT, handle, text),
     }
 }
 
@@ -366,8 +420,8 @@ fn last_row() -> i64 {
         .unwrap_or(i64::MAX)
 }
 
-/// Whether `handle` has had iMessage, and text messages, in Messages' store.
-fn services(handle: &str) -> Result<(bool, bool), MessageError> {
+/// Whether `handle` has had iMessage, SMS and RCS messages in Messages' store.
+fn services(handle: &str) -> Result<(bool, bool, bool), MessageError> {
     let db = open()?;
     let mut statement = db
         .prepare("SELECT id, service FROM handle")
@@ -377,14 +431,15 @@ fn services(handle: &str) -> Result<(bool, bool), MessageError> {
             Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
         })
         .map_err(|err| store_error(&err))?;
-    let (mut imessage, mut sms) = (false, false);
+    let (mut imessage, mut sms, mut rcs) = (false, false, false);
     for (id, service) in rows.flatten() {
         if same_handle(&id, handle) {
             imessage |= service == "iMessage";
             sms |= service == "SMS";
+            rcs |= service == "RCS";
         }
     }
-    Ok((imessage, sms))
+    Ok((imessage, sms, rcs))
 }
 
 /// Watches Messages' store for what became of `text`, sent to `handle` in a row after `before`, for at most

@@ -138,6 +138,15 @@ function inboxes(mail) {
   }
   return found;
 }
+// Each account's trash, by the account's name, through Mail's own trash: whatever the box is called ("Papierkorb",
+// "Deleted Messages").
+function trashes(mail) {
+  const found = {};
+  for (const box of mail.trashMailbox.mailboxes()) {
+    try { found[box.account().name()] = box; } catch (e) {}
+  }
+  return found;
+}
 function run(argv) {
   const mail = Application('Mail');
   const what = argv[0];
@@ -219,6 +228,53 @@ function run(argv) {
     message.toRecipients.push(mail.Recipient({ address: argv[2] }));
     if (send) message.send();
     return JSON.stringify({ to: argv[2], subject: argv[3] });
+  }
+  if (what === 'trash') {
+    // argv: account, [{id, from}] as JSON. Into the account's own trash, never deleted for good: without one nothing
+    // moves. Only a message still from the sender the owner was told; each moved one answers with its Message-ID.
+    const box = inboxes(mail)[argv[1]];
+    const bin = trashes(mail)[argv[1]];
+    if (!box || !bin) throw new Error('no inbox or no trash');
+    // Each on its own: one that fails stays where it is, and what moved before it is still answered.
+    return JSON.stringify(JSON.parse(argv[2]).map(want => {
+      try {
+        const found = box.messages.whose({ id: want.id });
+        if (found.length === 0) return null;
+        const m = found[0];
+        const raw = m.sender() || '';
+        const angled = raw.match(/<([^<>]+)>/);
+        const from = (angled ? angled[1] : raw).trim().toLowerCase();
+        const mid = m.messageId() || '';
+        // An id that could not be looked for again stays: a move without a way back is no move.
+        if (from !== want.from || mid === '' || mid.length > 998 || /[^\x21-\x7e]/.test(mid)) return null;
+        mail.move(m, { to: bin });
+        return mid;
+      } catch (e) {
+        return null;
+      }
+    }));
+  }
+  if (what === 'untrash') {
+    // argv: account, [{mid, from}] as JSON: each found in the account's trash by its Message-ID and its sender goes
+    // back to the inbox — another copy under the same Message-ID from someone else stays where it is.
+    const box = inboxes(mail)[argv[1]];
+    const bin = trashes(mail)[argv[1]];
+    if (!box || !bin) throw new Error('no inbox or no trash');
+    let back = 0;
+    for (const want of JSON.parse(argv[2])) {
+      try {
+        const found = bin.messages.whose({ messageId: want.mid });
+        for (let i = 0; i < found.length; i++) {
+          const raw = found[i].sender() || '';
+          const angled = raw.match(/<([^<>]+)>/);
+          if ((angled ? angled[1] : raw).trim().toLowerCase() !== want.from) continue;
+          mail.move(found[i], { to: box });
+          back++;
+          break;
+        }
+      } catch (e) {}
+    }
+    return JSON.stringify(back);
   }
   throw new Error('unknown request');
 }
@@ -416,6 +472,98 @@ fn parse_sent(answer: &str) -> Result<Sent, MailError> {
         to: line(row["to"].as_str().unwrap_or_default()).to_lowercase(),
         subject: line(row["subject"].as_str().unwrap_or_default()),
     })
+}
+
+/// The most messages one call moves to the trash or back.
+pub const MAX_TRASH: usize = 50;
+/// The longest Message-ID kept (a header line is at most 998 characters).
+const MAX_MESSAGE_ID_CHARS: usize = 998;
+
+/// Moves the messages of `account`'s inbox into that account's own trash — never deleted for good: an account
+/// without a trash moves nothing. Each is a `(id, sender's address)` as a look told it, and moves only while it is
+/// still from that sender. Returns, in order, each moved message's Message-ID, to bring it back by ([`untrash`]),
+/// or `None` for one that did not move (gone, from someone else now).
+///
+/// # Errors
+///
+/// [`MailError::Invalid`] for none, too many, or a closed account or sender, else see [`MailError`].
+pub fn trash(
+    account: &str,
+    mails: &[(i64, String)],
+    closed: &Closed<'_>,
+) -> Result<Vec<Option<String>>, MailError> {
+    if mails.is_empty() || mails.len() > MAX_TRASH {
+        return Err(MailError::Invalid("say which messages, at most fifty"));
+    }
+    if !plain(account) || closed.closes_account(account) {
+        return Err(MailError::Invalid("that account is closed"));
+    }
+    if mails
+        .iter()
+        .any(|(_, from)| !plain_address(from) || closed.closes_sender(&from.to_lowercase()))
+    {
+        return Err(MailError::Invalid(
+            "a sender is closed or has no plain address",
+        ));
+    }
+    let wanted: Vec<serde_json::Value> = mails
+        .iter()
+        .map(|(id, from)| serde_json::json!({ "id": id, "from": from.to_lowercase() }))
+        .collect();
+    let wanted = serde_json::to_string(&wanted).map_err(|e| MailError::Failed(e.to_string()))?;
+    let answer = run(&["trash", account, &wanted], TIMEOUT)?;
+    parse_trashed(&answer, mails.len())
+}
+
+/// Mail's answer to `trash`: a Message-ID or nothing for each of `count` messages.
+fn parse_trashed(answer: &str, count: usize) -> Result<Vec<Option<String>>, MailError> {
+    let rows: Vec<serde_json::Value> =
+        serde_json::from_str(answer).map_err(|e| MailError::Failed(e.to_string()))?;
+    if rows.len() != count {
+        return Err(MailError::Failed("Mail answered for other messages".into()));
+    }
+    Ok(rows
+        .iter()
+        .map(|row| row.as_str().filter(|id| message_id(id)).map(str::to_owned))
+        .collect())
+}
+
+/// Whether `id` is a Message-ID to look for: one line, nothing that shows nothing, not too long.
+fn message_id(id: &str) -> bool {
+    !id.trim().is_empty()
+        && id.chars().count() <= MAX_MESSAGE_ID_CHARS
+        && !id.chars().any(|c| c.is_control() || invisible(c))
+}
+
+/// Brings messages back from `account`'s trash into its inbox, each a `(Message-ID, sender's address)` as [`trash`]
+/// moved it: how many came back (one emptied from the trash meanwhile does not).
+///
+/// # Errors
+///
+/// [`MailError::Invalid`] for none, too many, or a closed account, else see [`MailError`].
+pub fn untrash(
+    account: &str,
+    mails: &[(String, String)],
+    closed: &Closed<'_>,
+) -> Result<usize, MailError> {
+    if mails.is_empty()
+        || mails.len() > MAX_TRASH
+        || !mails
+            .iter()
+            .all(|(id, from)| message_id(id) && plain_address(from))
+    {
+        return Err(MailError::Invalid("say which messages, at most fifty"));
+    }
+    if !plain(account) || closed.closes_account(account) {
+        return Err(MailError::Invalid("that account is closed"));
+    }
+    let wanted: Vec<serde_json::Value> = mails
+        .iter()
+        .map(|(mid, from)| serde_json::json!({ "mid": mid, "from": from.to_lowercase() }))
+        .collect();
+    let wanted = serde_json::to_string(&wanted).map_err(|e| MailError::Failed(e.to_string()))?;
+    let answer = run(&["untrash", account, &wanted], TIMEOUT)?;
+    serde_json::from_str::<usize>(answer.trim()).map_err(|e| MailError::Failed(e.to_string()))
 }
 
 /// The messages `ids` in the inbox of `account`, in their order; `None` for one that is not there, or that the owner
@@ -657,6 +805,40 @@ fn run(_args: &[&str], _timeout: Duration) -> Result<String, MailError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_trashed_answer_keeps_each_message_id_and_drops_what_shows_nothing() {
+        let answer = r#"["<a@example.com>", null, "<b\u200b@example.com>"]"#;
+        assert_eq!(
+            parse_trashed(answer, 3).unwrap(),
+            vec![Some("<a@example.com>".to_owned()), None, None]
+        );
+        assert!(
+            parse_trashed(answer, 2).is_err(),
+            "an answer for other messages is refused"
+        );
+    }
+
+    #[test]
+    fn nothing_closed_and_never_too_many_go_to_the_trash() {
+        let senders = ["@news.example.com".to_owned()];
+        let closed = Closed {
+            accounts: &[],
+            senders: &senders,
+        };
+        assert!(trash("iCloud", &[], &closed).is_err());
+        let many: Vec<(i64, String)> = (0..=MAX_TRASH as i64)
+            .map(|i| (i, "a@b.de".into()))
+            .collect();
+        assert!(trash("iCloud", &many, &closed).is_err());
+        assert_eq!(
+            trash("iCloud", &[(1, "deals@news.example.com".into())], &closed),
+            Err(MailError::Invalid(
+                "a sender is closed or has no plain address"
+            ))
+        );
+        assert!(untrash("iCloud", &[("bad\nid".into(), "a@b.de".into())], &closed).is_err());
+    }
 
     #[test]
     fn heads_are_read_cleaned_and_a_closed_sender_or_account_is_dropped() {
