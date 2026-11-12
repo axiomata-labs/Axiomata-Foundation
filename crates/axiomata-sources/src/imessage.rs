@@ -1,11 +1,12 @@
 //! iMessages (§8l S4c, §8m S5b). Sending to one number or address, or into an existing group chat by its id (Lirvel
-//! #160), through Messages' own scripting — a constant script, the values only as its arguments — and over iMessage
-//! only: one who cannot be reached there gets nothing,
-//! never an SMS in its place. Reading from Messages' own store, `~/Library/Messages/chat.db`, opened read only where it
-//! is (macOS lets an app read it only with Full Disk Access, which the owner grants by hand): the text of each message
-//! — decoded from Messages' archived form when it has no plain one —, who and when, and only the kind of an
-//! attachment, never the attachment. Reactions and the group's own notices are left out, and so is whoever the
-//! caller closed.
+//! #160), through Messages' own scripting — a constant script, the values only as its arguments. A message to one
+//! person goes as the owner's Messages would send it (owner, 2026-11-12: "ob SMS oder iMessage ist mir egal"): over
+//! iMessage, or as a text message over the iPhone when the number has only ever had text messages or iMessage cannot
+//! deliver it — and what became of it is read back from Messages' store, never assumed. Reading from Messages' own
+//! store, `~/Library/Messages/chat.db`, opened read only where it is (macOS lets an app read it only with Full Disk
+//! Access, which the owner grants by hand): the text of each message — decoded from Messages' archived form when it
+//! has no plain one —, who and when, and only the kind of an attachment, never the attachment. Reactions and the
+//! group's own notices are left out, and so is whoever the caller closed.
 
 use crate::calendar::invisible;
 
@@ -59,6 +60,21 @@ on run argv
   set theText to item 2 of argv
   tell application "Messages"
     set theService to 1st account whose service type = iMessage
+    set theBuddy to participant theHandle of theService
+    send theText to theBuddy
+  end tell
+  return "sent"
+end run
+"#;
+
+/// The script for a text message (SMS) over the iPhone: the handle and the text are its arguments.
+#[cfg(target_os = "macos")]
+const SMS_SCRIPT: &str = r#"
+on run argv
+  set theHandle to item 1 of argv
+  set theText to item 2 of argv
+  tell application "Messages"
+    set theService to 1st account whose service type = SMS
     set theBuddy to participant theHandle of theService
     send theText to theBuddy
   end tell
@@ -219,27 +235,226 @@ pub fn plain_handle(handle: &str) -> bool {
         })
 }
 
-/// Sends `text` to `handle` over iMessage.
+/// How a message to one person went out.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Delivery {
+    /// It went as a text message over the iPhone, not over iMessage.
+    pub sms: bool,
+    /// Messages' store says it was sent; `false` when the store could not be read (no Full Disk Access) or Messages
+    /// had not answered yet — then it was handed over, nothing more is known.
+    pub confirmed: bool,
+}
+
+/// How long Messages is watched for what became of a message.
+const WATCH: std::time::Duration = std::time::Duration::from_secs(12);
+/// How often the store is looked at meanwhile.
+const WATCH_STEP: std::time::Duration = std::time::Duration::from_millis(300);
+
+/// What Messages' store says of a message sent.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Fate {
+    /// Not in the store yet, or not sent yet.
+    Waiting,
+    Sent,
+    /// Messages gave up on it (the red "Nicht zugestellt"), with its error number.
+    Failed(i64),
+}
+
+/// Sends `text` to `handle` as the owner's Messages would: over iMessage, as a text message over the iPhone when the
+/// number only ever had text messages or iMessage cannot deliver it.
 ///
 /// # Errors
 ///
-/// [`MessageError::Invalid`] for a handle or text that may not go out, else see [`MessageError`].
-pub fn send(handle: &str, text: &str) -> Result<(), MessageError> {
+/// [`MessageError::Invalid`] for a handle or text that may not go out; [`MessageError::Failed`] when neither way
+/// got it out; else see [`MessageError`].
+pub fn send(handle: &str, text: &str) -> Result<Delivery, MessageError> {
     if !plain_handle(handle) {
         return Err(MessageError::Invalid("no plain number or address"));
     }
     check_text(text)?;
-    run(handle.trim(), text)
+    let handle = handle.trim();
+    // A number that only ever had text messages gets one: iMessage would fail on it, red, after a while.
+    let only_sms =
+        !handle.contains('@') && services(handle).is_ok_and(|(imessage, sms)| sms && !imessage);
+    if !only_sms {
+        let before = last_row();
+        match run_script_of(Way::IMessage, handle, text) {
+            Ok(()) => match watch(handle, text, before) {
+                Fate::Sent => {
+                    return Ok(Delivery {
+                        sms: false,
+                        confirmed: true,
+                    });
+                }
+                Fate::Waiting => {
+                    return Ok(Delivery {
+                        sms: false,
+                        confirmed: false,
+                    });
+                }
+                Fate::Failed(_) => {}
+            },
+            // Stopped waiting is not stopped sending: a text message now could make it two (reviews 2026-11-12).
+            Err(MessageError::TimedOut) => return Err(MessageError::TimedOut),
+            // Not allowed is not allowed for a text message either.
+            Err(MessageError::NotAllowed) => return Err(MessageError::NotAllowed),
+            Err(_) => {}
+        }
+        // Messages may have sent it as a text message by itself meanwhile: then not a second time.
+        if let Ok(Fate::Sent) = fate(handle, text, before, true) {
+            return Ok(Delivery {
+                sms: true,
+                confirmed: true,
+            });
+        }
+    }
+    // An address has no text message.
+    if handle.contains('@') {
+        return Err(MessageError::Failed(
+            "iMessage could not deliver it, and an address takes no text message".into(),
+        ));
+    }
+    let before = last_row();
+    run_script_of(Way::Sms, handle, text)?;
+    match watch(handle, text, before) {
+        Fate::Sent => Ok(Delivery {
+            sms: true,
+            confirmed: true,
+        }),
+        Fate::Waiting => Ok(Delivery {
+            sms: true,
+            confirmed: false,
+        }),
+        Fate::Failed(code) => Err(MessageError::Failed(format!(
+            "not delivered, neither over iMessage nor as a text message (error {code}) — is the iPhone near and \
+             text message forwarding on?"
+        ))),
+    }
+}
+
+/// The two ways a message to one person goes.
+#[derive(Clone, Copy)]
+enum Way {
+    IMessage,
+    Sms,
 }
 
 #[cfg(target_os = "macos")]
-fn run(handle: &str, text: &str) -> Result<(), MessageError> {
-    run_script(SCRIPT, handle, text)
+fn run_script_of(way: Way, handle: &str, text: &str) -> Result<(), MessageError> {
+    match way {
+        Way::IMessage => run_script(SCRIPT, handle, text),
+        Way::Sms => run_script(SMS_SCRIPT, handle, text),
+    }
 }
 
 #[cfg(not(target_os = "macos"))]
-fn run(_handle: &str, _text: &str) -> Result<(), MessageError> {
+fn run_script_of(_way: Way, _handle: &str, _text: &str) -> Result<(), MessageError> {
     Err(MessageError::Failed("macOS only".into()))
+}
+
+/// The newest row of Messages' store before a send: only a message after it can be the one sent (reviews
+/// 2026-11-12: the same text sent twice must not be confirmed by the first). `i64::MAX` when the store cannot be read —
+/// then nothing is confirmed.
+fn last_row() -> i64 {
+    open()
+        .and_then(|db| {
+            db.query_row("SELECT COALESCE(MAX(ROWID), 0) FROM message", [], |row| {
+                row.get(0)
+            })
+            .map_err(|err| store_error(&err))
+        })
+        .unwrap_or(i64::MAX)
+}
+
+/// Whether `handle` has had iMessage, and text messages, in Messages' store.
+fn services(handle: &str) -> Result<(bool, bool), MessageError> {
+    let db = open()?;
+    let mut statement = db
+        .prepare("SELECT id, service FROM handle")
+        .map_err(|err| store_error(&err))?;
+    let rows = statement
+        .query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })
+        .map_err(|err| store_error(&err))?;
+    let (mut imessage, mut sms) = (false, false);
+    for (id, service) in rows.flatten() {
+        if same_handle(&id, handle) {
+            imessage |= service == "iMessage";
+            sms |= service == "SMS";
+        }
+    }
+    Ok((imessage, sms))
+}
+
+/// Watches Messages' store for what became of `text`, sent to `handle` in a row after `before`, for at most
+/// [`WATCH`].
+fn watch(handle: &str, text: &str, before: i64) -> Fate {
+    let until = std::time::Instant::now() + WATCH;
+    loop {
+        match fate(handle, text, before, false) {
+            Ok(Fate::Waiting) => {}
+            Ok(fate) => return fate,
+            // Without Full Disk Access nothing can be read back: it was handed over, nothing more is known.
+            Err(_) => return Fate::Waiting,
+        }
+        if std::time::Instant::now() >= until {
+            return Fate::Waiting;
+        }
+        std::thread::sleep(WATCH_STEP);
+    }
+}
+
+/// The newest message of the owner's to `handle` after row `before` holding `text`: sent, failed, or not yet. With
+/// `any_sent`, whether any such message was sent, however the newest fared.
+fn fate(handle: &str, text: &str, before: i64, any_sent: bool) -> Result<Fate, MessageError> {
+    let db = open()?;
+    let mut statement = db
+        .prepare(
+            "SELECT COALESCE(h.id, ''), m.text, m.attributedBody, m.is_sent, m.error
+             FROM message m LEFT JOIN handle h ON h.ROWID = m.handle_id
+             WHERE m.is_from_me = 1 AND m.ROWID > ?1
+             ORDER BY m.ROWID DESC LIMIT 20",
+        )
+        .map_err(|err| store_error(&err))?;
+    let rows = statement
+        .query_map([before], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, Option<String>>(1)?,
+                row.get::<_, Option<Vec<u8>>>(2)?,
+                row.get::<_, i64>(3)?,
+                row.get::<_, i64>(4)?,
+            ))
+        })
+        .map_err(|err| store_error(&err))?;
+    let mut newest = None;
+    for (id, plain, archived, sent, error) in rows.flatten() {
+        let body = plain.or_else(|| archived.as_deref().and_then(body_text));
+        if !same_handle(&id, handle) || body.as_deref().map(str::trim) != Some(text.trim()) {
+            continue;
+        }
+        let fate = classify(sent, error);
+        if !any_sent {
+            return Ok(fate);
+        }
+        if fate == Fate::Sent {
+            return Ok(Fate::Sent);
+        }
+        newest.get_or_insert(fate);
+    }
+    Ok(newest.unwrap_or(Fate::Waiting))
+}
+
+/// What a message's `is_sent` and `error` say.
+fn classify(sent: i64, error: i64) -> Fate {
+    if error != 0 {
+        Fate::Failed(error)
+    } else if sent != 0 {
+        Fate::Sent
+    } else {
+        Fate::Waiting
+    }
 }
 
 /// Runs `script` with its two arguments, waiting at most [`TIMEOUT`].
@@ -623,6 +838,7 @@ pub fn body_text(blob: &[u8]) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
@@ -855,5 +1071,13 @@ mod tests {
             "{} messages read, {decoded} with text, {over_imessage} over iMessage",
             found.len()
         );
+    }
+
+    #[test]
+    fn what_messages_store_says_of_a_message_sent() {
+        assert_eq!(classify(0, 0), Fate::Waiting);
+        assert_eq!(classify(1, 0), Fate::Sent);
+        assert_eq!(classify(0, 22), Fate::Failed(22), "the red not delivered");
+        assert_eq!(classify(1, 4), Fate::Failed(4), "an error outweighs sent");
     }
 }

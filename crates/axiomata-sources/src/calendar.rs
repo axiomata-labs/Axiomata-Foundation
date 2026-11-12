@@ -160,6 +160,12 @@ pub fn status(kind: Kind) -> Status {
     imp::status(kind)
 }
 
+/// What macOS says of `kind` word for word — `full_access`, `not_determined`, `restricted`, `denied`, `write_only` —
+/// where [`status`] folds them into three: a self-test and a log need to tell them apart.
+pub fn status_name(kind: Kind) -> &'static str {
+    imp::status_name(kind)
+}
+
 /// Asks the owner for access to `kind` when nobody has yet — the system's dialog; blocks until the owner answered (up
 /// to two minutes), so call it off the UI thread. `Ok` once it is granted.
 ///
@@ -344,6 +350,18 @@ mod imp {
         }
     }
 
+    pub(super) fn status_name(kind: Kind) -> &'static str {
+        // SAFETY: a class method without arguments that hold state.
+        match unsafe { EKEventStore::authorizationStatusForEntityType(entity(kind)) } {
+            EKAuthorizationStatus::FullAccess => "full_access",
+            EKAuthorizationStatus::NotDetermined => "not_determined",
+            EKAuthorizationStatus::Restricted => "restricted",
+            EKAuthorizationStatus::Denied => "denied",
+            EKAuthorizationStatus::WriteOnly => "write_only",
+            _ => "unknown",
+        }
+    }
+
     pub(super) fn ask(kind: Kind) -> Result<(), CalendarError> {
         match status(kind) {
             Status::Granted => return Ok(()),
@@ -388,9 +406,9 @@ mod imp {
 
     /// A store this app may read `kind` from.
     pub(super) fn store(kind: Kind) -> Result<Retained<EKEventStore>, CalendarError> {
-        if status(kind) != Status::Granted {
-            return Err(CalendarError::AccessDenied(kind));
-        }
+        // Never asked (Lirvel 2026-11-12: a read failed as "no access" for a question macOS never put — a new
+        // signature counts as a new app): asked now, as writing asks; refused or limited stays refused.
+        ask(kind)?;
         // SAFETY: a plain constructor.
         Ok(unsafe { EKEventStore::new() })
     }
@@ -651,6 +669,10 @@ mod imp {
 
     pub(super) fn status(_kind: Kind) -> Status {
         Status::Denied
+    }
+
+    pub(super) fn status_name(_kind: Kind) -> &'static str {
+        "unsupported"
     }
     pub(super) fn now() -> Option<super::Moment> {
         None
