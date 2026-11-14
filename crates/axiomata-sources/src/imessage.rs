@@ -1,12 +1,13 @@
 //! iMessages (§8l S4c, §8m S5b). Sending to one number or address, or into an existing group chat by its id (Lirvel
 //! #160), through Messages' own scripting — a constant script, the values only as its arguments. A message to one
 //! person goes as the owner's Messages would send it (owner, 2026-11-12: "ob SMS oder iMessage ist mir egal"): over
-//! iMessage, or as a text message over the iPhone when the number has only ever had text messages or iMessage cannot
-//! deliver it — and what became of it is read back from Messages' store, never assumed. Reading from Messages' own
-//! store, `~/Library/Messages/chat.db`, opened read only where it is (macOS lets an app read it only with Full Disk
-//! Access, which the owner grants by hand): the text of each message — decoded from Messages' archived form when it
-//! has no plain one —, who and when, and only the kind of an attachment, never the attachment. Reactions and the
-//! group's own notices are left out, and so is whoever the caller closed.
+//! iMessage, or as a text message over the iPhone when the number itself only ever wrote in text messages or iMessage
+//! cannot deliver it; only as a text message when the caller asks (`Over::Text`) — and what became of it, the way it
+//! went and whether Messages reports it delivered, is read back from Messages' store, never assumed. Reading from
+//! Messages' own store, `~/Library/Messages/chat.db`, opened read only where it is (macOS lets an app read it only with
+//! Full Disk Access, which the owner grants by hand): the text of each message — decoded from Messages' archived form
+//! when it has no plain one —, who and when, and only the kind of an attachment, never the attachment. Reactions and
+//! the group's own notices are left out, and so is whoever the caller closed.
 
 use crate::calendar::invisible;
 
@@ -252,18 +253,35 @@ pub fn plain_handle(handle: &str) -> bool {
         })
 }
 
+/// Which ways a message to one person may take.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Over {
+    /// As the owner's Messages would send it: over iMessage, or as a text message where iMessage cannot.
+    Any,
+    /// Only as a text message over the iPhone (RCS or SMS), never over iMessage: the owner asked for an SMS, or knows
+    /// the number has no iMessage although Apple answers for it (owner, 2026-11-14 — a number that never had an
+    /// iPhone was taken by iMessage, shown blue and "Zugestellt", and the message never arrived).
+    Text,
+}
+
 /// How a message to one person went out.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Delivery {
-    /// It went as a text message over the iPhone (SMS or RCS), not over iMessage.
+    /// It went as a text message over the iPhone (SMS or RCS), not over iMessage — as Messages' store keeps the
+    /// message, not as the way it was handed over: Messages may turn an iMessage into a text message by itself.
     pub sms: bool,
     /// Messages' store says it was sent; `false` when the store could not be read (no Full Disk Access) or Messages
     /// had not answered yet — then it was handed over, nothing more is known.
     pub confirmed: bool,
+    /// Messages' store says it was delivered ("Zugestellt"). Over iMessage that is only Apple's word that some device
+    /// registered for the number took it — not proof the person read it, nor that it is their device.
+    pub delivered: bool,
 }
 
 /// How long Messages is watched for what became of a message.
 const WATCH: std::time::Duration = std::time::Duration::from_secs(12);
+/// How long a sent iMessage is watched further for "Zugestellt": it mostly comes within a second or two.
+const DELIVERY_WATCH: std::time::Duration = std::time::Duration::from_secs(4);
 /// How often the store is looked at meanwhile.
 const WATCH_STEP: std::time::Duration = std::time::Duration::from_millis(300);
 
@@ -272,46 +290,62 @@ const WATCH_STEP: std::time::Duration = std::time::Duration::from_millis(300);
 enum Fate {
     /// Not in the store yet, or not sent yet.
     Waiting,
-    Sent,
+    /// Sent: whether as a text message, and whether delivered.
+    Sent { text: bool, delivered: bool },
     /// Messages gave up on it (the red "Nicht zugestellt"), with its error number.
     Failed(i64),
 }
 
-/// Sends `text` to `handle` as the owner's Messages would: over iMessage, as a text message over the iPhone when the
-/// number only ever had text messages or iMessage cannot deliver it — over RCS first when the number has had RCS,
-/// as an SMS when RCS cannot take it.
+impl Fate {
+    fn delivery(self) -> Option<Delivery> {
+        match self {
+            Fate::Sent { text, delivered } => Some(Delivery {
+                sms: text,
+                confirmed: true,
+                delivered,
+            }),
+            _ => None,
+        }
+    }
+}
+
+/// Handed over, nothing more known: what the way it went says.
+fn unconfirmed(text: bool) -> Delivery {
+    Delivery {
+        sms: text,
+        confirmed: false,
+        delivered: false,
+    }
+}
+
+/// Sends `text` to `handle` as the owner's Messages would, or with [`Over::Text`] only as a text message: over
+/// iMessage, as a text message over the iPhone when the number only ever wrote in text messages or iMessage cannot
+/// deliver it — over RCS first when the number has had RCS, as an SMS when RCS cannot take it.
 ///
 /// # Errors
 ///
-/// [`MessageError::Invalid`] for a handle or text that may not go out; [`MessageError::Failed`] when neither way
-/// got it out; else see [`MessageError`].
-pub fn send(handle: &str, text: &str) -> Result<Delivery, MessageError> {
+/// [`MessageError::Invalid`] for a handle or text that may not go out, or an address asked for as a text message;
+/// [`MessageError::Failed`] when no way got it out; else see [`MessageError`].
+pub fn send(handle: &str, text: &str, over: Over) -> Result<Delivery, MessageError> {
     if !plain_handle(handle) {
         return Err(MessageError::Invalid("no plain number or address"));
     }
     check_text(text)?;
     let handle = handle.trim();
-    // A number that only ever had text messages gets one: iMessage would fail on it, red, after a while.
-    let known = services(handle).ok();
-    let only_text = !handle.contains('@')
-        && known.is_some_and(|(imessage, sms, rcs)| (sms || rcs) && !imessage);
-    let rcs_first = known.is_some_and(|(_, _, rcs)| rcs);
+    if over == Over::Text && handle.contains('@') {
+        return Err(MessageError::Invalid("an address takes no text message"));
+    }
+    let (heard_imessage, heard_text) = heard_from(handle).unwrap_or((false, false));
+    let rcs_first = services(handle).is_ok_and(|(_, _, rcs)| rcs);
+    // What the person wrote tells their phone; the store's handles also hold the owner's own tries over iMessage,
+    // which made a number that never had iMessage look like one (owner, 2026-11-14).
+    let only_text = over == Over::Text || (!handle.contains('@') && heard_text && !heard_imessage);
     if !only_text {
         let before = last_row();
         match run_script_of(Way::IMessage, handle, text) {
             Ok(()) => match watch(handle, text, before) {
-                Fate::Sent => {
-                    return Ok(Delivery {
-                        sms: false,
-                        confirmed: true,
-                    });
-                }
-                Fate::Waiting => {
-                    return Ok(Delivery {
-                        sms: false,
-                        confirmed: false,
-                    });
-                }
+                Fate::Sent { .. } => return Ok(delivered(handle, text, before)),
+                Fate::Waiting => return Ok(unconfirmed(false)),
                 Fate::Failed(_) => {}
             },
             // Stopped waiting is not stopped sending: a text message now could make it two (reviews 2026-11-12).
@@ -321,11 +355,10 @@ pub fn send(handle: &str, text: &str) -> Result<Delivery, MessageError> {
             Err(_) => {}
         }
         // Messages may have sent it as a text message by itself meanwhile: then not a second time.
-        if let Ok(Fate::Sent) = fate(handle, text, before, true) {
-            return Ok(Delivery {
-                sms: true,
-                confirmed: true,
-            });
+        if let Ok(fate @ Fate::Sent { .. }) = fate(handle, text, before, true)
+            && let Some(delivery) = fate.delivery()
+        {
+            return Ok(delivery);
         }
     }
     // An address has no text message.
@@ -344,24 +377,14 @@ pub fn send(handle: &str, text: &str) -> Result<Delivery, MessageError> {
         }
         // Even when the script failed, Messages may have taken it: watched before anything goes again.
         match watch(handle, text, before) {
-            Fate::Sent => {
-                return Ok(Delivery {
-                    sms: true,
-                    confirmed: true,
-                });
-            }
+            fate @ Fate::Sent { .. } => return Ok(fate.delivery().unwrap_or(unconfirmed(true))),
             // Red over RCS is no proof it did not arrive (the very case above): no second copy as SMS.
             Fate::Failed(code) => {
                 return Err(MessageError::Failed(format!(
                     "RCS reports it not delivered (error {code}); not sent again as SMS, so no copy goes twice"
                 )));
             }
-            Fate::Waiting if ran.is_ok() => {
-                return Ok(Delivery {
-                    sms: true,
-                    confirmed: false,
-                });
-            }
+            Fate::Waiting if ran.is_ok() => return Ok(unconfirmed(true)),
             // No RCS account on this Mac, and nothing of it in the store: as an SMS.
             Fate::Waiting => {}
         }
@@ -369,18 +392,38 @@ pub fn send(handle: &str, text: &str) -> Result<Delivery, MessageError> {
     let before = last_row();
     run_script_of(Way::Sms, handle, text)?;
     match watch(handle, text, before) {
-        Fate::Sent => Ok(Delivery {
-            sms: true,
-            confirmed: true,
-        }),
-        Fate::Waiting => Ok(Delivery {
-            sms: true,
-            confirmed: false,
-        }),
+        fate @ Fate::Sent { .. } => Ok(fate.delivery().unwrap_or(unconfirmed(true))),
+        Fate::Waiting => Ok(unconfirmed(true)),
         Fate::Failed(code) => Err(MessageError::Failed(format!(
             "not delivered, neither over iMessage nor as a text message (error {code}) — is the iPhone near and \
              text message forwarding on?"
         ))),
+    }
+}
+
+/// A message Messages' store has as sent: over iMessage watched a little longer for "Zugestellt".
+fn delivered(handle: &str, text: &str, before: i64) -> Delivery {
+    let until = std::time::Instant::now() + DELIVERY_WATCH;
+    let mut last = Fate::Sent {
+        text: false,
+        delivered: false,
+    };
+    loop {
+        if let Ok(fate @ Fate::Sent { .. }) = fate(handle, text, before, false) {
+            last = fate;
+        }
+        let done = matches!(
+            last,
+            Fate::Sent { text: true, .. }
+                | Fate::Sent {
+                    delivered: true,
+                    ..
+                }
+        );
+        if done || std::time::Instant::now() >= until {
+            return last.delivery().unwrap_or(unconfirmed(false));
+        }
+        std::thread::sleep(WATCH_STEP);
     }
 }
 
@@ -442,6 +485,41 @@ fn services(handle: &str) -> Result<(bool, bool, bool), MessageError> {
     Ok((imessage, sms, rcs))
 }
 
+/// How many of a number's last digits narrow the search for what it wrote: a handle in the store is written without
+/// spaces, so its tail is these digits.
+const HEARD_TAIL_DIGITS: usize = 7;
+
+/// Whether `handle` itself ever wrote over iMessage, and as a text message (SMS or RCS).
+fn heard_from(handle: &str) -> Result<(bool, bool), MessageError> {
+    heard_from_in(&open()?, handle)
+}
+
+fn heard_from_in(db: &rusqlite::Connection, handle: &str) -> Result<(bool, bool), MessageError> {
+    // Narrowed in SQL by the number's last digits, however it is written; `same_handle` decides.
+    let digits: String = handle.chars().filter(char::is_ascii_digit).collect();
+    let tail = &digits[digits.len().saturating_sub(HEARD_TAIL_DIGITS)..];
+    let mut statement = db
+        .prepare(
+            "SELECT DISTINCT h.id, COALESCE(m.service, '')
+             FROM handle h JOIN message m ON m.handle_id = h.ROWID
+             WHERE m.is_from_me = 0 AND h.id LIKE '%' || ?1",
+        )
+        .map_err(|err| store_error(&err))?;
+    let rows = statement
+        .query_map([tail], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })
+        .map_err(|err| store_error(&err))?;
+    let (mut imessage, mut text) = (false, false);
+    for (id, service) in rows.flatten() {
+        if same_handle(&id, handle) {
+            imessage |= service == "iMessage";
+            text |= service == "SMS" || service == "RCS";
+        }
+    }
+    Ok((imessage, text))
+}
+
 /// Watches Messages' store for what became of `text`, sent to `handle` in a row after `before`, for at most
 /// [`WATCH`].
 fn watch(handle: &str, text: &str, before: i64) -> Fate {
@@ -463,10 +541,20 @@ fn watch(handle: &str, text: &str, before: i64) -> Fate {
 /// The newest message of the owner's to `handle` after row `before` holding `text`: sent, failed, or not yet. With
 /// `any_sent`, whether any such message was sent, however the newest fared.
 fn fate(handle: &str, text: &str, before: i64, any_sent: bool) -> Result<Fate, MessageError> {
-    let db = open()?;
+    fate_in(&open()?, handle, text, before, any_sent)
+}
+
+fn fate_in(
+    db: &rusqlite::Connection,
+    handle: &str,
+    text: &str,
+    before: i64,
+    any_sent: bool,
+) -> Result<Fate, MessageError> {
     let mut statement = db
         .prepare(
-            "SELECT COALESCE(h.id, ''), m.text, m.attributedBody, m.is_sent, m.error
+            "SELECT COALESCE(h.id, ''), m.text, m.attributedBody, m.is_sent, m.error, m.is_delivered,
+                    COALESCE(m.service, '')
              FROM message m LEFT JOIN handle h ON h.ROWID = m.handle_id
              WHERE m.is_from_me = 1 AND m.ROWID > ?1
              ORDER BY m.ROWID DESC LIMIT 20",
@@ -478,35 +566,43 @@ fn fate(handle: &str, text: &str, before: i64, any_sent: bool) -> Result<Fate, M
                 row.get::<_, String>(0)?,
                 row.get::<_, Option<String>>(1)?,
                 row.get::<_, Option<Vec<u8>>>(2)?,
-                row.get::<_, i64>(3)?,
-                row.get::<_, i64>(4)?,
+                (
+                    row.get::<_, i64>(3)?,
+                    row.get::<_, i64>(4)?,
+                    row.get::<_, i64>(5)?,
+                ),
+                row.get::<_, String>(6)?,
             ))
         })
         .map_err(|err| store_error(&err))?;
     let mut newest = None;
-    for (id, plain, archived, sent, error) in rows.flatten() {
+    for (id, plain, archived, (sent, error, delivered), service) in rows.flatten() {
         let body = plain.or_else(|| archived.as_deref().and_then(body_text));
         if !same_handle(&id, handle) || body.as_deref().map(str::trim) != Some(text.trim()) {
             continue;
         }
-        let fate = classify(sent, error);
+        let fate = classify(sent, error, delivered, &service);
         if !any_sent {
             return Ok(fate);
         }
-        if fate == Fate::Sent {
-            return Ok(Fate::Sent);
+        if matches!(fate, Fate::Sent { .. }) {
+            return Ok(fate);
         }
         newest.get_or_insert(fate);
     }
     Ok(newest.unwrap_or(Fate::Waiting))
 }
 
-/// What a message's `is_sent` and `error` say.
-fn classify(sent: i64, error: i64) -> Fate {
+/// What a message's `is_sent`, `error`, `is_delivered` and service say. RCS counts as a text message: like an SMS it
+/// goes over the iPhone, and the owner hears "als SMS".
+fn classify(sent: i64, error: i64, delivered: i64, service: &str) -> Fate {
     if error != 0 {
         Fate::Failed(error)
     } else if sent != 0 {
-        Fate::Sent
+        Fate::Sent {
+            text: service == "SMS" || service == "RCS",
+            delivered: delivered != 0,
+        }
     } else {
         Fate::Waiting
     }
@@ -917,9 +1013,9 @@ mod tests {
         ] {
             assert!(!plain_handle(bad), "{bad}");
         }
-        assert!(send("+49 171 1234567", "").is_err());
-        assert!(send("+49 171 1234567", "Hallo\u{200b}").is_err());
-        assert!(send("jonas", "Hallo").is_err());
+        assert!(send("+49 171 1234567", "", Over::Any).is_err());
+        assert!(send("+49 171 1234567", "Hallo\u{200b}", Over::Any).is_err());
+        assert!(send("jonas", "Hallo", Over::Any).is_err());
     }
 
     /// An attributed body as Messages archives it: the class name, a few type bytes, `+`, the length, the text.
@@ -1130,9 +1226,100 @@ mod tests {
 
     #[test]
     fn what_messages_store_says_of_a_message_sent() {
-        assert_eq!(classify(0, 0), Fate::Waiting);
-        assert_eq!(classify(1, 0), Fate::Sent);
-        assert_eq!(classify(0, 22), Fate::Failed(22), "the red not delivered");
-        assert_eq!(classify(1, 4), Fate::Failed(4), "an error outweighs sent");
+        let sent = |text, delivered| Fate::Sent { text, delivered };
+        assert_eq!(classify(0, 0, 0, "iMessage"), Fate::Waiting);
+        assert_eq!(classify(1, 0, 0, "iMessage"), sent(false, false));
+        assert_eq!(
+            classify(1, 0, 1, "iMessage"),
+            sent(false, true),
+            "blue and Zugestellt"
+        );
+        assert_eq!(
+            classify(1, 0, 0, "SMS"),
+            sent(true, false),
+            "the service of the message, not of the try"
+        );
+        assert_eq!(classify(1, 0, 1, "RCS"), sent(true, true));
+        assert_eq!(
+            classify(0, 22, 0, "iMessage"),
+            Fate::Failed(22),
+            "the red not delivered"
+        );
+        assert_eq!(
+            classify(1, 4, 1, "SMS"),
+            Fate::Failed(4),
+            "an error outweighs sent"
+        );
+    }
+
+    /// A store with Messages' tables as far as sending reads them.
+    fn sending_store() -> rusqlite::Connection {
+        let db = rusqlite::Connection::open_in_memory().unwrap();
+        db.execute_batch(
+            "CREATE TABLE handle (ROWID INTEGER PRIMARY KEY, id TEXT, service TEXT);
+             CREATE TABLE message (ROWID INTEGER PRIMARY KEY, text TEXT, attributedBody BLOB, is_from_me INTEGER,
+                 handle_id INTEGER, is_sent INTEGER, error INTEGER, is_delivered INTEGER, service TEXT);
+             -- René: the owner's own try made an iMessage handle, but he only ever wrote as SMS.
+             INSERT INTO handle VALUES (1, '+491725806888', 'iMessage'), (2, '+491725806888', 'SMS'),
+                 (3, '+491711234567', 'iMessage');
+             INSERT INTO message VALUES
+                 (1, 'Bin dabei', NULL, 0, 2, 0, 0, 0, 'SMS'),
+                 (2, 'Hallo René', NULL, 1, 1, 1, 0, 1, 'iMessage'),
+                 (3, 'Kommst du?', NULL, 0, 3, 0, 0, 0, 'iMessage'),
+                 (4, 'Hallo René', NULL, 1, 2, 1, 0, 0, 'SMS');",
+        )
+        .unwrap();
+        db
+    }
+
+    #[test]
+    fn what_a_number_wrote_tells_its_phone_never_the_owners_own_tries() {
+        let db = sending_store();
+        assert_eq!(
+            heard_from_in(&db, "+49 172 5806888").unwrap(),
+            (false, true)
+        );
+        assert_eq!(heard_from_in(&db, "0171 1234567").unwrap(), (true, false));
+        assert_eq!(
+            heard_from_in(&db, "+49 160 0000000").unwrap(),
+            (false, false),
+            "never wrote"
+        );
+    }
+
+    #[test]
+    fn a_message_is_read_back_with_its_own_service_and_delivery() {
+        let db = sending_store();
+        // The newest such message is the one sent; the blue "Zugestellt" before it is not.
+        assert_eq!(
+            fate_in(&db, "+491725806888", "Hallo René", 0, false).unwrap(),
+            Fate::Sent {
+                text: true,
+                delivered: false
+            }
+        );
+        assert_eq!(
+            fate_in(&db, "+491725806888", "Hallo René", 3, false).unwrap(),
+            Fate::Sent {
+                text: true,
+                delivered: false
+            }
+        );
+        assert_eq!(
+            fate_in(&db, "+491725806888", "Hallo René", 4, false).unwrap(),
+            Fate::Waiting
+        );
+        assert_eq!(
+            fate_in(&db, "+491725806888", "Anderes", 0, false).unwrap(),
+            Fate::Waiting
+        );
+    }
+
+    #[test]
+    fn a_text_message_is_never_asked_of_an_address() {
+        assert_eq!(
+            send("jonas@example.com", "Hallo", Over::Text),
+            Err(MessageError::Invalid("an address takes no text message"))
+        );
     }
 }
