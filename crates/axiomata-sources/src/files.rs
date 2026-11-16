@@ -201,6 +201,26 @@ pub fn real_file(path: &Path, fence: &Fence) -> Result<PathBuf, FileError> {
     Ok(real)
 }
 
+/// Reads `path` whole when it is a plain file the fence allows, of at most `most` bytes — opened without following a
+/// link at its end and judged where the open file really is; returns the bytes and that place. For a picture to be
+/// drawn from a copy, so nothing swapped in after the check is ever read.
+///
+/// # Errors
+///
+/// [`FileError::Closed`] for a closed, missing or special file, [`FileError::TooLarge`] beyond `most`.
+pub fn read_bytes(path: &Path, fence: &Fence, most: u64) -> Result<(Vec<u8>, PathBuf), FileError> {
+    let (file, real) = open_fenced(path, fence)?;
+    let meta = file.metadata().map_err(|_| FileError::Closed)?;
+    if meta.len() > most {
+        return Err(FileError::TooLarge);
+    }
+    let mut bytes = Vec::new();
+    file.take(most)
+        .read_to_end(&mut bytes)
+        .map_err(|err| FileError::Failed(err.to_string()))?;
+    Ok((bytes, real))
+}
+
 /// Reads `path` when it is a plain file the fence allows, judged where the open file really is.
 fn read_fenced(path: &Path, fence: &Fence) -> Result<Vec<u8>, FileError> {
     let (file, _) = open_fenced(path, fence)?;

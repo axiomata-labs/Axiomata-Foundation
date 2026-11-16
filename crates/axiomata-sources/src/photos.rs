@@ -7,10 +7,14 @@
 //! found an identity document, a passport or a barcode in. Screenshots only when asked for, and then only they. Of a
 //! picture the caller learns its date, kind, place (town and country) and where its small preview lies — never the
 //! picture itself, nor the text Photos read in it. Both stores are Photos' own and undocumented: when one does not
-//! look as expected, a read fails as [`PhotoError::UnknownFormat`] rather than guess.
+//! look as expected, the read is taken by Apple's PhotoKit instead (`kit`), which knows days, kinds, favourites and
+//! albums but not the search's words — a read by words then fails as [`PhotoError::NoWords`] rather than guess.
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+
+#[cfg(target_os = "macos")]
+mod kit;
 
 /// The most pictures one read returns.
 pub const MAX_READ: usize = 60;
@@ -68,6 +72,12 @@ pub enum PhotoError {
     AlbumClosed,
     /// Photos did not answer in time.
     TimedOut,
+    /// The stores are of a form not known, and PhotoKit — the way taken then — knows no search words.
+    NoWords,
+    /// Photos' search index knows none of the library's pictures yet: it is still sorting them.
+    NotIndexed,
+    /// The stores are of a form not known, and the owner did not let the app see the photos through PhotoKit.
+    NoPhotosAccess,
     /// Reading or showing failed; only what, never a store's own text.
     Failed(String),
 }
@@ -91,6 +101,19 @@ impl std::fmt::Display for PhotoError {
                  reopens it there); nothing was read"
             ),
             PhotoError::TimedOut => write!(f, "Photos did not answer in time"),
+            PhotoError::NoWords => write!(
+                f,
+                "this version of Photos can be read only by days, albums and favourites for now, not by words (a \
+                 person, a place, what is in a picture)"
+            ),
+            PhotoError::NoPhotosAccess => write!(
+                f,
+                "the photos cannot be seen: allow this app in System Settings → Privacy & Security → Photos"
+            ),
+            PhotoError::NotIndexed => write!(
+                f,
+                "Photos has not sorted this library yet; the pictures can be found once it has"
+            ),
             PhotoError::Failed(why) => write!(f, "{why}"),
         }
     }
@@ -272,7 +295,31 @@ fn known(library: &rusqlite::Connection, index: &rusqlite::Connection) -> Result
 /// See [`PhotoError`].
 pub fn albums() -> Result<Vec<String>, PhotoError> {
     let library = library_path().ok_or(PhotoError::NoLibrary)?;
-    albums_of(&open(&library.join("database/Photos.sqlite"))?)
+    match moved(&library, open(&library.join("database/Photos.sqlite")))
+        .and_then(|db| albums_of(&db))
+    {
+        Err(PhotoError::UnknownFormat) => by_kit_albums(),
+        read => read,
+    }
+}
+
+/// A store opened, or — when the library is there but the store is not where it was — a form not known: a newer
+/// Photos may have moved it.
+fn moved<T>(library: &Path, store: Result<T, PhotoError>) -> Result<T, PhotoError> {
+    match store {
+        Err(PhotoError::NoLibrary) if library.is_dir() => Err(PhotoError::UnknownFormat),
+        store => store,
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn by_kit_albums() -> Result<Vec<String>, PhotoError> {
+    kit::albums()
+}
+
+#[cfg(not(target_os = "macos"))]
+fn by_kit_albums() -> Result<Vec<String>, PhotoError> {
+    Err(PhotoError::UnknownFormat)
 }
 
 fn albums_of(db: &rusqlite::Connection) -> Result<Vec<String>, PhotoError> {
@@ -298,13 +345,41 @@ fn albums_of(db: &rusqlite::Connection) -> Result<Vec<String>, PhotoError> {
 ///
 /// # Errors
 ///
-/// [`PhotoError::NoDiskAccess`] without Full Disk Access, [`PhotoError::UnknownFormat`] for stores of a form not
-/// known, else see [`PhotoError`].
+/// [`PhotoError::NoDiskAccess`] without Full Disk Access; for stores of a form not known, what [`read_by_kit`] gives;
+/// else see [`PhotoError`].
 pub fn read(query: &Query, closed: &[String]) -> Result<Found, PhotoError> {
     let library = library_path().ok_or(PhotoError::NoLibrary)?;
-    let photos = open(&library.join("database/Photos.sqlite"))?;
-    let index = open(&library.join("database/search/leo.sqlite"))?;
-    read_from(&photos, &index, query, closed)
+    let read = moved(&library, open(&library.join("database/Photos.sqlite"))).and_then(|photos| {
+        let index = moved(&library, open(&library.join("database/search/leo.sqlite")))?;
+        read_from(&photos, &index, query, closed)
+    });
+    match read {
+        Err(PhotoError::UnknownFormat) => read_by_kit(query, closed),
+        read => read,
+    }
+}
+
+/// Reads what `query` asks for through Apple's PhotoKit, as [`read`] does when the stores are of a form not known —
+/// called by itself only to try that way: days, kinds, favourites and albums, no words, no places. macOS asks the
+/// owner once whether the app may see the photos.
+///
+/// # Errors
+///
+/// [`PhotoError::NoWords`] for a read by words, [`PhotoError::NoPhotosAccess`] when the owner did not allow it,
+/// [`PhotoError::AlbumClosed`] as [`read`] gives it.
+#[cfg(target_os = "macos")]
+pub fn read_by_kit(query: &Query, closed: &[String]) -> Result<Found, PhotoError> {
+    kit::read(query, closed)
+}
+
+/// See the macOS one: elsewhere there is no PhotoKit.
+///
+/// # Errors
+///
+/// Always [`PhotoError::UnknownFormat`].
+#[cfg(not(target_os = "macos"))]
+pub fn read_by_kit(_query: &Query, _closed: &[String]) -> Result<Found, PhotoError> {
+    Err(PhotoError::UnknownFormat)
 }
 
 /// One entry of the index's lexicon, as far as a read needs it.
@@ -481,7 +556,7 @@ fn read_from(
             .collect::<Result<_, _>>()
             .map_err(|err| store_error(&err))
     };
-    let same = |a: &str, b: &str| clean(a).to_lowercase() == clean(b).to_lowercase();
+    let same = same_name;
     // A closed album that is not found any more (renamed, deleted) reads nothing: closing must not fail open.
     if closed
         .iter()
@@ -603,11 +678,17 @@ fn read_from(
             });
         }
     }
-    // An index that knows none of the pictures asked for is no index to trust: a newer Photos may name them otherwise.
+    // An index that knows none of the pictures asked for is no index to trust: Photos may not have sorted the library
+    // yet — never a reason for the second way, which cannot tell a passport from a photo.
     if found.total == 0 && unindexed > 0 && carried.is_empty() {
-        return Err(PhotoError::UnknownFormat);
+        return Err(PhotoError::NotIndexed);
     }
     Ok(found)
+}
+
+/// Whether two album names name the same album: alike once cleaned, whatever their case.
+fn same_name(a: &str, b: &str) -> bool {
+    clean(a).to_lowercase() == clean(b).to_lowercase()
 }
 
 /// Whether `uuid` is one of Photos' ids: 36 characters, hex digits and four dashes where they belong.
@@ -987,11 +1068,12 @@ mod tests {
             read_from(&library, &index, &query(&[]), &["Geheim".into()]),
             Err(PhotoError::AlbumClosed)
         );
-        // An index that knows no picture at all is of a form not known.
+        // An index that knows no picture at all is not trusted — and never a reason for PhotoKit, which cannot tell a
+        // passport from a photo: Photos may still be sorting the library.
         index.execute_batch("DELETE FROM items").unwrap();
         assert_eq!(
             read_from(&library, &index, &query(&[]), &[]),
-            Err(PhotoError::UnknownFormat)
+            Err(PhotoError::NotIndexed)
         );
     }
 

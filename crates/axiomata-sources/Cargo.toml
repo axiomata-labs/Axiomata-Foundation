@@ -19,10 +19,12 @@ rusqlite.workspace = true
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 block2 = "0.6"
-objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSDate", "NSArray", "NSEnumerator", "NSError", "NSCalendar", "NSPredicate", "NSData", "NSBundle", "NSValue"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSDate", "NSArray", "NSEnumerator", "NSError", "NSCalendar", "NSPredicate", "NSData", "NSBundle", "NSValue", "NSSortDescriptor"] }
 # The apps that run, to quit one gently (`apps.rs`): no Apple events, no permission.
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSRunningApplication"] }
 # The owner's contacts, read only (`contacts.rs`).
 objc2-contacts = { version = "0.3", default-features = false, features = ["std", "block2", "CNContact", "CNContactStore", "CNContact_Predicates", "CNLabeledValue", "CNPhoneNumber"] }
 objc2-event-kit = { version = "0.3", default-features = false, features = ["std", "block2", "EKEventStore", "EKEvent", "EKCalendarItem", "EKCalendar", "EKReminder", "EKSource", "EKTypes", "EKObject", "EKAlarm", "EKRecurrenceRule", "EKRecurrenceEnd", "EKRecurrenceDayOfWeek"] }
+# The second way into the photos when Photos' own stores change form (`photos/kit.rs`): read only.
+objc2-photos = { version = "0.3", default-features = false, features = ["std", "block2", "PHAsset", "PHCollection", "PHFetchOptions", "PHFetchResult", "PHObject", "PHPhotoLibrary", "PhotosTypes"] }
 objc2-pdf-kit = { version = "0.3", default-features = false, features = ["std", "PDFDocument", "PDFPage"] }
