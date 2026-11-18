@@ -13,6 +13,11 @@ Guidance for coding agents in this repository (Claude Code reads it through `CLA
   password exports — plus the owner's closed folders; a path is judged as written and as it really is) and the
   sources behind it (`calendar`: EventKit, read only; `files`: Spotlight and fenced text and PDF reads; `mail`: Mail.app's inboxes through a constant JXA script, values only
   as arguments, JSON back, closed accounts and senders dropped here). It knows nothing of models. Used by Lirvel.
+- `crates/axiomata-script` — scripts (`docs/plans/plugins.md`, Lirvel `companion.md` §8x): a model-written
+  JavaScript or TypeScript (types stripped by oxc) run in QuickJS through `rquickjs`, whose only way out is
+  `tools.<name>(args)` — every call a `Request` the host answers on its own path; no `RegExp` (GHSA-rxpx-wj25-jhqq —
+  do not add it back until rquickjs bundles a fixed engine); limits on memory, calls, output and `wait`; ends on stop,
+  deadline, or a script waiting for nothing. Lirvel first; Glut's `codemode.rs` moves onto it after its launch.
 - Next to move in when the Studio leaves Axiomata: the terminal emulator (`axiomata-terminal`).
 
 The apps build these crates from this folder (path dependencies): a change here takes effect in each app at its next

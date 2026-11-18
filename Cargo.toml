@@ -33,3 +33,11 @@ notify = "8"
 # Reading Messages' own store, `chat.db`, read only (`axiomata-sources::imessage`, Lirvel §8m S5b). The version
 # Axiomata-OS and Lirvel use, bundled: one SQLite in every app built on these crates.
 rusqlite = { version = "0.41", features = ["bundled"] }
+# QuickJS for `axiomata-script`, as Glut's code mode pins it: `std` and `futures` for the async runtime a script's
+# tool calls await in, `parallel` so the runtime is `Send` and a host may run it on any thread of its own.
+rquickjs = { version = "0.14", default-features = false, features = ["std", "futures", "parallel"] }
+# TypeScript's types stripped before QuickJS runs a script: the transform (with what it needs, semantic analysis and
+# the printer) only — no minifier, no lowering.
+oxc = { version = "0.159", default-features = false, features = ["transformer", "codegen", "semantic"] }
+# A script's tool calls (channels), its watch and `wait` (timer), and `select!` between them; the host's runtime.
+tokio = { version = "1.54", default-features = false, features = ["rt", "time", "sync", "macros"] }

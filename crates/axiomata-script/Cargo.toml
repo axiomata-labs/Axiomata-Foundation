@@ -1,0 +1,18 @@
+[package]
+name = "axiomata-script"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Scripts for the Axiomata apps: a model-written JavaScript or TypeScript run in QuickJS, whose only way out is a host's tools — every call answered by the host on its own path. Knows no tools of its own."
+
+[dependencies]
+oxc.workspace = true
+rquickjs.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+# Tests run several scripts at once on a runtime of more than one thread.
+tokio = { workspace = true, features = ["rt-multi-thread"] }
