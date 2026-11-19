@@ -48,6 +48,14 @@ pub struct Manifest {
     /// The app's hooks it answers (Hauch: `filter-recognised`); the app calls no other.
     #[serde(default)]
     pub provides: Vec<String>,
+    /// The places in the app's window where it wants its page shown (Hauch: `sidebar`, an entry of its own in the
+    /// navigation), beside the app's page "Plugins" every plugin has; the user may refuse each (plugins.md Q15).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub places: Vec<String>,
+    /// Its sign where it has a place: a name from the app's icon set ([`App::icons`]), never a picture of its own,
+    /// so it always looks like the app around it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
     /// The memory it needs in MiB, if more than [`DEFAULT_MEMORY_MIB`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub memory_mib: Option<u32>,
@@ -92,6 +100,16 @@ impl Manifest {
         if self.name.trim().is_empty() {
             return bad("the name is empty".into());
         }
+        if app
+            .reserved
+            .iter()
+            .any(|own| folded(own) == folded(&self.name))
+        {
+            return bad(format!(
+                "the name {:?} is one of {}'s own pages",
+                self.name, app.name
+            ));
+        }
         if self.app != app.name {
             let app: String = self
                 .app
@@ -104,8 +122,11 @@ impl Manifest {
         if !app.speaks(&self.interface) {
             return Err(Error::NewerApp(self.interface.clone()));
         }
-        if self.rights.len() > MAX_LIST || self.provides.len() > MAX_LIST {
-            return bad("too many rights or hooks".into());
+        if self.rights.len() > MAX_LIST
+            || self.provides.len() > MAX_LIST
+            || self.places.len() > MAX_LIST
+        {
+            return bad("too many rights, hooks or places".into());
         }
         for (i, right) in self.rights.iter().enumerate() {
             if !app.knows_right(right) {
@@ -119,6 +140,19 @@ impl Manifest {
             if !app.hooks.iter().any(|known| known == hook) {
                 return bad(format!("the hook {hook:?} is not one {} has", app.name));
             }
+        }
+        for (i, place) in self.places.iter().enumerate() {
+            if !app.places.iter().any(|known| known == place) {
+                return bad(format!("the place {place:?} is not one {} has", app.name));
+            }
+            if self.places[..i].contains(place) {
+                return bad(format!("the place {place:?} is named twice"));
+            }
+        }
+        if let Some(icon) = &self.icon
+            && !app.icons.iter().any(|known| known == icon)
+        {
+            return bad(format!("the icon {icon:?} is not one {} has", app.name));
         }
         if self
             .memory_mib
@@ -141,10 +175,21 @@ impl Manifest {
 }
 
 /// Whether `c` changes how text around it is shown without being seen itself — a direction override (U+202E), a
-/// zero-width space, a line or paragraph separator: in a name or a description it could make the page say what the plugin is not.
+/// zero-width space, a line or paragraph separator, a blank that is not a space (Hangul filler, Braille blank), a
+/// variation selector or tag: in a name or a description it could make the page say what the plugin is not.
 fn is_format(c: char) -> bool {
-    matches!(c, '\u{00AD}' | '\u{061C}' | '\u{180E}' | '\u{200B}'..='\u{200F}' | '\u{2028}' | '\u{2029}' | '\u{202A}'..='\u{202E}'
-        | '\u{2060}'..='\u{2064}' | '\u{2066}'..='\u{206F}' | '\u{FEFF}' | '\u{FFF9}'..='\u{FFFB}')
+    matches!(c, '\u{00AD}' | '\u{034F}' | '\u{061C}' | '\u{115F}' | '\u{1160}' | '\u{17B4}' | '\u{17B5}'
+        | '\u{180B}'..='\u{180F}' | '\u{200B}'..='\u{200F}' | '\u{2028}' | '\u{2029}' | '\u{202A}'..='\u{202E}'
+        | '\u{2060}'..='\u{206F}' | '\u{2800}' | '\u{3164}' | '\u{FE00}'..='\u{FE0F}' | '\u{FEFF}' | '\u{FFA0}'
+        | '\u{FFF9}'..='\u{FFFB}' | '\u{1D173}'..='\u{1D17A}' | '\u{E0000}'..='\u{E0FFF}')
+}
+
+/// `name` as compared with an app's own: without case and without spaces.
+fn folded(name: &str) -> String {
+    name.chars()
+        .filter(|c| !c.is_whitespace())
+        .flat_map(char::to_lowercase)
+        .collect()
 }
 
 /// Whether `id` can name a plugin and its folder.

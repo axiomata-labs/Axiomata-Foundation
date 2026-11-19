@@ -22,6 +22,12 @@
 //! Each app adds its world (`hauch:plugin`) on top of the shared one, [`WIT`]: its hooks are exported from
 //! `<package>/hooks` and called through [`Plugins::call`].
 //!
+//! **Places** ([`App::places`], [`Manifest::places`]): every plugin's page is on the app's page "Plugins"; a plugin may
+//! ask for more places in the app's window (Hauch: `sidebar`, an entry of its own in the navigation), with a sign from
+//! the app's icon set ([`Manifest::icon`]). The user is asked for them like for rights, may take each back
+//! ([`Plugins::set_place`]), and an update that wants a new one asks again; [`Installed::shows_at`] says where to draw
+//! it. The page is the same blocks wherever it is shown.
+//!
 //! **An app under the hardened runtime** must be signed with the entitlement
 //! `com.apple.security.cs.allow-unsigned-executable-memory`: wasmtime makes the machine code executable itself, and
 //! without it macOS kills the app at the first call ("Code Signature Invalid"). `allow-jit` alone is not enough.
@@ -126,6 +132,15 @@ pub struct App {
     pub hooks: Vec<String>,
     /// Its own rights, on top of [`manifest::SHARED_RIGHTS`].
     pub rights: Vec<String>,
+    /// The places in its window it gives plugins (Hauch: `sidebar`); every plugin's page is on its page "Plugins"
+    /// anyway (plugins.md Q15).
+    pub places: Vec<String>,
+    /// The names of the icons a plugin may take as its sign ([`Manifest::icon`]), from the app's own set — none
+    /// of those its own pages wear.
+    pub icons: Vec<String>,
+    /// Names a plugin may not take, regardless of case and spaces: the app's own pages in every language, so a
+    /// plugin's entry never passes for one of them.
+    pub reserved: Vec<String>,
 }
 
 impl App {
@@ -191,6 +206,10 @@ pub struct State {
     /// next check.
     #[serde(default)]
     pub held_back: Option<Version>,
+    /// The places the user gave it, each asked for by a manifest of it — after going back, maybe not the current
+    /// one's: [`Installed::shows_at`] asks both.
+    #[serde(default)]
+    pub placed: Vec<String>,
 }
 
 /// An installed plugin, as the app's page shows it.
@@ -201,6 +220,13 @@ pub struct Installed {
 }
 
 impl Installed {
+    /// Whether its page is shown at `place`: switched on, asked for by the current version, and given by the user.
+    pub fn shows_at(&self, place: &str) -> bool {
+        self.state.enabled
+            && self.manifest.places.iter().any(|asked| asked == place)
+            && self.state.placed.iter().any(|given| given == place)
+    }
+
     /// Who publishes it: the GitHub account, the address's host, or "local" — from where it came, never from what
     /// its manifest says.
     pub fn publisher(&self) -> String {
@@ -224,6 +250,11 @@ pub struct Offer {
     /// The app's hooks it answers that the installed version did not: they reach what the app hands them (Hauch:
     /// everything it recognises), so an update with any waits for the user too.
     pub new_hooks: Vec<String>,
+    /// The places it wants that the installed version did not: an update with any waits for the user.
+    pub new_places: Vec<String>,
+    /// Whether it has a place and comes under another name or sign than the installed version: what the user sees
+    /// in the app's window changes, so it waits for the user.
+    pub renamed: bool,
     /// Whether it asks for more memory than the installed version.
     pub more_memory: bool,
     manifest_bytes: Vec<u8>,
@@ -239,6 +270,8 @@ impl std::fmt::Debug for Offer {
             .field("replaces", &self.replaces)
             .field("new_rights", &self.new_rights)
             .field("new_hooks", &self.new_hooks)
+            .field("new_places", &self.new_places)
+            .field("renamed", &self.renamed)
             .field("more_memory", &self.more_memory)
             .finish_non_exhaustive()
     }
@@ -253,10 +286,14 @@ impl Offer {
         self.source.is_ours()
     }
 
-    /// Whether it asks for more than the installed version — a right, a hook or memory: then the user is asked,
-    /// even where updates install themselves.
+    /// Whether it asks for more than the installed version — a right, a hook, a place, memory, or another name or
+    /// sign where it has a place: then the user is asked, even where updates install themselves.
     pub fn asks_more(&self) -> bool {
-        !self.new_rights.is_empty() || !self.new_hooks.is_empty() || self.more_memory
+        !self.new_rights.is_empty()
+            || !self.new_hooks.is_empty()
+            || !self.new_places.is_empty()
+            || self.renamed
+            || self.more_memory
     }
 }
 
@@ -436,12 +473,21 @@ impl Plugins {
                     .cloned()
                     .collect();
                 granted.extend(offer.new_rights.iter().cloned());
+                let places = &offer.manifest.places;
+                let mut placed: Vec<String> = earlier
+                    .placed
+                    .iter()
+                    .filter(|place| places.contains(place) && !offer.new_places.contains(place))
+                    .cloned()
+                    .collect();
+                placed.extend(offer.new_places.iter().cloned());
                 State {
                     previous: (earlier.current != version)
                         .then_some(earlier.current.clone())
                         .or(earlier.previous),
                     current: version.clone(),
                     granted,
+                    placed,
                     available: None,
                     held_back: None,
                     ..earlier
@@ -458,6 +504,7 @@ impl Plugins {
                 compiled: BTreeMap::new(),
                 available: None,
                 held_back: None,
+                placed: offer.manifest.places.clone(),
             },
         };
         state
@@ -562,6 +609,22 @@ impl Plugins {
             state.granted.retain(|had| had != right);
             if granted {
                 state.granted.push(right.to_owned());
+            }
+        })
+    }
+
+    /// Gives `id` one of the places it asks for, or takes it back: its page is then only on the page "Plugins".
+    pub fn set_place(&self, id: &str, place: &str, given: bool) -> Result<()> {
+        let installed = self.installed(id)?;
+        if !installed.manifest.places.iter().any(|asked| asked == place) {
+            return Err(Error::Conflict(format!(
+                "{id} does not ask for the place {place}"
+            )));
+        }
+        self.change(id, |state| {
+            state.placed.retain(|had| had != place);
+            if given {
+                state.placed.push(place.to_owned());
             }
         })
     }
@@ -750,6 +813,21 @@ impl Plugins {
             })
             .cloned()
             .collect();
+        let new_places = manifest
+            .places
+            .iter()
+            .filter(|place| {
+                earlier
+                    .as_ref()
+                    .is_none_or(|earlier| !earlier.manifest.places.contains(place))
+            })
+            .cloned()
+            .collect();
+        let renamed = earlier.as_ref().is_some_and(|earlier| {
+            !manifest.places.is_empty()
+                && (manifest.name != earlier.manifest.name
+                    || manifest.icon != earlier.manifest.icon)
+        });
         let more_memory = earlier
             .as_ref()
             .is_some_and(|earlier| manifest.memory_bytes() > earlier.manifest.memory_bytes());
@@ -758,6 +836,8 @@ impl Plugins {
             replaces: earlier.map(|earlier| earlier.state.current),
             new_rights,
             new_hooks,
+            new_places,
+            renamed,
             more_memory,
             manifest,
             manifest_bytes: fetched.manifest,

@@ -134,6 +134,16 @@ and by anyone who wants to. Scripts, the smaller sibling, chain what an app can 
   place gets none. A new place is a new minor version of the app's interface, so older plugins keep running.
   Nothing of this is built in Glut during its launch freeze.
 
+- **Built (2026-11-19, Q15's first place):** the manifest's `places` and `icon` (a name from the app's icon set),
+  `App::places` and `App::icons`, the user's choice in the state (`placed`, all given at install, each to take back
+  with `set_place`), an update with a new place asks (`Offer::new_places`), and so does one that changes the name or sign of a plugin
+  with a place (`Offer::renamed`). Hauch gives the place `sidebar`: an entry
+  under "Von Plugins" in its navigation (Schimmer's `Rail::section`) with one of 36 Lucide icons (none Hauch's own pages wear; a name of one of them is refused), the plugin's page
+  drawn there as a page of its own, and on "Plugins" a switch "In der Navigation" and "Öffnen" in its stead. One page
+  per plugin, wherever it is shown — a plugin wanting different pages per place (`show(place)`) is a later interface
+  version. The Wortfilter 0.2.0 asks for it. Context as a right comes with Glut.
+
 ## Later
 
-The free drawing surface (Q5), real signatures (Q4), places beyond Hauch's page (Q15).
+The free drawing surface (Q5), real signatures (Q4), places in Lirvel, the Studio and Glut, context as a right
+(Q15).

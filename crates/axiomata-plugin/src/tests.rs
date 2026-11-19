@@ -20,6 +20,9 @@ fn app() -> App {
         interfaces: vec![Version::new(0, 1, 0)],
         hooks: HOOKS.iter().map(|hook| (*hook).to_owned()).collect(),
         rights: Vec::new(),
+        places: vec!["sidebar".into(), "panel".into()],
+        icons: vec!["puzzle".into(), "book-open".into()],
+        reserved: vec!["Einstellungen".into(), "Settings".into()],
     }
 }
 
@@ -35,6 +38,8 @@ fn manifest(version: &str) -> Manifest {
         rights: vec![STORAGE.into()],
         provides: HOOKS.iter().map(|hook| (*hook).to_owned()).collect(),
         memory_mib: Some(16),
+        places: Vec::new(),
+        icon: None,
         sha256: sha256(PROBE),
     }
 }
@@ -432,6 +437,137 @@ fn an_update_keeps_the_version_before_and_its_storage_and_goes_back_and_forth() 
         2,
         "only the current and the previous version stay: {versions:?}"
     );
+}
+
+#[test]
+fn a_place_is_given_at_install_taken_back_by_the_user_and_asked_again_when_new() {
+    let bench = Bench::new(Duration::from_secs(2));
+    let placed = Manifest {
+        places: vec!["sidebar".into()],
+        icon: Some("book-open".into()),
+        ..manifest("0.1.0")
+    };
+    let offer = bench
+        .plugins
+        .fetch(&bench.release(&placed))
+        .expect("fetched");
+    assert_eq!(offer.new_places, vec!["sidebar".to_owned()]);
+    let installed = bench.plugins.install(offer).expect("installed");
+    assert!(installed.shows_at("sidebar"));
+    assert!(!installed.shows_at("panel"), "not asked for");
+
+    bench
+        .plugins
+        .set_place("probe", "sidebar", false)
+        .expect("taken back");
+    assert!(
+        !bench
+            .plugins
+            .installed("probe")
+            .expect("installed")
+            .shows_at("sidebar")
+    );
+    assert!(
+        bench.plugins.set_place("probe", "panel", true).is_err(),
+        "a place it did not ask for is not given"
+    );
+    bench
+        .plugins
+        .set_enabled("probe", false)
+        .expect("switched off");
+    bench
+        .plugins
+        .set_place("probe", "sidebar", true)
+        .expect("given");
+    assert!(
+        !bench
+            .plugins
+            .installed("probe")
+            .expect("installed")
+            .shows_at("sidebar"),
+        "a plugin switched off is shown nowhere"
+    );
+    bench.plugins.set_enabled("probe", true).expect("on");
+
+    // An update that keeps its place keeps the user's choice and asks nothing; one that wants another place asks.
+    bench
+        .plugins
+        .set_place("probe", "sidebar", false)
+        .expect("taken back");
+    bench.release(&Manifest {
+        version: Version::new(0, 2, 0),
+        ..placed.clone()
+    });
+    let same = bench
+        .plugins
+        .check("probe")
+        .expect("checked")
+        .expect("newer");
+    assert!(!same.asks_more());
+    let updated = bench.plugins.install(same).expect("updated");
+    assert!(!updated.shows_at("sidebar"), "the user's no stays");
+
+    bench.release(&Manifest {
+        version: Version::new(0, 3, 0),
+        places: vec!["sidebar".into(), "panel".into()],
+        ..placed.clone()
+    });
+    let more = bench
+        .plugins
+        .check("probe")
+        .expect("checked")
+        .expect("newer");
+    assert_eq!(more.new_places, vec!["panel".to_owned()]);
+    assert!(more.asks_more());
+    let updated = bench.plugins.install(more).expect("updated");
+    assert!(updated.shows_at("panel") && !updated.shows_at("sidebar"));
+    assert_eq!(updated.state.placed, vec!["panel".to_owned()]);
+
+    // Another name or sign where it has a place is what the user sees change: it waits for the user.
+    bench.release(&Manifest {
+        version: Version::new(0, 3, 1),
+        name: "Probe Zwei".into(),
+        places: vec!["sidebar".into(), "panel".into()],
+        ..placed.clone()
+    });
+    let renamed = bench
+        .plugins
+        .check("probe")
+        .expect("checked")
+        .expect("newer");
+    assert!(renamed.renamed && renamed.asks_more());
+
+    let refused = |manifest: &Manifest| {
+        bench
+            .plugins
+            .fetch(&bench.release(manifest))
+            .expect_err("refused")
+    };
+    let unknown_place = Manifest {
+        places: vec!["toolbar".into()],
+        ..manifest("0.4.0")
+    };
+    assert!(matches!(refused(&unknown_place), Error::Manifest(_)));
+    let twice = Manifest {
+        places: vec!["sidebar".into(), "sidebar".into()],
+        ..manifest("0.4.0")
+    };
+    assert!(matches!(refused(&twice), Error::Manifest(_)));
+    let own_page = Manifest {
+        name: "einstellungen ".into(),
+        ..manifest("0.4.0")
+    };
+    assert!(matches!(refused(&own_page), Error::Manifest(_)));
+    let blank = Manifest {
+        name: "\u{3164}\u{2800}".into(),
+        ..manifest("0.4.0")
+    };
+    assert!(matches!(refused(&blank), Error::Manifest(_)));
+    let unknown_icon = Manifest {
+        icon: Some("skull".into()),
+        ..manifest("0.4.0")
+    };
+    assert!(matches!(refused(&unknown_icon), Error::Manifest(_)));
 }
 
 #[test]
