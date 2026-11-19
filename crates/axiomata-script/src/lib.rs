@@ -5,7 +5,8 @@
 //!
 //! * **QuickJS through `rquickjs`**: the script is the body of an async function, so `await` and `return` work at the
 //!   top. TypeScript loses its types first (oxc). No Node, no `fetch`, no `require`, no file system, no timers but
-//!   `wait(seconds)` ([`Limits::max_wait`]) — the only way out is `tools.<name>(args)`.
+//!   `wait(seconds)` ([`Limits::max_wait`]), which the host may cut short ([`Nudge`]) — the only way out is
+//!   `tools.<name>(args)`.
 //! * **The host answers every call** ([`Request`]): this crate calls no tool of its own. Whatever guards a host has —
 //!   its switches, its gate, asking its owner — a call from a script passes them as a direct call would.
 //! * **No regular expressions**: the bundled quickjs-ng has an open advisory, GHSA-rxpx-wj25-jhqq (2026-07):
@@ -36,7 +37,7 @@ use rquickjs::{
     AsyncContext, AsyncRuntime, CatchResultExt, Ctx, Function, Promise, Value as JsValue,
 };
 use serde_json::{Value, json};
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::{Notify, mpsc, oneshot};
 
 pub use catalog::{Catalog, ToolSpec, declarations};
 
@@ -214,8 +215,9 @@ pub fn guide(limits: &Limits) -> String {
          the tool's text output — JSON.parse it when it is JSON — and rejects with an Error when the call fails or is \
          refused. Only what you print (`text(...)`, `console.log(...)`) and `return` comes back to you — filter and \
          sum up large results inside the script, and run independent calls together with `Promise.all`. At most {} \
-         tool calls per script. `await wait(seconds)` pauses, at most {} s at a time. `store(key, value)` / \
-         `load(key)` keep small JSON values for later scripts. `searchTools(query)` → [{{name, description}}], \
+         tool calls per script. `await wait(seconds)` pauses, at most {} s at a time; it resolves to `true` when the \
+         host cut it short (go on at once), else `false`. `store(key, value)` / `load(key)` keep small JSON values \
+         for later scripts. `searchTools(query)` → [{{name, description}}], \
          `describeTool(name)` → its argument schema, `ALL_TOOLS` → every name. Regular expressions are not available, \
          and with them neither `match`, `matchAll` nor `search` — use `includes`, `indexOf`, `split` and \
          `replaceAll`. Error lines count from your first line (in TypeScript only roughly).",
@@ -257,11 +259,24 @@ pub enum Reply {
     Failed(String),
 }
 
-/// What stops a script from outside: the host's stop flag and the deadline.
+/// What stops a script from outside: the host's stop flag and the deadline — and what cuts its waits short.
 #[derive(Debug, Clone)]
 pub struct Interrupt {
     stop: Arc<AtomicBool>,
     deadline: Instant,
+    wake: Arc<Notify>,
+}
+
+/// Ends the `wait` a script is in at once, or its next one should it be in none — a host's "go on" (a speaker's
+/// "weiter" during a slideshow). The `wait` then resolves to `true`. Nudges given while no wait runs count once.
+#[derive(Debug, Clone)]
+pub struct Nudge(Arc<Notify>);
+
+impl Nudge {
+    /// Cuts the script's current or next wait short.
+    pub fn nudge(&self) {
+        self.0.notify_one();
+    }
 }
 
 impl Interrupt {
@@ -271,19 +286,30 @@ impl Interrupt {
         Self {
             stop: Arc::default(),
             deadline,
+            wake: Arc::default(),
         }
     }
 
     /// A script that may run until `deadline` or until `stop` is set — the host's own flag, set from anywhere.
     #[must_use]
     pub fn with_stop(stop: Arc<AtomicBool>, deadline: Instant) -> Self {
-        Self { stop, deadline }
+        Self {
+            stop,
+            deadline,
+            wake: Arc::default(),
+        }
     }
 
     /// The flag that stops the script when set.
     #[must_use]
     pub fn stopper(&self) -> Arc<AtomicBool> {
         Arc::clone(&self.stop)
+    }
+
+    /// What cuts the script's waits short.
+    #[must_use]
+    pub fn nudge(&self) -> Nudge {
+        Nudge(Arc::clone(&self.wake))
     }
 
     fn stopped(&self) -> bool {
@@ -433,8 +459,9 @@ const PRELUDE: &str = r#"
     if (waiting >= 16) throw new Error("too many waits at once");
     waiting++;
     try {
-      const refused = await pause(Number(seconds));
-      if (refused) throw new Error(refused);
+      const [ok, out] = JSON.parse(await pause(Number(seconds)));
+      if (!ok) throw new Error(out);
+      return out;
     } finally {
       waiting--;
     }
@@ -688,6 +715,8 @@ fn install<'js>(ctx: &Ctx<'js>, host: Host) -> rquickjs::Result<()> {
         limits,
     } = host;
     let globals = ctx.globals();
+    // Taken before the calls' closure takes the interrupt itself.
+    let wake = Arc::clone(&interrupt.wake);
     globals.set("__max_calls", limits.max_calls)?;
     // A loop printing forever must not fill the memory outside QuickJS's limit; the host gets less anyway.
     let max_buffered = limits.max_output_chars.saturating_mul(10);
@@ -731,23 +760,32 @@ fn install<'js>(ctx: &Ctx<'js>, host: Host) -> rquickjs::Result<()> {
         "__wait",
         Function::new(
             ctx.clone(),
+            // `[true, woken]` when it waited — `woken` when the host cut it short — or `[false, why]`.
             Async(move |seconds: f64| {
                 let activity = Arc::clone(&waiting);
+                let wake = Arc::clone(&wake);
                 async move {
                     if !seconds.is_finite() || seconds < 0.0 {
-                        return Ok::<Option<String>, rquickjs::Error>(Some(
-                            "wait needs a number of seconds".into(),
-                        ));
+                        return Ok::<String, rquickjs::Error>(
+                            json!([false, "wait needs a number of seconds"]).to_string(),
+                        );
                     }
                     // Compared as seconds first: a huge number is no Duration at all.
                     if seconds > limits.max_wait.as_secs_f64() {
                         let most = limits.max_wait.as_secs();
-                        return Ok(Some(format!("wait at most {most} seconds at a time")));
+                        return Ok(json!([
+                            false,
+                            format!("wait at most {most} seconds at a time")
+                        ])
+                        .to_string());
                     }
                     let asked = Duration::from_secs_f64(seconds);
                     let _open = Open::new(&activity);
-                    tokio::time::sleep(asked).await;
-                    Ok(None)
+                    let woken = tokio::select! {
+                        () = tokio::time::sleep(asked) => false,
+                        () = wake.notified() => true,
+                    };
+                    Ok(json!([true, woken]).to_string())
                 }
             }),
         )?,

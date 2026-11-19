@@ -16,8 +16,9 @@ use std::path::{Path, PathBuf};
 #[cfg(target_os = "macos")]
 mod kit;
 
-/// The most pictures one read returns.
-pub const MAX_READ: usize = 60;
+/// The most pictures one read returns: as many as a slideshow of a script takes (Lirvel §8x Q18); a caller that
+/// tells them one by one asks for fewer.
+pub const MAX_READ: usize = 100;
 /// The most words one read looks for.
 pub const MAX_WORDS: usize = 4;
 /// The longest word looked for.

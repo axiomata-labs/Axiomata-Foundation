@@ -191,6 +191,49 @@ async fn the_hosts_stop_ends_a_script_waiting_for_a_call() {
 }
 
 #[tokio::test]
+async fn a_nudge_cuts_the_wait_short_and_one_given_before_ends_the_next_at_once() {
+    let interrupt = soon();
+    let nudge = interrupt.nudge();
+    let later = nudge.clone();
+    tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_millis(150)).await;
+        later.nudge();
+    });
+    let started = Instant::now();
+    let ended = with(
+        Script::javascript(
+            "const a = await wait(20); const b = await wait(0.05); return [a, b].join(' ')",
+        ),
+        Kept::default(),
+        Limits::default(),
+        interrupt,
+    )
+    .await;
+    assert!(ended.ok(), "{}", ended.text);
+    assert_eq!(
+        ended.text, "true false",
+        "the first cut short, the second slept"
+    );
+    assert!(started.elapsed() < Duration::from_secs(2));
+    // Given while no wait runs, it counts for the next one — once.
+    let interrupt = soon();
+    interrupt.nudge().nudge();
+    interrupt.nudge().nudge();
+    let started = Instant::now();
+    let ended = with(
+        Script::javascript(
+            "const a = await wait(20); const b = await wait(0.05); return [a, b].join(' ')",
+        ),
+        Kept::default(),
+        Limits::default(),
+        interrupt,
+    )
+    .await;
+    assert_eq!(ended.text, "true false", "{}", ended.text);
+    assert!(started.elapsed() < Duration::from_secs(2));
+}
+
+#[tokio::test]
 async fn a_script_that_waits_for_nothing_ends_at_once() {
     let started = Instant::now();
     let ended = js("text('a'); await new Promise(() => {}); return 'never'").await;
