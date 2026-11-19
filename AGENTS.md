@@ -18,6 +18,12 @@ Guidance for coding agents in this repository (Claude Code reads it through `CLA
   `tools.<name>(args)` — every call a `Request` the host answers on its own path; no `RegExp` (GHSA-rxpx-wj25-jhqq —
   do not add it back until rquickjs bundles a fixed engine); limits on memory, calls, output and `wait`; ends on stop,
   deadline, or a script waiting for nothing. Lirvel first; Glut's `codemode.rs` moves onto it after its launch.
+- `crates/axiomata-plugin` — plugins (`docs/plans/plugins.md`): WebAssembly components with a WIT interface
+  (`wit/plugin.wit`, `axiomata:plugin`; each app adds its world), fetched from a GitHub release, an HTTPS address or a
+  folder, checked (manifest, SHA-256, imports against the rights asked for, exports), translated once into machine
+  code (kept with its checksum), run in wasmtime on a fresh instance per call with a memory cap and a time limit
+  (epochs); WASI linked with nothing granted; a storage folder per plugin. The tests' plugin is
+  `tests/guest` (`build.sh` → `tests/probe.wasm`; needs rustup's `wasm32-wasip2`). Hauch first.
 - Next to move in when the Studio leaves Axiomata: the terminal emulator (`axiomata-terminal`).
 
 The apps build these crates from this folder (path dependencies): a change here takes effect in each app at its next

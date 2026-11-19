@@ -1,0 +1,28 @@
+/// The world of the tests' plugin: the shared base and hooks that show each way a plugin can behave.
+package axiomata:probe@0.1.0;
+
+interface hooks {
+    /// Returns `text` as it came.
+    echo: func(text: string) -> string;
+    /// Never returns: a plugin that hangs.
+    spin: func();
+    /// Sleeps an hour: a plugin that waits on the host.
+    nap: func();
+    /// Takes `mib` MiB and holds them; returns how many it got.
+    grow: func(mib: u32) -> u32;
+    /// Keeps `value` in its storage.
+    save: func(key: string, value: string) -> result<_, string>;
+    /// Reads from its storage.
+    load: func(key: string) -> result<option<string>, string>;
+    /// Busy work for the measurement of interrupting: `rounds` rounds of arithmetic.
+    work: func(rounds: u64) -> u64;
+    /// Writes `times` lines to the log.
+    shout: func(times: u32);
+    /// The app's language.
+    language: func() -> string;
+}
+
+world probe {
+    include axiomata:plugin/base@0.1.0;
+    export hooks;
+}

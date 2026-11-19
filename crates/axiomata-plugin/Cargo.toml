@@ -1,0 +1,20 @@
+[package]
+name = "axiomata-plugin"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Plugins for the Axiomata apps: WebAssembly components fetched from a release, checked, translated once at install and run in wasmtime — fresh for every call, with no rights but those the user granted, within limits of memory and time."
+
+[dependencies]
+reqwest.workspace = true
+semver.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+wasmtime.workspace = true
+wasmtime-wasi.workspace = true
+
+[dev-dependencies]
+tempfile = "3"

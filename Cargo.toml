@@ -41,3 +41,18 @@ rquickjs = { version = "0.14", default-features = false, features = ["std", "fut
 oxc = { version = "0.159", default-features = false, features = ["transformer", "codegen", "semantic"] }
 # A script's tool calls (channels), its watch and `wait` (timer), and `select!` between them; the host's runtime.
 tokio = { version = "1.54", default-features = false, features = ["rt", "time", "sync", "macros"] }
+# Plugins for `axiomata-plugin` (docs/plans/plugins.md): WebAssembly components with a WIT interface. Cranelift is in,
+# because the app translates a plugin once at install into machine code; the component model's async ABI is compiled
+# in for components that use it, but every call runs synchronously. No WASI beyond P2, nothing of the defaults the
+# host does not need.
+wasmtime = { version = "=50.0.2", default-features = false, features = ["runtime", "cranelift", "component-model", "component-model-async", "std", "parallel-compilation"] }
+# WASI P2 with nothing granted: no folders, no network, no variables — what a guest's standard library imports must
+# link, and only that.
+wasmtime-wasi = { version = "=50.0.2", default-features = false, features = ["p2"] }
+# Releases fetched from GitHub or a direct address at install and update: blocking HTTPS through rustls, as Hauch and
+# Lirvel have it.
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "blocking"] }
+# A plugin's checksum (its manifest names the SHA-256 of its `.wasm`) and the check of its compiled machine code.
+sha2 = "0.10"
+# A plugin's version and the interface version it was built against.
+semver = { version = "1", features = ["serde"] }

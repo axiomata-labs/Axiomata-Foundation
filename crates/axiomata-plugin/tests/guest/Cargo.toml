@@ -1,0 +1,22 @@
+# The plugin the tests run (`../probe.wasm`, built by `build.sh`): every way a plugin can behave — well, slowly,
+# greedily, loudly — in one component. Not a member of the workspace: it builds for `wasm32-wasip2` only.
+[package]
+name = "probe"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = { version = "=0.63.0", default-features = false, features = ["macros", "realloc"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+codegen-units = 1
+
+[workspace]

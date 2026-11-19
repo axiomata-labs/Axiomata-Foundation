@@ -75,6 +75,49 @@ and by anyone who wants to. Scripts, the smaller sibling, chain what an app can 
   (Q8) and the templates → Lirvel → Glut after its launch → the Studio once it is an app of its own. Website and
   index once the first strangers' plugins exist.
 
+## Built (2026-11-19, first step of Q14)
+
+- **`crates/axiomata-plugin`**: the shared host. WIT package `axiomata:plugin@0.1.0` (`wit/plugin.wit`): `log`,
+  `settings` (the app's language), `storage`, `ui` (the blocks of Q5) and the export `page` (`show`, `handle`); an app's
+  world includes `base` and exports its hooks from `<package>/hooks`. `Plugins::fetch` → `Offer` (manifest checked,
+  SHA-256, component translated, imports matched against the rights asked for, the page and every provided hook
+  exported, linked) → `Plugins::install` after the yes; `check`, `check_due` (daily, updating by itself only without a
+  new right), `roll_back` (current ↔ previous), `remove`, `set_enabled`, `set_right`, `set_auto_update`; `page`,
+  `handle`, `call` (typed, any hook of the app). On disk `<id>/state.json`, `<id>/versions/<version>/` (manifest,
+  component, machine code with its SHA-256 in the state, translated again when it changed or another wasmtime made it),
+  `<id>/data/`.
+- **Every call meets a fresh instance** (14 µs for a Rust plugin, 60 µs with QuickJS inside), 2 s and the manifest's
+  memory (64 MiB unless it asks for up to 512): no pool, nothing kept in memory between calls (Q6). Epochs cost
+  nothing measurable (`../Lirvel/docs/research/plugin-runtimes.md`).
+- **Hauch** (Q8): `hauch:plugin@0.1.0` (`crates/hauch-app/wit/hauch.wit`) with the hook `filter-recognised`, called
+  for the workshop's transcript, `hauch transcribe` and `hauch dictate`; the page "Plugins" (list; adding with the
+  publisher, "Von Axiomata" and the rights; switched on, each right, updating by itself; looking for updates, back to
+  the version before, removing after a second click; the plugin's own page under "Vom Plugin gezeigt"; its log
+  lines); `hauch plugins [install|update|back|on|off|remove|filter|wit]`. Hauch looks for updates once a day while
+  its window is open.
+- **The first plugin and the template** (Q13): `axiomata-labs/hauch-wortfilter` (Rust, 103 KB: the owner's own
+  replacements for words the recogniser gets wrong) and `axiomata-labs/axiomata-plugin-template` (Rust ~80 KB and
+  JavaScript ~1.4 MB through `componentize-qjs --sync`, TypeScript compiled to JS first); a tag builds the release
+  with `plugin.json` and `plugin.wasm`.
+- **Decided while building:** a right the user takes back is not unlinked but answers every call of its interface
+  with `not granted: …` — the plugin keeps running without it (Q3 says the import is never linked; a component that
+  imports an interface whose right its manifest does not ask for is refused at fetch, which is what that guarded).
+  A plugin's publisher and "Von Axiomata" come from where it was fetched, never from its manifest. Another plugin
+  under an id already installed from elsewhere is refused. Network and file rights, keys (Q12), the index (Q2) and
+  Lirvel's world come with the next steps.
+- **After review and security audit (2026-11-19):** a plugin may not wait — WASI's `poll` and `block` (a sleep, a
+  blocking read) trap, since epochs end a plugin only in its own code and a waiting host call would hold the hook
+  past its limit; everything a plugin hands the host in one transfer is bounded at 16 MiB before it is copied
+  (wasmtime's hostcall fuel — strings aliasing one buffer count each time); one budget for all memories and table
+  elements of a call; a page at most 1000 blocks, 8 deep, 1 MiB of text, 16 pictures of at most 2048 pixels a side;
+  a component at most 16 MiB (it is translated before the user is asked); the offer shows the hooks (what the plugin
+  gets from the app) and the memory beside the rights, and an update that asks for more of any installs itself
+  never; a found update is kept in the state ("Update verfügbar" after a restart), the version gone back from is held
+  back; a release's assets must lie under `github.com/<owner>/<repo>/releases/download/`; an address names its host
+  and first path segment as publisher; names and descriptions with direction overrides are refused; the plugin folder
+  is 0700. Accepted: an address may lead to any HTTPS host the user typed; a hook's signature is checked at its first
+  call, not at install.
+
 ## Later
 
 The free drawing surface (Q5), real signatures (Q4), measuring the cost of interrupting (Q6).

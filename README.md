@@ -9,4 +9,8 @@ The crates the Axiomata apps share, [Glut](https://github.com/axiomata-labs/glut
 - **`axiomata-script`** — scripts in JavaScript or TypeScript that reach the outside only through a host's tools:
   QuickJS in the process, with limits on memory, calls, output and time.
 
+- **`axiomata-plugin`** — plugins as WebAssembly components: fetched from a release, checked, translated once,
+  run in wasmtime on a fresh instance per call with no rights but those the user granted. Hauch's plugins stand on
+  it; [a template](https://github.com/axiomata-labs/axiomata-plugin-template) shows how to write one.
+
 Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT license](LICENSE-MIT) at your option.

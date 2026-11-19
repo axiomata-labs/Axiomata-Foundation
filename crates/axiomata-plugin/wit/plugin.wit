@@ -1,0 +1,138 @@
+/// What every plugin of every Axiomata app shares: the app's log, what the app tells about itself, a storage of the
+/// plugin's own, and a page built from blocks the app draws. Each app adds its own world on top
+/// (`include axiomata:plugin/base@0.1.0;`): its hooks, and later rights of its own.
+///
+/// A plugin keeps nothing in memory from one call to the next: every call meets a fresh instance. What must last goes
+/// into `storage`.
+package axiomata:plugin@0.1.0;
+
+/// Lines for the app's log, shown with the plugin's name.
+interface log {
+    enum level {
+        debug,
+        info,
+        warn,
+        error,
+    }
+
+    /// Writes one line; a long one is cut, and a call that writes too many loses the rest.
+    log: func(level: level, message: string);
+}
+
+/// What the app tells every plugin about itself.
+interface settings {
+    /// The language the app speaks to its user, as a tag such as `de` or `en`.
+    language: func() -> string;
+}
+
+/// A storage of the plugin's own: one folder only it reaches, nothing else. Needs the right `storage`; without it,
+/// every function returns an error.
+///
+/// A key is 1–64 characters of `a-z`, `0-9`, `.`, `_` and `-`, not starting with `.`; a value is at most 1 MiB, all
+/// values together at most 16 MiB.
+interface storage {
+    /// The value under `key`, or none.
+    get: func(key: string) -> result<option<list<u8>>, string>;
+    /// Keeps `value` under `key`, replacing what was there.
+    set: func(key: string, value: list<u8>) -> result<_, string>;
+    /// Removes `key`; removing a missing key is no error.
+    remove: func(key: string) -> result<_, string>;
+    /// Every key there is, sorted.
+    keys: func() -> result<list<string>, string>;
+}
+
+/// Building blocks of a plugin's page. A plugin never draws itself: it describes the page, the app draws it in its
+/// own look, and what the user does comes back as an event.
+interface ui {
+    record button {
+        id: string,
+        label: string,
+        /// The one action that matters most on the page.
+        primary: bool,
+    }
+
+    record switch {
+        id: string,
+        label: string,
+        on: bool,
+    }
+
+    record field {
+        id: string,
+        label: string,
+        value: string,
+        placeholder: string,
+    }
+
+    record choice {
+        id: string,
+        label: string,
+        options: list<string>,
+        chosen: option<u32>,
+    }
+
+    record picture {
+        /// PNG or JPEG, at most 4 MiB.
+        bytes: list<u8>,
+        /// What it shows, for those who cannot see it.
+        description: string,
+    }
+
+    variant block {
+        /// A card with a title; its children inside.
+        card(string),
+        /// Its children side by side.
+        row,
+        /// Its children as the rows of a list.
+        %list,
+        text(string),
+        /// Quieter text: a hint, a count.
+        note(string),
+        picture(picture),
+        button(button),
+        switch(switch),
+        field(field),
+        choice(choice),
+    }
+
+    /// One block; `parent` is the index of the block it sits in (a card, a row or a list), none for the page itself.
+    /// A parent comes before its children.
+    record node {
+        parent: option<u32>,
+        block: block,
+    }
+
+    record page {
+        nodes: list<node>,
+    }
+
+    variant action {
+        clicked(string),
+        switched(tuple<string, bool>),
+        chosen(tuple<string, u32>),
+    }
+
+    /// What the user did, with every field's value at that moment (id, value): a click on "Add" brings what was typed.
+    record event {
+        action: action,
+        fields: list<tuple<string, string>>,
+    }
+}
+
+/// The page a plugin shows on the app's page "Plugins".
+interface page {
+    use ui.{page, event};
+
+    /// The page as it is now.
+    show: func() -> page;
+    /// The user did something on it; returns the page as it is after.
+    handle: func(event: event) -> page;
+}
+
+/// What every plugin has; an app's world includes it.
+world base {
+    import log;
+    import settings;
+    import storage;
+    export page;
+}
