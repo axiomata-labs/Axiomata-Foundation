@@ -118,6 +118,22 @@ and by anyone who wants to. Scripts, the smaller sibling, chain what an app can 
   is 0700. Accepted: an address may lead to any HTTPS host the user typed; a hook's signature is checked at its first
   call, not at install.
 
+## Talked through (owner, 2026-11-19, Q15)
+
+- **Q15 Places:** a plugin gets a stage only where an app offers one — a *place* in its interface, the counterpart of
+  a hook (a hook is a step in the app's work where it hands the plugin data and goes on with the answer, nothing
+  shown; a place is where the app shows what the plugin describes). Each app's world names its places: Hauch `page`
+  (the plugin's own page under "Plugins", today's only one); the Studio `sidebar` (an entry on the left with an icon,
+  opening a page); Glut `right-tab` (a tab in the right panel) and `left-panel` (a panel of its own), both offered,
+  the tab first since it fits the layout as it is. The manifest names the places it wants, as `provides` names hooks;
+  the offer shows them ("Bekommt einen Reiter rechts") and the user may refuse each. What a place shows is the blocks
+  of Q5, drawn by the app. Its icon is a name from the app's own icon set (an own monochrome SVG the app tints is a
+  later step), and the entry is marked as a plugin's, so none passes for a part of the app. A place beside the work
+  gets the app's *context* (Glut: the open session, the chosen file) when it is drawn and is drawn again when the
+  context changes — seeing it is a right of its own, shown at install ("Sieht, welche Datei offen ist"); without it a
+  place gets none. A new place is a new minor version of the app's interface, so older plugins keep running.
+  Nothing of this is built in Glut during its launch freeze.
+
 ## Later
 
-The free drawing surface (Q5), real signatures (Q4), measuring the cost of interrupting (Q6).
+The free drawing surface (Q5), real signatures (Q4), places beyond Hauch's page (Q15).
