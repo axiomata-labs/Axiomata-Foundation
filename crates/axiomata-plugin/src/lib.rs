@@ -22,6 +22,11 @@
 //! Each app adds its world (`hauch:plugin`) on top of the shared one, [`WIT`]: its hooks are exported from
 //! `<package>/hooks` and called through [`Plugins::call`].
 //!
+//! **An app under the hardened runtime** must be signed with the entitlement
+//! `com.apple.security.cs.allow-unsigned-executable-memory`: wasmtime makes the machine code executable itself, and
+//! without it macOS kills the app at the first call ("Code Signature Invalid"). `allow-jit` alone is not enough.
+//! Tests run unsigned and never see this.
+//!
 //! On disk, under the app's plugin folder: `<id>/state.json`, `<id>/versions/<version>/` (manifest, component, machine
 //! code; the current and the previous version) and `<id>/data/`, the plugin's storage.
 
