@@ -1,6 +1,8 @@
 //! A plugin's manifest, `plugin.json`, beside its `plugin.wasm` in every release: who it is, what it was built
 //! against, what it asks for, and the checksum of its code.
 
+use std::collections::BTreeMap;
+
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
@@ -25,6 +27,8 @@ const MAX_NAME_CHARS: usize = 60;
 const MAX_DESCRIPTION_CHARS: usize = 500;
 const MAX_AUTHOR_CHARS: usize = 100;
 const MAX_LIST: usize = 32;
+/// The longest language code a description may be keyed by: two or three letters, as `de`, `en` or `gsw`.
+const MAX_LANGUAGE_CHARS: usize = 3;
 
 /// What `plugin.json` says. Fields this version does not know are ignored, so a newer manifest still reads.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -38,8 +42,13 @@ pub struct Manifest {
     pub app: String,
     /// The version of the app's plugin interface it was built against.
     pub interface: Version,
+    /// What it does, in the language a manifest without [`Self::descriptions`] for the user's language falls back to.
     #[serde(default)]
     pub description: String,
+    /// What it does in each language it speaks, keyed by a lowercase language code (`de`, `en`): an app shows the one
+    /// in its own language ([`Self::description_in`]), never two languages one under the other.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub descriptions: BTreeMap<String, String>,
     #[serde(default)]
     pub author: String,
     /// The rights it asks for; it gets none it did not ask for, and the user may refuse each.
@@ -72,6 +81,14 @@ impl Manifest {
         Ok(manifest)
     }
 
+    /// What it does in `language` (a lowercase code such as `de`), or [`Self::description`] where it says nothing in
+    /// that language.
+    pub fn description_in(&self, language: &str) -> &str {
+        self.descriptions
+            .get(language)
+            .map_or(self.description.as_str(), String::as_str)
+    }
+
     /// The memory this plugin may use, in bytes.
     pub fn memory_bytes(&self) -> usize {
         self.memory_mib.unwrap_or(DEFAULT_MEMORY_MIB) as usize * 1024 * 1024
@@ -94,6 +111,31 @@ impl Manifest {
             if text.chars().count() > most || text.chars().any(|c| c.is_control() || is_format(c)) {
                 return bad(format!(
                     "the {field} is longer than {most} characters or holds control characters"
+                ));
+            }
+        }
+        if self.descriptions.len() > MAX_LIST {
+            return bad("too many descriptions".into());
+        }
+        for (language, text) in &self.descriptions {
+            if language.is_empty()
+                || language.len() > MAX_LANGUAGE_CHARS
+                || !language.bytes().all(|b| b.is_ascii_lowercase())
+            {
+                return bad(format!(
+                    "the description's language {:?} is not 1–{MAX_LANGUAGE_CHARS} letters a-z",
+                    language
+                        .chars()
+                        .take(MAX_LANGUAGE_CHARS + 1)
+                        .collect::<String>()
+                ));
+            }
+            if text.chars().count() > MAX_DESCRIPTION_CHARS
+                || text.chars().any(|c| c.is_control() || is_format(c))
+            {
+                return bad(format!(
+                    "the description in {language} is longer than {MAX_DESCRIPTION_CHARS} characters or holds \
+                     control characters"
                 ));
             }
         }

@@ -147,3 +147,8 @@ and by anyone who wants to. Scripts, the smaller sibling, chain what an app can 
 
 The free drawing surface (Q5), real signatures (Q4), places in Lirvel, the Studio and Glut, context as a right
 (Q15).
+
+- **Built (2026-11-20):** a description in each language the plugin speaks — the manifest's `descriptions`, keyed by
+  a lowercase language code (`de`, `en`), each checked as `description` is; an app shows `description_in(its
+  language)`, and `description` where there is none for it, so a plugin never shows two languages one under the
+  other. A manifest without it reads as before. The Wortfilter 0.2.1 has it.

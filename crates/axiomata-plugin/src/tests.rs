@@ -1,5 +1,6 @@
 //! The plugin host against the tests' plugin (`tests/probe.wasm`, built by `tests/guest/build.sh`).
 
+use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -34,6 +35,7 @@ fn manifest(version: &str) -> Manifest {
         app: "probe".into(),
         interface: Version::new(0, 1, 0),
         description: "The tests' plugin".into(),
+        descriptions: BTreeMap::new(),
         author: "Axiomata".into(),
         rights: vec![STORAGE.into()],
         provides: HOOKS.iter().map(|hook| (*hook).to_owned()).collect(),
@@ -889,4 +891,39 @@ fn a_name_that_hides_what_it_says_is_refused() {
         ..manifest("0.1.0")
     };
     assert!(matches!(hidden.check(&app()), Err(Error::Manifest(_))));
+}
+
+#[test]
+fn a_description_is_shown_in_the_users_language_and_falls_back_to_the_plain_one() {
+    let speaking = Manifest {
+        description: "Replaces words".into(),
+        descriptions: BTreeMap::from([("de".into(), "Ersetzt Wörter".into())]),
+        ..manifest("0.1.0")
+    };
+    assert!(speaking.check(&app()).is_ok());
+    assert_eq!(speaking.description_in("de"), "Ersetzt Wörter");
+    assert_eq!(speaking.description_in("en"), "Replaces words");
+
+    // An older manifest without them still reads, and one written back keeps its shape.
+    let json = serde_json::to_value(manifest("0.1.0")).expect("written");
+    assert!(json.get("descriptions").is_none());
+}
+
+#[test]
+fn a_description_under_a_strange_language_or_hiding_what_it_says_is_refused() {
+    for (language, text) in [
+        ("DE", "Ersetzt"),
+        ("deutsch", "Ersetzt"),
+        ("", "Ersetzt"),
+        ("de", "Ersetzt\u{202E}tztesrE"),
+    ] {
+        let strange = Manifest {
+            descriptions: BTreeMap::from([(language.into(), text.into())]),
+            ..manifest("0.1.0")
+        };
+        assert!(
+            matches!(strange.check(&app()), Err(Error::Manifest(_))),
+            "{language:?}"
+        );
+    }
 }
