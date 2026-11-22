@@ -1,0 +1,146 @@
+# The texts of Settings → Voice (`shell/PodcastSettings.svelte`). Voice ids and folder names stay as they are
+# (`docs/plans/i18n.md`, Q13).
+
+[title]
+en = "Podcast"
+de = "Podcast"
+
+[lead]
+en = "The news-podcast skill writes a conversation for two speakers every night and has it voiced. Choose who speaks: a cloned voice of Hauch for each role — Hauch keeps the choice, so Lirvel's conversation episodes speak with the same voices. Names and characters are in {profile} in the vault."
+de = "Der Skill news-podcast schreibt jede Nacht ein Gespräch für zwei Stimmen und lässt es vertonen. Wähle, wer spricht: für jede Rolle eine geklonte Stimme aus Hauch — Hauch merkt sich die Wahl, auch Lirvels Gesprächsfolgen sprechen mit diesen Stimmen. Namen und Charaktere stehen in {profile} im Vault."
+
+[explainer]
+en = "Explains"
+de = "Erklärt"
+
+[explainerHint]
+en = "The speaker who explains (Samantha in the profile)."
+de = "Die Stimme, die erklärt (im Profil Samantha)."
+
+[asker]
+en = "Asks back"
+de = "Fragt nach"
+
+[askerHint]
+en = "The speaker who asks back as a curious listener (Theodor in the profile)."
+de = "Die Stimme, die als neugieriger Hörer nachfragt (im Profil Theodor)."
+
+[none]
+en = "— not chosen —"
+de = "— nicht gewählt —"
+
+[model]
+en = "Script model"
+de = "Modell für das Skript"
+
+[skillModel]
+en = "— the skill model —"
+de = "— das Skill-Modell —"
+
+[modelHint]
+en = "The model that writes the script. A cheap skill model tends to drop the roles and moods."
+de = "Das Modell, das das Skript schreibt. Ein sehr günstiges Skill-Modell übergeht gern Rollen und Stimmungen."
+
+[edit]
+en = "Edit the script"
+de = "Skript lektorieren"
+
+[editHint]
+en = "Before an episode is voiced, a second model reads its script with fresh eyes: it corrects errors and turns stiff phrasing and bumpy transitions into spoken language — no new facts, numbers and names unchanged. Runs on Claude Code (your subscription). What it changed, line by line: ~/.axiomata/logs/podcast-edits/."
+de = "Bevor eine Folge vertont wird, liest ein zweites Modell ihr Skript mit frischem Blick: Es korrigiert Fehler und macht aus steifen Wendungen und holprigen Übergängen gesprochene Sprache — keine neuen Fakten, Zahlen und Namen bleiben. Läuft über Claude Code (dein Abo). Was es geändert hat, Zeile für Zeile: ~/.axiomata/logs/podcast-edits/."
+
+[editModel]
+en = "Editing model"
+de = "Modell fürs Lektorat"
+
+[editModelDefault]
+en = "— {model} —"
+de = "— {model} —"
+
+[keepDraft]
+en = "Keep the draft"
+de = "Entwurf aufheben"
+
+[keepDraftHint]
+en = "The script as written stays beside the edited one as <date>-entwurf.json, to compare."
+de = "Das Skript, wie es geschrieben wurde, bleibt als <Datum>-entwurf.json neben dem lektorierten liegen."
+
+[noVoices]
+en = "No cloned voice yet. Make one in Hauch (workshop or lab); it then appears here."
+de = "Noch keine geklonte Stimme. Leg eine in Hauch an (Werkstatt oder Labor), dann erscheint sie hier."
+
+[hauchTitle]
+en = "Hauch"
+de = "Hauch"
+
+[hauchLead]
+en = "Voices, the recording workshop, the lab for described voices and the pronunciation list live in Hauch, an app of its own. What you change there applies here at once."
+de = "Stimmen, die Aufnahme-Werkstatt, das Labor für beschriebene Stimmen und die Aussprache-Liste sind in Hauch, einer eigenen App. Was du dort änderst, gilt hier sofort."
+
+[hauchOpen]
+en = "Open in Hauch"
+de = "In Hauch öffnen"
+
+[hauchFailed]
+en = "Hauch did not start. Is it installed in Applications?"
+de = "Hauch ließ sich nicht starten. Ist es unter Programme installiert?"
+
+[hauchProposals]
+en = "New pronunciation proposals from the podcast: {count}. Check them in Hauch under Pronunciation."
+de = "Neue Aussprache-Vorschläge aus dem Podcast: {count}. Prüfe sie in Hauch unter Aussprache."
+
+[wordProposed]
+en = "proposed"
+de = "vorgeschlagen"
+
+[loadFailed]
+en = "Could not read the podcast settings: {error}"
+de = "Die Podcast-Einstellungen ließen sich nicht lesen: {error}"
+
+[loading]
+en = "Loading…"
+de = "Lade…"
+
+[saved]
+en = "Podcast settings saved"
+de = "Podcast-Einstellungen gespeichert"
+
+[saveFailed]
+en = "Could not save the podcast settings: {error}"
+de = "Die Podcast-Einstellungen ließen sich nicht speichern: {error}"
+
+[wordsTitle]
+en = "Pronunciation"
+de = "Aussprache"
+
+[wordsHint]
+en = "Words the voices say wrong — technical terms, names — and how they should say them, written as spoken. Every episode goes through this list, and dictation expects these words."
+de = "Wörter, die die Stimmen falsch sagen – Fachbegriffe, Namen –, und wie sie sie sagen sollen, so geschrieben, wie man sie spricht. Jede Folge geht durch diese Liste, und das Diktat erwartet diese Wörter."
+
+[wordLabel]
+en = "Word"
+de = "Wort"
+
+[wordPlaceholder]
+en = "Word, e.g. Qwen"
+de = "Wort, z. B. Qwen"
+
+[spokenLabel]
+en = "Spoken as"
+de = "Gesprochen als"
+
+[spokenPlaceholder]
+en = "Spoken as, e.g. Kwen"
+de = "Gesprochen als, z. B. Kwen"
+
+[wordAdd]
+en = "Add"
+de = "Hinzufügen"
+
+[wordRemove]
+en = "Remove “{word}”"
+de = "„{word}“ entfernen"
+
+[wordsFailed]
+en = "Could not change the pronunciations: {error}"
+de = "Die Aussprache ließ sich nicht ändern: {error}"
