@@ -1,0 +1,159 @@
+# The texts of dictation (`docs/plans/voice-browser.md` §12): the pill (`shell/DictationPill.svelte`), the chat bar's
+# microphone and the Dictation section of Settings → Voice (`shell/DictationSettings.svelte`). The model's and the
+# microphones' names stay as they are (`docs/plans/i18n.md`, Q13).
+
+[title]
+en = "Dictation"
+de = "Diktat"
+
+[lead]
+en = "Speak into any text field of Axiomata — the chat, a note, a card, the editor. Whisper recognises it on this Mac; the audio is never stored. Say “new line” or “new paragraph” for a break."
+de = "Sprich in jedes Textfeld von Axiomata – den Chat, eine Notiz, eine Karte, den Editor. Whisper erkennt es auf diesem Mac; der Ton wird nie gespeichert. Sag „neue Zeile“ oder „neuer Absatz“ für einen Umbruch."
+
+[key]
+en = "Key"
+de = "Taste"
+
+[keyHint]
+en = "Starts and ends a dictation. On an Apple keyboard F5 and F6 need fn, or “Use F1, F2, etc. keys as standard function keys” in the system settings."
+de = "Startet und beendet ein Diktat. Auf einer Apple-Tastatur brauchen F5 und F6 fn dazu oder in den Systemeinstellungen „F1, F2 usw. als Standard-Funktionstasten verwenden“."
+
+[microphone]
+en = "Microphone"
+de = "Mikrofon"
+
+[systemDefault]
+en = "— the system's default —"
+de = "— Standard des Systems —"
+
+[notConnected]
+en = "{name} (not connected)"
+de = "{name} (nicht verbunden)"
+
+[model]
+en = "Model"
+de = "Modell"
+
+[modelReady]
+en = "Whisper large-v3-turbo, {size}, downloaded. It stays in memory for ten minutes after a dictation."
+de = "Whisper large-v3-turbo, {size}, heruntergeladen. Es bleibt nach einem Diktat zehn Minuten im Speicher."
+
+[modelMissing]
+en = "Whisper large-v3-turbo ({size}) is not downloaded yet."
+de = "Whisper large-v3-turbo ({size}) ist noch nicht heruntergeladen."
+
+[download]
+en = "Download"
+de = "Herunterladen"
+
+[downloading]
+en = "Downloading… {percent}"
+de = "Lade herunter… {percent}"
+
+[remove]
+en = "Delete"
+de = "Löschen"
+
+[removeSure]
+en = "Really delete?"
+de = "Wirklich löschen?"
+
+[removed]
+en = "The dictation model was deleted"
+de = "Das Diktat-Modell ist gelöscht"
+
+[removeFailed]
+en = "Could not delete the model: {error}"
+de = "Das Modell ließ sich nicht löschen: {error}"
+
+[downloadFailed]
+en = "Could not download the model: {error}"
+de = "Das Modell ließ sich nicht laden: {error}"
+
+[loadFailed]
+en = "Could not read the dictation settings: {error}"
+de = "Die Diktat-Einstellungen ließen sich nicht lesen: {error}"
+
+[loading]
+en = "Loading…"
+de = "Lade…"
+
+[saved]
+en = "Dictation settings saved"
+de = "Diktat-Einstellungen gespeichert"
+
+[lirvelTalking]
+en = "Lirvel is listening right now — end the conversation first (⌃⌥L)."
+de = "Lirvel hört gerade zu — beende erst das Gespräch (⌃⌥L)."
+
+[saveFailed]
+en = "Could not save the dictation settings: {error}"
+de = "Die Diktat-Einstellungen ließen sich nicht speichern: {error}"
+
+[dictate]
+en = "Dictate ({keys})"
+de = "Diktieren ({keys})"
+
+[stop]
+en = "End dictation ({keys})"
+de = "Diktat beenden ({keys})"
+
+[pillListening]
+en = "Listening"
+de = "Hört zu"
+
+[pillEsc]
+en = "Esc ends"
+de = "Esc beendet"
+
+[pillLoading]
+en = "Loading the model…"
+de = "Lade das Modell…"
+
+[pillFinishing]
+en = "Writing the last sentence…"
+de = "Schreibe den letzten Satz…"
+
+[pillStarting]
+en = "Opening the microphone…"
+de = "Öffne das Mikrofon…"
+
+[pillBlocked]
+en = "No dictation in a terminal"
+de = "Im Terminal gibt es kein Diktat"
+
+[pillNoField]
+en = "Put the cursor into a text field first"
+de = "Setz den Cursor zuerst in ein Textfeld"
+
+[pillModelMissing]
+en = "Dictation needs the Whisper model ({size})."
+de = "Das Diktat braucht das Whisper-Modell ({size})."
+
+[pillNotNow]
+en = "Not now"
+de = "Nicht jetzt"
+
+[pillDownloading]
+en = "Downloading the model… {percent}"
+de = "Lade das Modell herunter… {percent}"
+
+[failedMicrophone]
+en = "The microphone could not be used: {error}"
+de = "Das Mikrofon ließ sich nicht nutzen: {error}"
+
+[failedModel]
+en = "The model could not be loaded: {error}"
+de = "Das Modell ließ sich nicht laden: {error}"
+
+[failedRecognition]
+en = "A sentence could not be recognised: {error}"
+de = "Ein Satz ließ sich nicht erkennen: {error}"
+
+[failedStart]
+en = "Dictation could not start: {error}"
+de = "Das Diktat konnte nicht starten: {error}"
+
+[level]
+en = "Level"
+de = "Pegel"
