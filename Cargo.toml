@@ -9,6 +9,8 @@ repository = "https://github.com/axiomata-labs/Axiomata-Foundation"
 
 # The versions as Axiomata-OS has them, so the apps built on these crates share one version of each.
 [workspace.dependencies]
+# The text catalogs of `axiomata-texts`, read by its build script only.
+toml = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"

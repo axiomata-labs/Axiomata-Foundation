@@ -1,0 +1,436 @@
+# Refusals of the core in the owner's language (Axiomata-OS docs/plans/i18n.md, Q11): a coded error from Rust
+# (axiomata_core::error::coded) names its code and values; the app writes the sentence from here. A code this catalog
+# does not know shows the English sentence Rust sent with it. The keys are the codes; a text names the code's values
+# as {name}, with the names the Rust call gives them. The values arrive as strings, so a text here never counts.
+
+["agent.invalidActor"]
+en = "“{name}” makes no valid actor."
+de = "„{name}“ ergibt keinen gültigen Akteur."
+
+["agent.masterKeepsEngine"]
+en = "The project's master session keeps its engine and role."
+de = "Die Master-Sitzung des Projekts behält ihre Engine und Rolle."
+
+["agent.nameExhausted"]
+en = "“{name}” has been started {n} times; remove its old sessions first."
+de = "„{name}“ wurde schon {n}-mal gestartet; entferne zuerst seine alten Sitzungen."
+
+["board.plainDoneCard"]
+en = "Card #{card} is done and stays so; for further changes add a new card."
+de = "Karte #{card} ist fertig und bleibt es; für weitere Änderungen leg eine neue Karte an."
+
+["board.plainDoneColumn"]
+en = "{column} is a done column; finishing a card is the owner's on the board."
+de = "{column} ist eine Fertig-Spalte; eine Karte abschließen tust du selbst auf dem Board."
+
+["board.plainFlowCard"]
+en = "Card #{card} is part of the agent flow; the owner moves it on the board."
+de = "Karte #{card} gehört zum Agenten-Ablauf; du verschiebst sie selbst auf dem Board."
+
+["board.plainFlowColumn"]
+en = "{column} is a column of the agent flow; approving and reviewing are the owner's on the board."
+de = "{column} ist eine Spalte des Agenten-Ablaufs; freigeben und prüfen tust du selbst auf dem Board."
+
+["board.plainFlowFields"]
+en = "A card added here gets no plan, role or other field of the agent flow; the owner sets those on the board."
+de = "Eine Karte, die hier angelegt wird, bekommt keinen Plan, keine Rolle und kein anderes Feld des Agenten-Ablaufs; die setzt du selbst auf dem Board."
+
+["browser.badPanel"]
+en = "That is not a browser panel."
+de = "Das ist kein Browser-Panel."
+
+["browser.badUrl"]
+en = "“{url}” is not a web address (http or https)."
+de = "„{url}“ ist keine Webadresse (http oder https)."
+
+["browser.gone"]
+en = "The page is already closed."
+de = "Die Seite ist schon geschlossen."
+
+["browser.noWindow"]
+en = "No main window."
+de = "Kein Hauptfenster."
+
+["browser.tooMany"]
+en = "At most {n} pages can be open at once; close one first."
+de = "Höchstens {n} Seiten können gleichzeitig offen sein; schließ zuerst eine."
+
+["card.changedAfterReview"]
+en = "The work changed after it was reviewed; send the card back for a new review instead of taking it over."
+de = "Die Arbeit hat sich nach dem Review geändert; gib die Karte für ein neues Review zurück, statt sie zu übernehmen."
+
+["card.couldNotPutBack"]
+en = "The card could not be put back to be done again."
+de = "Die Karte ließ sich nicht zurücklegen, um sie neu zu machen."
+
+["card.doesNotFitLine"]
+en = "The card does not fit the line, and could not be put back."
+de = "Die Karte passt nicht auf die Linie und ließ sich nicht zurücklegen."
+
+["card.hasPredecessors"]
+en = "Card #{card} builds on card #{dep}; only a plan that runs by itself starts cards on the work of their predecessors."
+de = "Karte #{card} baut auf Karte #{dep} auf; nur ein Plan, der von selbst läuft, startet Karten auf der Arbeit ihrer Vorgänger."
+
+["card.integrateNotSignedOff"]
+en = "Only a card the reviewer signed off can be integrated."
+de = "Integrieren lässt sich nur eine Karte, die der Reviewer abgenommen hat."
+
+["card.integratedAlready"]
+en = "The card was integrated or taken over already."
+de = "Die Karte wurde schon integriert oder übernommen."
+
+["card.missing"]
+en = "No card {id}."
+de = "Es gibt keine Karte {id}."
+
+["card.noCli"]
+en = "A session working on a card needs the team tools, and no `axiomata-cli` was found next to the app (build the workspace, or set AXIOMATA_CLI)."
+de = "Eine Sitzung an einer Karte braucht die Team-Werkzeuge, und neben der App wurde kein `axiomata-cli` gefunden (bau den Workspace, oder setze AXIOMATA_CLI)."
+
+["card.noRunningPlan"]
+en = "The card belongs to no plan that runs by itself."
+de = "Die Karte gehört zu keinem Plan, der von selbst läuft."
+
+["card.notGivenUp"]
+en = "Only a card the studio gave up integrating can be done again by hand."
+de = "Von Hand neu machen lässt sich nur eine Karte, bei der das Studio das Integrieren aufgegeben hat."
+
+["card.notMarkedIntegrated"]
+en = "The work is on the line, but the card could not be marked as integrated."
+de = "Die Arbeit liegt auf der Linie, aber die Karte ließ sich nicht als integriert markieren."
+
+["card.otherProject"]
+en = "Card #{card} belongs to plan #{plan}, which runs in project {project}; start it there."
+de = "Karte #{card} gehört zu Plan #{plan}, der im Projekt {project} läuft; starte sie dort."
+
+["card.predecessorNotOnLine"]
+en = "Card #{card} builds on card #{dep}, whose work is not on the plan's line yet."
+de = "Karte #{card} baut auf Karte #{dep} auf, deren Arbeit noch nicht auf der Linie des Plans liegt."
+
+["card.projectNotRepo"]
+en = "An unattended session needs its own worktree, and this project is not a git repository."
+de = "Eine Sitzung ohne Aufsicht braucht einen eigenen Worktree, und dieses Projekt ist kein Git-Repository."
+
+["card.reviewerGone"]
+en = "The reviewer that signed the card off is gone, so there is no way to tell that the work is what it saw; send the card back for a new review."
+de = "Den Reviewer, der die Karte abgenommen hat, gibt es nicht mehr, also lässt sich nicht sagen, ob die Arbeit die ist, die er gesehen hat; gib die Karte für ein neues Review zurück."
+
+["card.sessionGone"]
+en = "The session that works on the card is gone."
+de = "Die Sitzung, die an der Karte arbeitet, gibt es nicht mehr."
+
+["card.takeOverNotSignedOff"]
+en = "Only a card the reviewer signed off can be taken over."
+de = "Übernehmen lässt sich nur eine Karte, die der Reviewer abgenommen hat."
+
+["card.takeOverPlanCard"]
+en = "This card belongs to a plan that runs by itself: its work is integrated into the plan's line, and the plan is taken over as a whole."
+de = "Diese Karte gehört zu einem Plan, der von selbst läuft: ihre Arbeit wird in die Linie des Plans integriert, und der Plan wird als Ganzes übernommen."
+
+["card.takenOverAlready"]
+en = "The card was taken over already."
+de = "Die Karte wurde schon übernommen."
+
+["card.workerGone"]
+en = "The session that worked on the card is gone."
+de = "Die Sitzung, die an der Karte gearbeitet hat, gibt es nicht mehr."
+
+["engine.automatic"]
+en = "“{id}” is an automatic engine, made from a model of the catalog; it cannot be edited or removed — switch its model on or off in the Studio's Models settings, or give an own engine another id."
+de = "„{id}“ ist eine automatische Engine, aus einem Modell des Katalogs gemacht; sie lässt sich weder bearbeiten noch entfernen — schalte ihr Modell unter „Modelle & Rollen“ ein oder aus, oder gib einer eigenen Engine eine andere Id."
+
+["engine.exists"]
+en = "There is already an engine “{id}”."
+de = "Es gibt schon eine Engine „{id}“."
+
+["engine.gone"]
+en = "There is no engine “{id}” any more; pick another one."
+de = "Die Engine „{id}“ gibt es nicht mehr; wähle eine andere."
+
+["engine.inUseByRole"]
+en = "The engine “{id}” cannot be removed: the role “{role}” uses it."
+de = "Die Engine „{id}“ lässt sich nicht entfernen: die Rolle „{role}“ nutzt sie."
+
+["engine.inUseBySessions"]
+en = "The engine “{id}” cannot be removed: agent sessions run on it ({n})."
+de = "Die Engine „{id}“ lässt sich nicht entfernen: Agenten-Sitzungen laufen darauf ({n})."
+
+["engine.noneForTier"]
+en = "No engine of the tier {tier} can run now; switch a model of that tier on in the Studio's Models tab."
+de = "Keine Engine der Stufe {tier} kann gerade laufen; schalte im Reiter „Modelle“ unter „Modelle & Rollen“ ein Modell dieser Stufe ein."
+
+["engine.noneForTierUnattended"]
+en = "No engine of the tier {tier} can run an unattended session; switch a model of that tier on or set the tier's default engine in the Studio's Models tab, or pick an engine when you start it."
+de = "Keine Engine der Stufe {tier} kann eine Sitzung ohne Aufsicht führen; schalte im Reiter „Modelle“ unter „Modelle & Rollen“ ein Modell dieser Stufe ein oder lege die Standard-Engine der Stufe fest, oder wähle beim Start eine Engine."
+
+["engine.ownCommand"]
+en = "The engine “{id}” runs a command of its own, which Axiomata does not touch; an unattended session needs the generated command."
+de = "Die Engine „{id}“ startet einen eigenen Befehl, den Axiomata nicht anfasst; eine Sitzung ohne Aufsicht braucht den erzeugten Befehl."
+
+["engine.unknown"]
+en = "There is no engine “{id}”."
+de = "Es gibt keine Engine „{id}“."
+
+["engine.unknownAddInStudio"]
+en = "There is no engine “{id}”; engines are added in the Studio settings."
+de = "Es gibt keine Engine „{id}“; Engines fügst du in den Einstellungen des Studios hinzu."
+
+["engine.unknownSwitchOn"]
+en = "There is no engine “{id}”; switch its model on in the Studio's Models settings, or add an own engine."
+de = "Es gibt keine Engine „{id}“; schalte ihr Modell unter „Modelle & Rollen“ ein, oder füge eine eigene Engine hinzu."
+
+["engine.unusable"]
+en = "The engine “{id}” cannot run now: {why}"
+de = "Die Engine „{id}“ kann gerade nicht laufen: {why}"
+
+["favorite.full"]
+en = "At most {n} favorites; remove one first."
+de = "Höchstens {n} Favoriten; entferne zuerst einen."
+
+["message.empty"]
+en = "The message is empty."
+de = "Die Nachricht ist leer."
+
+["model.badKey"]
+en = "“{key}” is no model key (anthropic/…, openrouter/… or ollama/…)."
+de = "„{key}“ ist kein Modellschlüssel (anthropic/…, openrouter/… oder ollama/…)."
+
+["models.limitNotPrice"]
+en = "Both limits are prices from 0 to {max} USD per million output tokens."
+de = "Beide Grenzen sind Preise von 0 bis {max} USD pro Million Ausgabe-Tokens."
+
+["models.limitsOrder"]
+en = "“Light below” must not be above “heavy above”."
+de = "„Light unter“ darf nicht über „Heavy über“ liegen."
+
+["plan.cardNotOnLine"]
+en = "Card #{card} is not on the line yet ({state}); a plan is taken over when all its cards are."
+de = "Karte #{card} liegt noch nicht auf der Linie ({state}); ein Plan wird übernommen, wenn alle seine Karten dort liegen."
+
+["plan.lineMoved"]
+en = "The line of plan #{plan} is not where the studio left it: something else moved or made the branch {branch}; look at it before anything is merged into it."
+de = "Die Linie von Plan #{plan} ist nicht dort, wo das Studio sie gelassen hat: etwas anderes hat den Branch {branch} bewegt oder angelegt; sieh sie dir an, bevor etwas hineingemergt wird."
+
+["plan.missing"]
+en = "No plan {id}."
+de = "Es gibt keinen Plan {id}."
+
+["plan.noLimitReached"]
+en = "Plan #{plan} has not reached a limit; there is nothing to go on from."
+de = "Plan #{plan} hat keine Grenze erreicht; es gibt nichts, wovon es weitergehen könnte."
+
+["plan.noLine"]
+en = "Only a plan that runs by itself has a line to take over."
+de = "Nur ein Plan, der von selbst läuft, hat eine Linie zum Übernehmen."
+
+["plan.noLongerDraft"]
+en = "Plan #{plan} is not a draft any more."
+de = "Plan #{plan} ist kein Entwurf mehr."
+
+["plan.notDraft"]
+en = "Plan #{plan} is {status}: only a draft is planned."
+de = "Plan #{plan} ist {status}: geplant wird nur ein Entwurf."
+
+["plan.nothingOnLine"]
+en = "No card of the plan is on its line: there is nothing to take over."
+de = "Keine Karte des Plans liegt auf seiner Linie: es gibt nichts zu übernehmen."
+
+["plan.projectGone"]
+en = "The plan's project is gone."
+de = "Das Projekt des Plans gibt es nicht mehr."
+
+["plan.projectNotRepo"]
+en = "A plan's steps run unattended in worktrees of their own, and this project is not a git repository."
+de = "Die Schritte eines Plans laufen ohne Aufsicht in eigenen Worktrees, und dieses Projekt ist kein Git-Repository."
+
+["plan.sessionExists"]
+en = "Plan #{plan} has such a session already, {name}; open its pane in the Studio."
+de = "Plan #{plan} hat schon so eine Sitzung, {name}; öffne ihr Pane im Studio."
+
+["planner.noCli"]
+en = "A planner needs the team tools, and no `axiomata-cli` was found next to the app (build the workspace, or set AXIOMATA_CLI)."
+de = "Ein Planer braucht die Team-Werkzeuge, und neben der App wurde kein `axiomata-cli` gefunden (bau den Workspace, oder setze AXIOMATA_CLI)."
+
+["planner.projectNotRepo"]
+en = "A planner needs a worktree of its own, and this project is not a git repository."
+de = "Ein Planer braucht einen eigenen Worktree, und dieses Projekt ist kein Git-Repository."
+
+["project.missing"]
+en = "No project {id}."
+de = "Es gibt kein Projekt {id}."
+
+["review.alreadyRunning"]
+en = "The card is being reviewed already, by {name}."
+de = "Die Karte wird schon geprüft, von {name}."
+
+["review.noCli"]
+en = "A reviewer needs the team tools, and no `axiomata-cli` was found next to the app (build the workspace, or set AXIOMATA_CLI)."
+de = "Ein Reviewer braucht die Team-Werkzeuge, und neben der App wurde kein `axiomata-cli` gefunden (bau den Workspace, oder setze AXIOMATA_CLI)."
+
+["review.noEngine"]
+en = "The reviewer needs an engine of the tier {tier} or above other than the worker's, and none can run; switch another model of that tier on in the Studio's Models tab, or pick one."
+de = "Der Reviewer braucht eine Engine der Stufe {tier} oder höher, die nicht die der arbeitenden Sitzung ist, und keine kann laufen; schalte im Reiter „Modelle“ unter „Modelle & Rollen“ ein weiteres Modell dieser Stufe ein, oder wähle eine."
+
+["review.noRole"]
+en = "There is no role of kind `review` for this project; add one in the Studio."
+de = "Es gibt keine Rolle der Art `review` für dieses Projekt; füge eine im Studio hinzu."
+
+["review.notWaiting"]
+en = "The card is not waiting for a review."
+de = "Die Karte wartet nicht auf ein Review."
+
+["review.projectNotRepo"]
+en = "A reviewer needs a worktree of its own, and this project is not a git repository."
+de = "Ein Reviewer braucht einen eigenen Worktree, und dieses Projekt ist kein Git-Repository."
+
+["review.sameEngine"]
+en = "The reviewer must run on another engine than the session that worked on the card."
+de = "Der Reviewer muss auf einer anderen Engine laufen als die Sitzung, die an der Karte gearbeitet hat."
+
+["review.touchesAgentConfig"]
+en = "The work changes files agents take their configuration from ({files}), and a reviewer started on that checkout would obey what the worker wrote there. Review it yourself, or start the review by hand and accept it."
+de = "Die Arbeit ändert Dateien, aus denen Agenten ihre Konfiguration lesen ({files}), und ein Reviewer, der auf diesem Stand startet, würde befolgen, was dort steht. Prüf sie selbst, oder starte das Review von Hand und nimm das in Kauf."
+
+["role.defaultUndeletable"]
+en = "The default role “{name}” cannot be deleted (new sessions start as it); edit it instead."
+de = "Die Standardrolle „{name}“ lässt sich nicht löschen (neue Sitzungen starten mit ihr); bearbeite sie stattdessen."
+
+["role.doesNotWork"]
+en = "The role “{name}” does not work cards (it reviews or plans); pick a role of kind implement for this card."
+de = "Die Rolle „{name}“ arbeitet keine Karten ab (sie prüft oder plant); wähle für diese Karte eine Rolle der Art implement."
+
+["role.inUse"]
+en = "The role “{name}” cannot be deleted: agent sessions play it ({n})."
+de = "Die Rolle „{name}“ lässt sich nicht löschen: Agenten-Sitzungen spielen sie ({n})."
+
+["role.isMaster"]
+en = "“{name}” is the project's master session, opened from the Agents panel, not a role."
+de = "„{name}“ ist die Master-Sitzung des Projekts, geöffnet aus dem Agents-Panel, keine Rolle."
+
+["role.noneOfKind"]
+en = "There is no role of kind {kind} for this project; the {default} role is seeded at the next start of the app, or add one in Models & roles."
+de = "Es gibt keine Rolle der Art {kind} für dieses Projekt; die Rolle {default} wird beim nächsten Start der App angelegt, oder füge eine unter „Modelle & Rollen“ hinzu."
+
+["role.reservedForMaster"]
+en = "“{name}” is reserved for the project's master session."
+de = "„{name}“ ist der Master-Sitzung des Projekts vorbehalten."
+
+["role.unknown"]
+en = "There is no role “{name}” for this project."
+de = "Es gibt keine Rolle „{name}“ für dieses Projekt."
+
+["role.unknownOfKind"]
+en = "There is no role “{name}” of kind {kind} for this project."
+de = "Es gibt keine Rolle „{name}“ der Art {kind} für dieses Projekt."
+
+["roster.blankOrSeveralLines"]
+en = "{field}: one line that is not empty, or nothing."
+de = "{field}: eine Zeile, die nicht leer ist, oder nichts."
+
+["roster.empty"]
+en = "{field}: must not be empty."
+de = "{field}: darf nicht leer sein."
+
+["roster.engineTwice"]
+en = "{field}: “{id}” is already the engine or listed twice."
+de = "{field}: „{id}“ ist schon die Engine oder steht doppelt da."
+
+["roster.hiddenCharacters"]
+en = "{field}: contains control or direction characters, which can hide what the text says."
+de = "{field}: enthält Steuer- oder Richtungszeichen, die verbergen können, was der Text sagt."
+
+["roster.idLength"]
+en = "{field}: 1 to {max} characters."
+de = "{field}: 1 bis {max} Zeichen."
+
+["roster.idShape"]
+en = "{field}: lower-case letters and digits, with - or _ between them."
+de = "{field}: Kleinbuchstaben und Ziffern, dazwischen - oder _."
+
+["roster.noEngine"]
+en = "{field}: there is no engine “{id}”."
+de = "{field}: Es gibt keine Engine „{id}“."
+
+["roster.notKeyValue"]
+en = "{field}: “{line}” is not KEY=value."
+de = "{field}: „{line}“ ist nicht KEY=value."
+
+["roster.notPositive"]
+en = "{field}: a positive number."
+de = "{field}: eine positive Zahl."
+
+["roster.notVariableName"]
+en = "{field}: “{key}” is not a variable name."
+de = "{field}: „{key}“ ist kein Variablenname."
+
+["roster.oneLine"]
+en = "{field}: one line, up to {max} characters."
+de = "{field}: eine Zeile, bis {max} Zeichen."
+
+["roster.opencodeIsNoEngine"]
+en = "Opencode is no engine any more; it runs only as the Opencode tile of the Agents panel."
+de = "Opencode ist keine Engine mehr; es läuft nur noch als Opencode-Kachel im Agents-Panel."
+
+["roster.repeated"]
+en = "{field}: “{item}” is listed twice."
+de = "{field}: „{item}“ steht doppelt da."
+
+["roster.roleExists"]
+en = "There is already a role “{name}”."
+de = "Es gibt schon eine Rolle „{name}“."
+
+["roster.singleLine"]
+en = "{field}: one line only."
+de = "{field}: nur eine Zeile."
+
+["roster.symlink"]
+en = "{field}: the role's folder or file is a symbolic link."
+de = "{field}: Ordner oder Datei der Rolle ist ein symbolischer Link."
+
+["roster.tooLong"]
+en = "{field}: longer than {max} bytes."
+de = "{field}: länger als {max} Bytes."
+
+["roster.zero"]
+en = "{field}: a limit of 0 would stop every session at once."
+de = "{field}: Eine Grenze von 0 würde jede Sitzung sofort stoppen."
+
+["session.missing"]
+en = "No session {id}."
+de = "Es gibt keine Sitzung {id}."
+
+["tags.characters"]
+en = "Letters, digits, _ - and / only."
+de = "Nur Buchstaben, Ziffern, _ - und /."
+
+["tags.digitsOnly"]
+en = "Not only digits."
+de = "Nicht nur Ziffern."
+
+["tags.empty"]
+en = "Type a tag."
+de = "Gib ein Tag ein."
+
+["tags.same"]
+en = "That is the tag's name already."
+de = "So heißt der Tag schon."
+
+["tags.slash"]
+en = "A / only between two parts."
+de = "Ein / nur zwischen zwei Teilen."
+
+["tags.start"]
+en = "Start with a letter or digit."
+de = "Fange mit einem Buchstaben oder einer Ziffer an."
+
+["tags.taken"]
+en = "#{tag} is on the list already."
+de = "#{tag} steht schon auf der Liste."
+
+["tags.tooLong"]
+en = "At most 64 characters."
+de = "Höchstens 64 Zeichen."
+
+["tags.twice"]
+en = "#{tag} is on the list twice."
+de = "#{tag} steht zweimal auf der Liste."
