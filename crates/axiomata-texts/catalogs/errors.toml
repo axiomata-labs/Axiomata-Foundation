@@ -411,6 +411,10 @@ de = "Ein Planer braucht die Team-Werkzeuge, und neben der App wurde kein `axiom
 en = "No project is open in the studio."
 de = "Im Studio ist kein Projekt offen."
 
+["studio.tooLarge"]
+en = "The studio's layout would grow too large to be saved; that change was not made."
+de = "Das Layout des Studios würde zu groß zum Speichern; diese Änderung wurde nicht gemacht."
+
 # The small browser (`src-tauri/src/browser.rs`).
 ["browser.badUrl"]
 en = "“{url}” is not a web address (http or https)."
