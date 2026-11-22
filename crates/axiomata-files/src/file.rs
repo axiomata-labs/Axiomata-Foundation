@@ -319,40 +319,54 @@ pub fn ensure_top_level_dir(root: &Root, rel: &str) -> Result<(), FilesError> {
     fs::create_dir(&full).map_err(io(&full))
 }
 
-/// Maps an extension onto the raster MIME types the dashboard's Markdown
-/// renderer allows inline (`core/markdown.ts`'s `DATA_IMAGE_RE`) and that
-/// `md-file.svelte` treats as an image — keep the three lists in lockstep.
-/// SVG is never included: it can carry `<script>`. Whether BMP/TIFF/HEIC/AVIF
-/// actually render is up to WebKit's image stack, not this function.
-pub fn image_mime(rel: &str) -> Option<&'static str> {
+/// The raster images the file service reads as pictures, `(extension, MIME type)`: the types the app's Markdown
+/// renderer allows inline (`core/markdown.ts`'s `DATA_IMAGE_RE`, held to this list by a test in the app) and that
+/// the file app opens as a picture (it asks the app for this list). SVG is never included: it can carry `<script>`.
+/// Whether BMP/TIFF/HEIC/AVIF actually render is up to WebKit's image stack, not this list.
+pub const IMAGE_TYPES: [(&str, &str); 11] = [
+    ("png", "image/png"),
+    ("jpg", "image/jpeg"),
+    ("jpeg", "image/jpeg"),
+    ("gif", "image/gif"),
+    ("webp", "image/webp"),
+    ("bmp", "image/bmp"),
+    ("tif", "image/tiff"),
+    ("tiff", "image/tiff"),
+    ("heic", "image/heic"),
+    ("heif", "image/heic"),
+    ("avif", "image/avif"),
+];
+
+/// The audio a web view's `<audio>` plays, `(extension, MIME type)` (WebKit: MP3, AAC in M4A, WAV, FLAC; Ogg where the
+/// system has it). A bare `.aac` is an ADTS stream, not an MP4 container.
+pub const AUDIO_TYPES: [(&str, &str); 8] = [
+    ("mp3", "audio/mpeg"),
+    ("m4a", "audio/mp4"),
+    ("aac", "audio/aac"),
+    ("wav", "audio/wav"),
+    ("flac", "audio/flac"),
+    ("ogg", "audio/ogg"),
+    ("oga", "audio/ogg"),
+    ("opus", "audio/ogg"),
+];
+
+/// The type `rel`'s extension has in `table`, ignoring case.
+fn mime_in(table: &[(&'static str, &'static str)], rel: &str) -> Option<&'static str> {
     let ext = Path::new(rel).extension()?.to_str()?.to_ascii_lowercase();
-    Some(match ext.as_str() {
-        "png" => "image/png",
-        "jpg" | "jpeg" => "image/jpeg",
-        "gif" => "image/gif",
-        "webp" => "image/webp",
-        "bmp" => "image/bmp",
-        "tif" | "tiff" => "image/tiff",
-        "heic" | "heif" => "image/heic",
-        "avif" => "image/avif",
-        _ => return None,
-    })
+    table
+        .iter()
+        .find(|(known, _)| *known == ext)
+        .map(|(_, mime)| *mime)
 }
 
-/// Maps an extension onto the audio types a web view's `<audio>` plays (WebKit: MP3, AAC in M4A, WAV, FLAC; Ogg
-/// where the system has it).
+/// Maps an extension onto the raster MIME types of [`IMAGE_TYPES`].
+pub fn image_mime(rel: &str) -> Option<&'static str> {
+    mime_in(&IMAGE_TYPES, rel)
+}
+
+/// Maps an extension onto the audio MIME types of [`AUDIO_TYPES`].
 pub fn audio_mime(rel: &str) -> Option<&'static str> {
-    let ext = Path::new(rel).extension()?.to_str()?.to_ascii_lowercase();
-    Some(match ext.as_str() {
-        "mp3" => "audio/mpeg",
-        "m4a" => "audio/mp4",
-        // A bare .aac is an ADTS stream, not an MP4 container.
-        "aac" => "audio/aac",
-        "wav" => "audio/wav",
-        "flac" => "audio/flac",
-        "ogg" | "oga" | "opus" => "audio/ogg",
-        _ => return None,
-    })
+    mime_in(&AUDIO_TYPES, rel)
 }
 
 /// Reads at most `max_bytes` from `target`; one byte more means too large,

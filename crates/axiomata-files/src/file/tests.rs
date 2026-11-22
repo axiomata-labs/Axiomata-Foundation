@@ -661,3 +661,27 @@ fn text_from_bytes_refuses_invalid_utf8_and_nul_bytes() {
     assert_eq!(text_from_bytes(vec![0xff, 0xfe]), None);
     assert_eq!(text_from_bytes(b"a\0b".to_vec()), None);
 }
+
+#[test]
+fn pictures_and_sounds_are_known_by_their_extension_in_any_case() {
+    assert_eq!(image_mime("a/B.PNG"), Some("image/png"));
+    assert_eq!(image_mime("x.jpeg"), Some("image/jpeg"));
+    assert_eq!(image_mime("x.avif"), Some("image/avif"));
+    assert_eq!(
+        image_mime("x.svg"),
+        None,
+        "SVG can carry script: never a picture here"
+    );
+    assert_eq!(image_mime("noext"), None);
+    assert_eq!(audio_mime("Folge.MP3"), Some("audio/mpeg"));
+    assert_eq!(audio_mime("x.opus"), Some("audio/ogg"));
+    assert_eq!(audio_mime("x.png"), None);
+    // Every entry of a table is what its lookup answers, and no extension is in both.
+    for (ext, mime) in IMAGE_TYPES {
+        assert_eq!(image_mime(&format!("f.{ext}")), Some(mime));
+        assert_eq!(audio_mime(&format!("f.{ext}")), None);
+    }
+    for (ext, mime) in AUDIO_TYPES {
+        assert_eq!(audio_mime(&format!("f.{ext}")), Some(mime));
+    }
+}

@@ -36,9 +36,9 @@ pub use dir::{
 };
 pub use error::FilesError;
 pub use file::{
-    Audio, Image, LARGE_FILE_BYTES, MAX_AUDIO_BYTES, MAX_IMAGE_BYTES, MAX_READ_BYTES,
-    MAX_WRITE_BYTES, TextFile, Version, audio_mime, create_text, current_version, delete,
-    ensure_top_level_dir, image_from_bytes, image_mime, read_audio, read_image, read_text,
+    AUDIO_TYPES, Audio, IMAGE_TYPES, Image, LARGE_FILE_BYTES, MAX_AUDIO_BYTES, MAX_IMAGE_BYTES,
+    MAX_READ_BYTES, MAX_WRITE_BYTES, TextFile, Version, audio_mime, create_text, current_version,
+    delete, ensure_top_level_dir, image_from_bytes, image_mime, read_audio, read_image, read_text,
     text_from_bytes, write_text,
 };
 pub use grants::{Grant, GrantKind, GrantStore};
