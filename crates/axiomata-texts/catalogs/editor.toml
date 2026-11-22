@@ -1,0 +1,2108 @@
+# The texts of the file app and its editor UI (`fileapp/*.svelte` and the helpers whose words they show). The editor
+# engine (`editor/`) imports nothing from the app; its own messages (Vi's `E486: …`, the find counts) have their
+# catalog in `editorEngine.ts`. Vi's mode names, key chords, command names and what a language server sends stay as
+# they are (`docs/plans/i18n.md`, Q13). A text that wraps a highlighted piece is split around it (`…Before` / `…After`), so
+# German may place the piece where its word order needs it.
+
+# Shared words.
+[save]
+en = "Save"
+de = "Speichern"
+
+[discard]
+en = "Discard"
+de = "Verwerfen"
+
+[cancel]
+en = "Cancel"
+de = "Abbrechen"
+
+[close]
+en = "Close"
+de = "Schließen"
+
+[dismiss]
+en = "Dismiss"
+de = "Ausblenden"
+
+[loading]
+en = "Loading…"
+de = "Lade…"
+
+[noMatch]
+en = "No match"
+de = "Kein Treffer"
+
+# The question where something unsaved is closed.
+[unsavedChanges]
+en = "Unsaved changes"
+de = "Ungespeicherte Änderungen"
+
+[noteNotFiled]
+en = "This note is not filed yet."
+de = "Diese Notiz ist noch nicht abgelegt."
+
+[hasUnsaved]
+en = "{name} has unsaved changes."
+de = "{name} hat ungespeicherte Änderungen."
+
+[fileIt]
+en = "File it"
+de = "Ablegen"
+
+# Previews.
+[svgBroken]
+en = "This SVG does not draw — check its source."
+de = "Dieses SVG zeichnet nichts — prüfe seinen Quelltext."
+
+[imageUndecodable]
+en = "This image cannot be shown here (the web view does not decode its format)."
+de = "Dieses Bild lässt sich hier nicht zeigen (die Web-Ansicht kann sein Format nicht lesen)."
+
+[actualSize]
+en = "Actual size"
+de = "Originalgröße"
+
+[fit]
+en = "Fit"
+de = "Einpassen"
+
+[imagePixels]
+en = "{w} × {h} px"
+de = "{w} × {h} px"
+
+[audioUndecodable]
+en = "This audio cannot be played here (the web view does not decode its format)."
+de = "Diese Audiodatei lässt sich hier nicht abspielen (die Web-Ansicht kann ihr Format nicht lesen)."
+
+[play]
+en = "Play"
+de = "Abspielen"
+
+[pause]
+en = "Pause"
+de = "Pause"
+
+[back15]
+en = "Back 15 seconds"
+de = "15 Sekunden zurück"
+
+[forward30]
+en = "Forward 30 seconds"
+de = "30 Sekunden vor"
+
+[position]
+en = "Position"
+de = "Position"
+
+[speed]
+en = "Speed"
+de = "Tempo"
+
+[volume]
+en = "Volume"
+de = "Lautstärke"
+
+[mute]
+en = "Mute"
+de = "Stumm"
+
+[unmute]
+en = "Unmute"
+de = "Ton an"
+
+[chapters]
+en = "Chapters"
+de = "Kapitel"
+
+[loadingPreview]
+en = "Loading preview…"
+de = "Vorschau lädt…"
+
+[previewUnavailable]
+en = "Preview unavailable: {message}"
+de = "Keine Vorschau: {message}"
+
+[peekCut]
+en = { one = "The first line — Open shows all of it.", other = "The first {n} lines — Open shows all of it." }
+de = { one = "Die erste Zeile — Öffnen zeigt alles.", other = "Die ersten {n} Zeilen — Öffnen zeigt alles." }
+
+[tags]
+en = "Tags"
+de = "Tags"
+
+[showTagged]
+en = "Show the notes tagged #{tag} in the Second Brain"
+de = "Die Notizen mit #{tag} im Second Brain zeigen"
+
+# The inspector.
+[inspector]
+en = "Inspector"
+de = "Inspektor"
+
+[inspectorSettings]
+en = "Settings"
+de = "Einstellungen"
+
+[inspectorShortcuts]
+en = "Shortcuts"
+de = "Tastenkürzel"
+
+[closeInspector]
+en = "Close the inspector"
+de = "Inspektor schließen"
+
+# Vi, completion and code actions.
+[viRecording]
+en = "● REC {register}"
+de = "● REC {register}"
+
+[suggestions]
+en = "Suggestions"
+de = "Vorschläge"
+
+[codeActions]
+en = "Code actions"
+de = "Code-Aktionen"
+
+[codeActionsFilter]
+en = "Code actions — type to filter"
+de = "Code-Aktionen — tippe zum Filtern"
+
+# The Shortcuts tab (`fileapp/shortcuts.ts`): group titles (scg…) and what each key does (sc…).
+[searchShortcuts]
+en = "Search keys or actions"
+de = "Tasten oder Aktionen suchen"
+
+[shortcutCount]
+en = { one = "1 shortcut", other = "{n} shortcuts" }
+de = { one = "1 Tastenkürzel", other = "{n} Tastenkürzel" }
+
+[noShortcutMatches]
+en = "No shortcut matches “{query}”."
+de = "Kein Tastenkürzel passt zu „{query}“."
+
+[scgMoving]
+en = "Moving"
+de = "Bewegen"
+
+[scOneCharacterLeftRight]
+en = "One character left / right"
+de = "Ein Zeichen nach links / rechts"
+
+[scOneWordLeftRight]
+en = "One word left / right"
+de = "Ein Wort nach links / rechts"
+
+[scStartEndOfTheLine]
+en = "Start / end of the line"
+de = "Anfang / Ende der Zeile"
+
+[scOneLineUpDown]
+en = "One line up / down"
+de = "Eine Zeile hoch / runter"
+
+[scStartEndOfTheFile]
+en = "Start / end of the file"
+de = "Anfang / Ende der Datei"
+
+[scOnePageUpDown]
+en = "One page up / down"
+de = "Eine Seite hoch / runter"
+
+[scExtendTheSelection]
+en = "Extend the selection"
+de = "Die Auswahl erweitern"
+
+[scgEditing]
+en = "Editing"
+de = "Bearbeiten"
+
+[scDeleteACharacterWordTo]
+en = "Delete a character / word / to the line start backwards"
+de = "Ein Zeichen / Wort / bis zum Zeilenanfang rückwärts löschen"
+
+[scDeleteACharacterWordBackwards]
+en = "Delete a character / word backwards"
+de = "Ein Zeichen / Wort rückwärts löschen"
+
+[scDeleteACharacterWordForwards]
+en = "Delete a character / word forwards"
+de = "Ein Zeichen / Wort vorwärts löschen"
+
+[scNewLine]
+en = "New line"
+de = "Neue Zeile"
+
+[scIndentOutdent]
+en = "Indent / outdent"
+de = "Einrücken / ausrücken"
+
+[scMoveTheLinesUpDown]
+en = "Move the lines up / down"
+de = "Die Zeilen nach oben / unten schieben"
+
+[scDuplicateTheLinesUpDown]
+en = "Duplicate the lines up / down"
+de = "Die Zeilen nach oben / unten verdoppeln"
+
+[scCommentUncommentTheLines]
+en = "Comment / uncomment the lines"
+de = "Die Zeilen aus- / einkommentieren"
+
+[scUndoRedo]
+en = "Undo / redo"
+de = "Rückgängig / wiederholen"
+
+[scCutCopyPaste]
+en = "Cut / copy / paste"
+de = "Ausschneiden / kopieren / einfügen"
+
+[scSelectEverything]
+en = "Select everything"
+de = "Alles auswählen"
+
+[scSelectTheLineAgainThe]
+en = "Select the line (again: the next one too) — code actions where a language server runs"
+de = "Die Zeile auswählen (nochmal: auch die nächste) — Code-Aktionen, wo ein Language-Server läuft"
+
+[scSaveFormatsFirstWhereThat]
+en = "Save (formats first where that is on)"
+de = "Speichern (formatiert vorher, wo das an ist)"
+
+[scOpenAFile]
+en = "Open a file"
+de = "Eine Datei öffnen"
+
+[scSourcePreviewSideBySide]
+en = "Source / preview / side by side (Markdown, HTML, SVG)"
+de = "Quelltext / Vorschau / nebeneinander (Markdown, HTML, SVG)"
+
+[scWrapLongLinesOnOff]
+en = "Wrap long lines on / off"
+de = "Lange Zeilen umbrechen an / aus"
+
+[scBackToOneCursor]
+en = "Back to one cursor"
+de = "Zurück zu einem Cursor"
+
+[scgMultipleCursors]
+en = "Multiple cursors"
+de = "Mehrere Cursor"
+
+[scAddACursorAboveBelow]
+en = "Add a cursor above / below"
+de = "Einen Cursor darüber / darunter hinzufügen"
+
+[scAddTheNextOccurrence]
+en = "Add the next occurrence"
+de = "Das nächste Vorkommen hinzufügen"
+
+[scRemoveTheLastCursor]
+en = "Remove the last cursor"
+de = "Den letzten Cursor entfernen"
+
+[scSelectEveryOccurrence]
+en = "Select every occurrence"
+de = "Jedes Vorkommen auswählen"
+
+[scgFind]
+en = "Find"
+de = "Suchen"
+
+[scFindInTheFile]
+en = "Find in the file"
+de = "In der Datei suchen"
+
+[scFindAndReplace]
+en = "Find and replace"
+de = "Suchen und ersetzen"
+
+[scNextPreviousMatch]
+en = "Next / previous match"
+de = "Nächster / vorheriger Treffer"
+
+[scSearchForTheSelection]
+en = "Search for the selection"
+de = "Nach der Auswahl suchen"
+
+[scgFolding]
+en = "Folding"
+de = "Einklappen"
+
+[scFoldUnfoldHere]
+en = "Fold / unfold here"
+de = "Hier ein- / ausklappen"
+
+[scFoldUnfoldEverything]
+en = "Fold / unfold everything"
+de = "Alles ein- / ausklappen"
+
+[scgLanguageServer]
+en = "Language server"
+de = "Language-Server"
+
+[scGoToTheDefinition]
+en = "Go to the definition"
+de = "Zur Definition springen"
+
+[scImplementations]
+en = "Implementations"
+de = "Implementierungen"
+
+[scAllUses]
+en = "All uses"
+de = "Alle Verwendungen"
+
+[scWhatTheServerSaysAbout]
+en = "What the server says about the symbol"
+de = "Was der Server über das Symbol sagt"
+
+[scNextPreviousProblem]
+en = "Next / previous problem"
+de = "Nächstes / vorheriges Problem"
+
+[scCodeActionsQuickFixesRefactorings]
+en = "Code actions (quick fixes, refactorings)"
+de = "Code-Aktionen (schnelle Korrekturen, Refactorings)"
+
+[scRenameTheSymbol]
+en = "Rename the symbol"
+de = "Das Symbol umbenennen"
+
+[scFormatTheFile]
+en = "Format the file"
+de = "Die Datei formatieren"
+
+[scComplete]
+en = "Complete"
+de = "Vervollständigen"
+
+[scShowTheCallSSignature]
+en = "Show the call's signature"
+de = "Die Signatur des Aufrufs zeigen"
+
+[scgNotesWikilinksAndTags]
+en = "Notes (wikilinks and tags)"
+de = "Notizen (Wikilinks und Tags)"
+
+[scFollowAWikilinkIntoNothing]
+en = "Follow a [[wikilink]] (into nothing: create the note beside this one), or show a #tag"
+de = "Einem [[Wikilink]] folgen (ins Leere: die Notiz neben dieser anlegen) oder einen #Tag zeigen"
+
+[scInTheReadingViewFollow]
+en = "In the reading view: follow a wikilink or show a tag"
+de = "In der Leseansicht: einem Wikilink folgen oder einen Tag zeigen"
+
+[scBackForwardAlongTheJumps]
+en = "Back / forward along the jumps across files"
+de = "Zurück / vor entlang der Sprünge über Dateien hinweg"
+
+[scCompleteANoteNameA]
+en = "Complete a note name / a tag"
+de = "Einen Notiznamen / einen Tag vervollständigen"
+
+[scgCompletionAndCodeActionMenus]
+en = "Completion and code-action menus"
+de = "Vervollständigungs- und Code-Aktions-Menüs"
+
+[scChoose]
+en = "Choose"
+de = "Wählen"
+
+[scTakeAndInCompletionOnly]
+en = "Take (⏎ and ⇥ in completion only without Vi)"
+de = "Übernehmen (⏎ und ⇥ in der Vervollständigung nur ohne Vi)"
+
+[scTakeThatCodeAction]
+en = "Take that code action"
+de = "Diese Code-Aktion übernehmen"
+
+[scNarrowWidenTheCodeActions]
+en = "Narrow / widen the code actions"
+de = "Die Code-Aktionen eingrenzen / erweitern"
+
+[scClose]
+en = "Close"
+de = "Schließen"
+
+[scgEverywhereInTheApp]
+en = "Everywhere in the app"
+de = "Überall in der App"
+
+[scOpenCloseTheSearchThe]
+en = "Open / close the search (the spotlight)"
+de = "Die Suche (das Spotlight) öffnen / schließen"
+
+[scOpenTheSettings]
+en = "Open the settings"
+de = "Die Einstellungen öffnen"
+
+[scInTheChatInputA]
+en = "In the chat input: a new conversation (the Studio's new note elsewhere)"
+de = "Im Chat-Feld: eine neue Unterhaltung (sonst die neue Notiz des Studio)"
+
+[scInTheChatInputSwitch]
+en = "In the chat input: switch between Plan and Build"
+de = "Im Chat-Feld: zwischen Plan und Build wechseln"
+
+[scCloseTheTopmostWindowThe]
+en = "Close the topmost window (the spotlight, else the top panel); not in a terminal"
+de = "Das oberste Fenster schließen (das Spotlight, sonst das obere Panel); nicht im Terminal"
+
+[scCloseTheTopmostWindowIn]
+en = "Close the topmost window — in a file window only on a rendered page or a picture"
+de = "Das oberste Fenster schließen — im Dateifenster nur auf einer gerenderten Seite oder einem Bild"
+
+[scWhileTheDebuggerIsStopped]
+en = "While the debugger is stopped: continue, step over, out, into"
+de = "Solange der Debugger hält: weiter, überspringen, hinaus, hinein"
+
+[scInATerminalPaneEvery]
+en = "In a terminal pane every app shortcut takes Ctrl+Shift — plain Ctrl belongs to the shell"
+de = "In einem Terminal-Pane nimmt jedes App-Kürzel Ctrl+Shift — das bloße Ctrl gehört der Shell"
+
+[scCopyPasteInATerminal]
+en = "Copy / paste in a terminal pane"
+de = "Kopieren / einfügen in einem Terminal-Pane"
+
+[scgStudio]
+en = "Studio"
+de = "Studio"
+
+[scOpenAFileByName]
+en = "Open a file by name (name:12 goes to line 12)"
+de = "Eine Datei nach Namen öffnen (name:12 springt zu Zeile 12)"
+
+[scOpenAFileWithThe]
+en = "Open a file with the file dialog"
+de = "Eine Datei mit dem Dateidialog öffnen"
+
+[scSearchTheProjectTheSidebar]
+en = "Search the project (the sidebar's Search view)"
+de = "Das Projekt durchsuchen (die Suche in der Seitenleiste)"
+
+[scNewNote]
+en = "New note"
+de = "Neue Notiz"
+
+[scCloseTheFileTab]
+en = "Close the file tab"
+de = "Den Datei-Tab schließen"
+
+[scGoToTab19]
+en = "Go to tab 1–9"
+de = "Zu Tab 1–9 springen"
+
+[scNextPreviousTabInThe]
+en = "Next / previous tab (in the focused group)"
+de = "Nächster / vorheriger Tab (in der Gruppe mit dem Fokus)"
+
+[scMoveTheTabIntoA]
+en = "Move the tab into a new group to the right / below"
+de = "Den Tab in eine neue Gruppe rechts / darunter schieben"
+
+[scDragATab]
+en = "Drag a tab"
+de = "Reiter ziehen"
+
+[scOntoAGroupJoinIt]
+en = "Onto a group: join it — onto an edge: split"
+de = "Auf eine Gruppe: ihr beitreten — an einen Rand: teilen"
+
+[scDragADivider]
+en = "Drag a divider"
+de = "Trenner ziehen"
+
+[scResizeTheGroupsBesideIt]
+en = "Resize the groups beside it"
+de = "Die Gruppen daneben in der Größe ändern"
+
+[scShowHideTheSidebarColumn]
+en = "Show / hide the sidebar column"
+de = "Die Seitenleiste zeigen / verbergen"
+
+[scgViMoving]
+en = "Vi — moving"
+de = "Vi — bewegen"
+
+[scLeftDownUpRight]
+en = "Left, down, up, right"
+de = "Links, runter, hoch, rechts"
+
+[scTheSameByOtherKeys]
+en = "The same, by other keys"
+de = "Dasselbe mit anderen Tasten"
+
+[scWordsForwardBackToThe]
+en = "Words forward, back, to the end (W: separated by spaces only)"
+de = "Wörter vor, zurück, ans Ende (W: nur durch Leerraum getrennt)"
+
+[scLineStartFirstCharacterEnd]
+en = "Line start, first character, end, last character, column"
+de = "Zeilenanfang, erstes Zeichen, Ende, letztes Zeichen, Spalte"
+
+[scLineStartEnd]
+en = "Line start / end"
+de = "Zeilenanfang / -ende"
+
+[scFirstLastLineWithA]
+en = "First / last line (with a count: that line)"
+de = "Erste / letzte Zeile (mit Zahl: diese Zeile)"
+
+[scFirstCharacterOfTheNext]
+en = "First character of the next / previous / this line"
+de = "Erstes Zeichen der nächsten / vorherigen / dieser Zeile"
+
+[scParagraphsAndSentences]
+en = "Paragraphs and sentences"
+de = "Absätze und Sätze"
+
+[scTheMatchingBracket]
+en = "The matching bracket"
+de = "Die passende Klammer"
+
+[scTopMiddleBottomOfThe]
+en = "Top, middle, bottom of the screen"
+de = "Oben, Mitte, unten auf dem Bildschirm"
+
+[scDownUpByScreenRows]
+en = "Down / up by screen rows"
+de = "Runter / hoch um Bildschirmzeilen"
+
+[scToBeforeACharacterAgain]
+en = "To / before a character, again, back"
+de = "Zu / vor ein Zeichen, nochmal, zurück"
+
+[scSearchForwardBackNextPrevious]
+en = "Search forward / back, next, previous, the word under the cursor"
+de = "Vorwärts / rückwärts suchen, nächster, vorheriger, das Wort unter dem Cursor"
+
+[scToAMarkItsLine]
+en = "To a mark (its line / its exact place)"
+de = "Zu einer Marke (ihre Zeile / ihre genaue Stelle)"
+
+[scgViChanging]
+en = "Vi — changing"
+de = "Vi — ändern"
+
+[scDeleteChangeCopyIndentOutdent]
+en = "Delete, change, copy, indent, outdent, reindent, case, comment — then a motion or object"
+de = "Löschen, ändern, kopieren, einrücken, ausrücken, neu einrücken, Groß/klein, kommentieren — dann eine Bewegung oder ein Objekt"
+
+[scTheSameForTheWhole]
+en = "The same for the whole line"
+de = "Dasselbe für die ganze Zeile"
+
+[scSurroundAddChangeDelete]
+en = "Surround: add, change, delete"
+de = "Umschließen: hinzufügen, ändern, löschen"
+
+[scInsertBeforeAfterLineStart]
+en = "Insert before, after, line start, line end, new line below, above, where last"
+de = "Einfügen davor, danach, am Zeilenanfang, am Zeilenende, neue Zeile darunter, darüber, wo zuletzt"
+
+[scDeleteCharacterBeforeSubstituteLine]
+en = "Delete character, before, substitute, line, to the end, change to the end, copy line"
+de = "Zeichen löschen, davor, ersetzen, Zeile, bis zum Ende, bis zum Ende ändern, Zeile kopieren"
+
+[scReplaceACharacterReplaceMode]
+en = "Replace a character / Replace mode"
+de = "Ein Zeichen ersetzen / Replace-Modus"
+
+[scPasteAfterBeforeGCursor]
+en = "Paste after / before (g: cursor after the text)"
+de = "Danach / davor einfügen (g: Cursor hinter den Text)"
+
+[scJoinLinesWithoutSpaces]
+en = "Join lines (without spaces)"
+de = "Zeilen verbinden (ohne Leerzeichen)"
+
+[scToggleCaseVisualUUpper]
+en = "Toggle case (Visual U: upper case)"
+de = "Groß/klein umschalten (Visual U: groß)"
+
+[scAddSubtractTheCount]
+en = "Add / subtract the count"
+de = "Die Zahl addieren / abziehen"
+
+[scUndoRedoRepeatTheLast]
+en = "Undo, redo, repeat the last change"
+de = "Rückgängig, wiederholen, die letzte Änderung wiederholen"
+
+[scRepeatSRepeatMacroRecord]
+en = "Repeat :s, repeat macro, record / play a macro, set a mark"
+de = ":s wiederholen, Makro wiederholen, ein Makro aufnehmen / abspielen, eine Marke setzen"
+
+[scSelectTheNextPreviousMatch]
+en = "Select the next / previous match (cgn: change it)"
+de = "Den nächsten / vorherigen Treffer auswählen (cgn: ihn ändern)"
+
+[scgViTextObjectsAfterI]
+en = "Vi — text objects (after i / a)"
+de = "Vi — Textobjekte (nach i / a)"
+
+[scWordWORDSentenceParagraph]
+en = "Word, WORD, sentence, paragraph"
+de = "Wort, WORT, Satz, Absatz"
+
+[scQuotedString]
+en = "Quoted string"
+de = "Text in Anführungszeichen"
+
+[scBrackets]
+en = "Brackets"
+de = "Klammern"
+
+[scHTMLXMLTag]
+en = "HTML/XML tag"
+de = "HTML/XML-Tag"
+
+[scFunctionClassArgumentTreeSitter]
+en = "Function, class, argument (tree-sitter)"
+de = "Funktion, Klasse, Argument (tree-sitter)"
+
+[scgViModesViewsAndThe]
+en = "Vi — modes, views and the rest"
+de = "Vi — Modi, Ansichten und der Rest"
+
+[scVisualByCharacterLineBlock]
+en = "Visual by character, line, block; again; other end"
+de = "Visual nach Zeichen, Zeile, Block; nochmal; anderes Ende"
+
+[scBackToNormal]
+en = "Back to Normal"
+de = "Zurück zu Normal"
+
+[scScrollTheCursorLineTo]
+en = "Scroll the cursor line to the top, middle, bottom"
+de = "Die Cursorzeile nach oben, in die Mitte, nach unten scrollen"
+
+[scScrollByLinesHalfPages]
+en = "Scroll by lines, half pages, pages"
+de = "Um Zeilen, halbe Seiten, Seiten scrollen"
+
+[scBackForwardInTheJump]
+en = "Back / forward in the jump list (past its ends: across files)"
+de = "Zurück / vor in der Sprungliste (über ihre Enden: über Dateien hinweg)"
+
+[scCloseOpenToggleAFold]
+en = "Close, open, toggle a fold; open / close all"
+de = "Eine Faltung schließen, öffnen, umschalten; alle öffnen / schließen"
+
+[scNextPreviousChangeInA]
+en = "Next / previous change in a diff"
+de = "Nächste / vorherige Änderung in einem Diff"
+
+[scDefinitionOnANoteS]
+en = "Definition (on a note's wikilink: follow it), hover, open the path under the cursor"
+de = "Definition (auf dem Wikilink einer Notiz: ihm folgen), Hover, den Pfad unter dem Cursor öffnen"
+
+[scImplementationsTypeDefinitionUses]
+en = "Implementations, type definition, uses"
+de = "Implementierungen, Typdefinition, Verwendungen"
+
+[scRenameCodeActionsVisualFor]
+en = "Rename, code actions (Visual: for the selection)"
+de = "Umbenennen, Code-Aktionen (Visual: für die Auswahl)"
+
+[scSaveAndCloseCloseWithout]
+en = "Save and close / close without saving"
+de = "Speichern und schließen / schließen ohne Speichern"
+
+[scCommandLineVisualForThe]
+en = "Command line (Visual: for the selected lines)"
+de = "Befehlszeile (Visual: für die ausgewählten Zeilen)"
+
+[scgViCommands]
+en = "Vi — commands"
+de = "Vi — Befehle"
+
+[scSaveSaveAndCloseClose]
+en = "Save, save and close, close"
+de = "Speichern, speichern und schließen, schließen"
+
+[scBackToTheFileOn]
+en = "Back to the file on disk"
+de = "Zurück zur Datei auf der Festplatte"
+
+[scReplaceCAskEachTime]
+en = "Replace (c: ask each time); repeat"
+de = "Ersetzen (c: jedes Mal fragen); wiederholen"
+
+[scRunACommandOnThe]
+en = "Run a command on the lines that match / do not match"
+de = "Einen Befehl auf den passenden / nicht passenden Zeilen ausführen"
+
+[scDeleteLinesTypeKeysOn]
+en = "Delete lines; type keys on every line"
+de = "Zeilen löschen; Tasten auf jeder Zeile tippen"
+
+[scWrappingNumbersRelativeNumbersWhitespace]
+en = "Wrapping, numbers, relative numbers, whitespace"
+de = "Umbruch, Nummern, relative Nummern, Leerraum"
+
+[scHideTheSearchHighlight]
+en = "Hide the search highlight"
+de = "Die Suchmarkierung ausblenden"
+
+[scFormatRenameCodeActions]
+en = "Format, rename, code actions"
+de = "Formatieren, umbenennen, Code-Aktionen"
+
+[scGoToLineN]
+en = "Go to line n"
+de = "Zu Zeile n springen"
+
+# The sidebar, its outline and quick open.
+[files]
+en = "Files"
+de = "Dateien"
+
+[hideHidden]
+en = "Hide dotfiles, .git, node_modules, target"
+de = "Dotfiles, .git, node_modules, target verbergen"
+
+[showHidden]
+en = "Show dotfiles, .git, node_modules, target"
+de = "Dotfiles, .git, node_modules, target zeigen"
+
+[rereadFolders]
+en = "Read the folders again"
+de = "Die Ordner neu lesen"
+
+[projectFolderMissing]
+en = "The project folder is not available."
+de = "Der Projektordner ist nicht da."
+
+[noProjectOpenHint]
+en = "No project open. Open a folder or start a new project from the bar above."
+de = "Kein Projekt offen. Öffne einen Ordner oder lege oben in der Leiste ein neues Projekt an."
+
+[outlineHeight]
+en = "Outline height"
+de = "Höhe der Gliederung"
+
+[sidebarWidth]
+en = "Sidebar width"
+de = "Breite der Seitenleiste"
+
+[outline]
+en = "Outline"
+de = "Gliederung"
+
+[fold]
+en = "Fold"
+de = "Einklappen"
+
+[unfold]
+en = "Unfold"
+de = "Ausklappen"
+
+[lineN]
+en = "Line {line}"
+de = "Zeile {line}"
+
+[followCursorAgain]
+en = "Follow the cursor again"
+de = "Wieder dem Cursor folgen"
+
+[pinOutline]
+en = "Pin: stop following the cursor"
+de = "Anheften: dem Cursor nicht mehr folgen"
+
+[filterSymbols]
+en = "Filter symbols"
+de = "Symbole filtern"
+
+[noFileOpen]
+en = "No file open."
+de = "Keine Datei offen."
+
+[noOutline]
+en = "No outline for this file."
+de = "Keine Gliederung für diese Datei."
+
+[noSymbols]
+en = "No symbols."
+de = "Keine Symbole."
+
+[nothingMatches]
+en = "Nothing matches."
+de = "Nichts passt."
+
+[openAFile]
+en = "Open a file"
+de = "Eine Datei öffnen"
+
+[quickOpenPlaceholder]
+en = "File name — :12 for a line"
+de = "Dateiname — :12 für eine Zeile"
+
+[fileName]
+en = "File name"
+de = "Dateiname"
+
+[readingFolders]
+en = "Reading the folders…"
+de = "Die Ordner werden gelesen…"
+
+[noFileMatches]
+en = "No file matches."
+de = "Keine Datei passt."
+
+[quickOpenTruncated]
+en = "Some folders have more files than quick open reads."
+de = "Manche Ordner haben mehr Dateien, als die Schnellsuche liest."
+
+# The file panel.
+[couldNotOpen]
+en = "Could not open {rel}: {message}"
+de = "{rel} ließ sich nicht öffnen: {message}"
+
+[newNote]
+en = "New note"
+de = "Neue Notiz"
+
+[thisFile]
+en = "This file"
+de = "Diese Datei"
+
+[textSize]
+en = "Text size"
+de = "Textgröße"
+
+[smallerText]
+en = "Smaller text"
+de = "Kleinerer Text"
+
+[largerText]
+en = "Larger text"
+de = "Größerer Text"
+
+[resetTextSize]
+en = "Reset text size"
+de = "Textgröße zurücksetzen"
+
+[reset]
+en = "Reset"
+de = "Zurücksetzen"
+
+[openInFileApp]
+en = "Open in the file app"
+de = "In der Datei-App öffnen"
+
+# Find in the file and in the project.
+[find]
+en = "Find"
+de = "Suchen"
+
+[search]
+en = "Search"
+de = "Suchen"
+
+[searching]
+en = "Searching"
+de = "Sucht"
+
+[searchingDots]
+en = "Searching…"
+de = "Suche…"
+
+[invalid]
+en = "Invalid"
+de = "Ungültig"
+
+[noResults]
+en = "No results"
+de = "Keine Treffer"
+
+[foundTotal]
+en = "{total} found"
+de = "{total} gefunden"
+
+[toggleReplace]
+en = "Toggle replace"
+de = "Ersetzen ein/aus"
+
+[matchCase]
+en = "Match case"
+de = "Groß/klein beachten"
+
+[wholeWord]
+en = "Whole word"
+de = "Ganzes Wort"
+
+[regularExpression]
+en = "Regular expression"
+de = "Regulärer Ausdruck"
+
+[previousMatch]
+en = "Previous match"
+de = "Vorheriger Treffer"
+
+[nextMatch]
+en = "Next match"
+de = "Nächster Treffer"
+
+[findInSelection]
+en = "Find in selection"
+de = "In der Auswahl suchen"
+
+[replace]
+en = "Replace"
+de = "Ersetzen"
+
+[preserveCase]
+en = "Preserve case"
+de = "Groß/klein erhalten"
+
+[replaceAll]
+en = "Replace all"
+de = "Alle ersetzen"
+
+[all]
+en = "All"
+de = "Alle"
+
+[glyphMatchCase]
+en = "Aa"
+de = "Aa"
+
+[glyphWholeWord]
+en = "ab"
+de = "ab"
+
+[glyphPreserveCase]
+en = "AB"
+de = "AB"
+
+[searchInFiles]
+en = "Search in files"
+de = "In Dateien suchen"
+
+[whereToSearch]
+en = "Where to search"
+de = "Wo gesucht wird"
+
+[includeExclude]
+en = "include / exclude"
+de = "einschließen / ausschließen"
+
+[includePlaceholder]
+en = "Include, e.g. *.rs, src/**"
+de = "Einschließen, z. B. *.rs, src/**"
+
+[filesToInclude]
+en = "Files to include"
+de = "Einzuschließende Dateien"
+
+[excludePlaceholder]
+en = "Exclude, e.g. **/*.test.ts"
+de = "Ausschließen, z. B. **/*.test.ts"
+
+[filesToExclude]
+en = "Files to exclude"
+de = "Auszuschließende Dateien"
+
+[placeCount]
+en = { one = "1 place", other = "{n} places" }
+de = { one = "1 Stelle", other = "{n} Stellen" }
+
+[closeList]
+en = "Close the list"
+de = "Die Liste schließen"
+
+[unsavedSearchHint]
+en = "Unsaved changes in an editor — these results are the file on disk"
+de = "Ungespeicherte Änderungen in einem Editor — diese Treffer zeigen die Datei auf der Festplatte"
+
+[searchFailed]
+en = "The search failed."
+de = "Die Suche ist fehlgeschlagen."
+
+[invalidGlob]
+en = "Invalid {detail}"
+de = "Ungültig: {detail}"
+
+[invalidPattern]
+en = "Invalid pattern: {detail}"
+de = "Ungültiges Muster: {detail}"
+
+[resultCount]
+en = { one = "{count} result", other = "{count} results" }
+de = { one = "{count} Treffer", other = "{count} Treffer" }
+
+[fileCount]
+en = { one = "{count} file", other = "{count} files" }
+de = { one = "{count} Datei", other = "{count} Dateien" }
+
+[resultsInFiles]
+en = "{results} in {files}"
+de = "{results} in {files}"
+
+[foundSearching]
+en = "{found} — searching…"
+de = "{found} — sucht…"
+
+[foundStopped]
+en = "{found} — stopped at {limit} results; narrow the search"
+de = "{found} — bei {limit} Treffern angehalten; grenze die Suche ein"
+
+# Git changes of one file.
+[discardHunkConfirm]
+en = "Throw this change away? It is not saved anywhere and cannot be brought back."
+de = "Diese Änderung verwerfen? Sie ist nirgends gespeichert und lässt sich nicht zurückholen."
+
+[changeOf]
+en = "Change of {path}"
+de = "Änderung an {path}"
+
+[gitStaged]
+en = "Staged"
+de = "Vorgemerkt"
+
+[gitChanges]
+en = "Changes"
+de = "Änderungen"
+
+[unstageFile]
+en = "Unstage file"
+de = "Datei nicht mehr vormerken"
+
+[stageFile]
+en = "Stage file"
+de = "Datei vormerken"
+
+[showSplit]
+en = "Show both sides next to each other"
+de = "Beide Seiten nebeneinander zeigen"
+
+[showUnified]
+en = "Show one column"
+de = "Eine Spalte zeigen"
+
+[closeChange]
+en = "Close the change"
+de = "Die Änderung schließen"
+
+[binaryFile]
+en = "Binary file — {old} → {new} bytes."
+de = "Binärdatei — {old} → {new} Bytes."
+
+[tooLargeForDiff]
+en = "This file is too large to show as a diff."
+de = "Diese Datei ist zu groß, um sie als Diff zu zeigen."
+
+[nothingStagedFile]
+en = "Nothing staged for this file."
+de = "Für diese Datei ist nichts vorgemerkt."
+
+[noUnstagedFile]
+en = "No unstaged changes in this file."
+de = "Keine nicht vorgemerkten Änderungen in dieser Datei."
+
+[readingChange]
+en = "Reading the change…"
+de = "Die Änderung wird gelesen…"
+
+# The file tree.
+[nameNeeded]
+en = "A name is needed."
+de = "Ein Name fehlt."
+
+[nameReserved]
+en = "That name is taken by the file system."
+de = "Diesen Namen belegt das Dateisystem."
+
+[nameBadChars]
+en = "A name cannot contain / or a NUL."
+de = "Ein Name darf kein / und kein NUL enthalten."
+
+[moveAcrossRoots]
+en = "Moving between roots is not possible — only within one."
+de = "Verschieben geht nur innerhalb eines Ortes — nicht zwischen Workspace, Projekten und Worktrees."
+
+[moveIntoItself]
+en = "A folder cannot be moved into itself."
+de = "Ein Ordner lässt sich nicht in sich selbst verschieben."
+
+[linksNotChecked]
+en = "The links to {name} were not checked: {error}"
+de = "Die Links auf {name} wurden nicht geprüft: {error}"
+
+[folderLinksKept]
+en = "Links into the renamed folder by path were not updated — links by note name still work"
+de = "Links per Pfad in den umbenannten Ordner wurden nicht angepasst — Links per Notizname funktionieren weiter"
+
+[linksUpdated]
+en = "Updated {links} in {notes}"
+de = "{links} in {notes} angepasst"
+
+[linksNotUpdated]
+en = "The links were not updated: {error}"
+de = "Die Links wurden nicht angepasst: {error}"
+
+[linkCount]
+en = { one = "1 link", other = "{n} links" }
+de = { one = "1 Link", other = "{n} Links" }
+
+[noteCount]
+en = { one = "1 note", other = "{n} notes" }
+de = { one = "1 Notiz", other = "{n} Notizen" }
+
+[updateLinks]
+en = "Update {links} in {notes}?"
+de = "{links} in {notes} anpassen?"
+
+[update]
+en = "Update"
+de = "Anpassen"
+
+[keep]
+en = "Keep"
+de = "Behalten"
+
+[name]
+en = "Name"
+de = "Name"
+
+[aLink]
+en = "{path} (a link)"
+de = "{path} (ein Link)"
+
+[actionsFor]
+en = "Actions for {name}"
+de = "Aktionen für {name}"
+
+[counting]
+en = "Counting…"
+de = "Zähle…"
+
+[entryCount]
+en = { one = "1 entry", other = "{n} entries" }
+de = { one = "1 Eintrag", other = "{n} Einträge" }
+
+[deleteFolder]
+en = "Delete {name} and {entries} in it?"
+de = "{name} und {entries} darin löschen?"
+
+[deleteFile]
+en = "Delete {name}?"
+de = "{name} löschen?"
+
+[delete]
+en = "Delete"
+de = "Löschen"
+
+[deleteDots]
+en = "Delete…"
+de = "Löschen…"
+
+[moreEntries]
+en = "…more entries than shown"
+de = "…mehr Einträge als gezeigt"
+
+[newFile]
+en = "New file"
+de = "Neue Datei"
+
+[newFolder]
+en = "New folder"
+de = "Neuer Ordner"
+
+[rename]
+en = "Rename"
+de = "Umbenennen"
+
+# The project bar.
+[glyphSmaller]
+en = "A−"
+de = "A−"
+
+[glyphLarger]
+en = "A+"
+de = "A+"
+
+[projectNameMissing]
+en = "Enter a project name first."
+de = "Gib zuerst einen Projektnamen ein."
+
+[projectNameTooLong]
+en = "That name is too long."
+de = "Dieser Name ist zu lang."
+
+[projectNameDot]
+en = "The name must not start with a dot."
+de = "Der Name darf nicht mit einem Punkt beginnen."
+
+[projectNameChars]
+en = "The name must not contain / \\ or :."
+de = "Der Name darf kein /, \\ oder : enthalten."
+
+[removeProjectConfirm]
+en = "Remove “{name}” from the list? The folder itself is left alone."
+de = "„{name}“ aus der Liste entfernen? Der Ordner selbst bleibt, wie er ist."
+
+[folderMissing]
+en = "folder missing"
+de = "Ordner fehlt"
+
+[noProject]
+en = "No project"
+de = "Kein Projekt"
+
+[changeFolderOf]
+en = "Change the folder of {name}…"
+de = "Den Ordner von {name} ändern…"
+
+[removeFromListOf]
+en = "Remove {name} from the list (the folder is left alone)"
+de = "{name} aus der Liste entfernen (der Ordner bleibt)"
+
+[openProject]
+en = "Open project…"
+de = "Projekt öffnen…"
+
+[newProjectDots]
+en = "New project…"
+de = "Neues Projekt…"
+
+[markerColourOf]
+en = "Marker colour of {name}"
+de = "Markierungsfarbe von {name}"
+
+[marker]
+en = "Marker"
+de = "Markierung"
+
+[noMarkerColour]
+en = "No marker colour"
+de = "Keine Markierungsfarbe"
+
+[noMarker]
+en = "No marker"
+de = "Keine Markierung"
+
+[markerColourN]
+en = "Marker colour {n}"
+de = "Markierungsfarbe {n}"
+
+[closeProject]
+en = "Close project"
+de = "Projekt schließen"
+
+[changeFolder]
+en = "Change folder…"
+de = "Ordner ändern…"
+
+[removeFromList]
+en = "Remove from list"
+de = "Aus der Liste entfernen"
+
+[newProject]
+en = "New project"
+de = "Neues Projekt"
+
+[projectName]
+en = "Project name"
+de = "Projektname"
+
+[startGitRepo]
+en = "Start a git repository"
+de = "Ein Git-Repository anlegen"
+
+[chooseWhere]
+en = "Choose where…"
+de = "Ort wählen…"
+
+# Editor settings.
+[editorSettings]
+en = "Editor settings"
+de = "Editor-Einstellungen"
+
+[off]
+en = "Off"
+de = "Aus"
+
+[cursorStrong]
+en = "Strong (smear, longer on long jumps)"
+de = "Stark (zieht nach, länger bei weiten Sprüngen)"
+
+[cursorSubtle]
+en = "Subtle"
+de = "Dezent"
+
+[smoothScroll]
+en = "Smooth scrolling"
+de = "Weiches Scrollen"
+
+[currentLine]
+en = "Highlight current line"
+de = "Aktuelle Zeile hervorheben"
+
+[indentGuides]
+en = "Indentation guides"
+de = "Einrückungslinien"
+
+[bracketColors]
+en = "Coloured bracket pairs"
+de = "Farbige Klammerpaare"
+
+[accentGlow]
+en = "Accent glow"
+de = "Akzent-Leuchten"
+
+[foldAnimation]
+en = "Animated folding"
+de = "Animiertes Einklappen"
+
+[minimap]
+en = "Minimap"
+de = "Minimap"
+
+[stickyScroll]
+en = "Sticky scroll"
+de = "Mitlaufende Kopfzeilen"
+
+[diagnosticsInline]
+en = "Problem message at line end"
+de = "Problemmeldung am Zeilenende"
+
+[autosaveDelay]
+en = "After 1 s pause"
+de = "Nach 1 s Pause"
+
+[autosaveLeave]
+en = "When leaving the editor"
+de = "Beim Verlassen des Editors"
+
+[iconsMono]
+en = "Monochrome"
+de = "Einfarbig"
+
+[iconsNone]
+en = "None"
+de = "Keine"
+
+[keys]
+en = "Keys"
+de = "Tasten"
+
+[keysNormal]
+en = "Normal (Mac)"
+de = "Normal (Mac)"
+
+[viClipboard]
+en = "Vi clipboard"
+de = "Vi-Zwischenablage"
+
+[viClipboardShared]
+en = "Shared with the system (y and p use ⌘C/⌘V's clipboard)"
+de = "Mit dem System geteilt (y und p nutzen die Zwischenablage von ⌘C/⌘V)"
+
+[viClipboardSeparate]
+en = "Separate (\"+y and \"+p reach the Mac)"
+de = "Getrennt (\"+y und \"+p erreichen den Mac)"
+
+[font]
+en = "Font"
+de = "Schrift"
+
+[fontsBundled]
+en = "Bundled"
+de = "Mitgeliefert"
+
+[fontsInstalled]
+en = "Installed on this Mac"
+de = "Auf diesem Mac installiert"
+
+[fontNotInstalled]
+en = "{font} (not installed)"
+de = "{font} (nicht installiert)"
+
+[monospaceOnly]
+en = "Only monospaced fonts"
+de = "Nur Festbreitenschriften"
+
+[fontMissing]
+en = "{font} is not installed on this Mac — the editor shows {fallback}."
+de = "{font} ist auf diesem Mac nicht installiert — der Editor zeigt {fallback}."
+
+[weight]
+en = "Weight"
+de = "Stärke"
+
+[weightMissing]
+en = "{font} has no {weight} — shows {shown}. It has {weights}."
+de = "{font} hat kein {weight} — zeigt {shown}. Vorhanden: {weights}."
+
+[size]
+en = "Size"
+de = "Größe"
+
+[lineHeight]
+en = "Line height"
+de = "Zeilenhöhe"
+
+[ligatures]
+en = "Ligatures"
+de = "Ligaturen"
+
+[lineNumbers]
+en = "Line numbers"
+de = "Zeilennummern"
+
+[lineAbsolute]
+en = "Absolute"
+de = "Absolut"
+
+[lineRelative]
+en = "Relative"
+de = "Relativ"
+
+[lineHybrid]
+en = "Hybrid"
+de = "Hybrid"
+
+[softWrap]
+en = "Soft wrap (⌥Z toggles per file)"
+de = "Zeilenumbruch (⌥Z schaltet pro Datei um)"
+
+[wrapProse]
+en = "Prose (.md, .txt)"
+de = "Fließtext (.md, .txt)"
+
+[wrapCode]
+en = "Code"
+de = "Code"
+
+[indent]
+en = "Indent"
+de = "Einrückung"
+
+[spaces]
+en = "Spaces"
+de = "Leerzeichen"
+
+[tabs]
+en = "Tabs"
+de = "Tabs"
+
+[indentNote]
+en = "Used only when a file shows no indentation of its own."
+de = "Gilt nur, wenn eine Datei keine eigene Einrückung zeigt."
+
+[tabWidth]
+en = "Tab width"
+de = "Tab-Breite"
+
+[effects]
+en = "Effects"
+de = "Effekte"
+
+[cursor]
+en = "Cursor"
+de = "Cursor"
+
+[editorTheme]
+en = "Editor theme"
+de = "Editor-Theme"
+
+[followAppTheme]
+en = "Follow the app theme"
+de = "Dem Theme der App folgen"
+
+[themeLight]
+en = "{name} (light)"
+de = "{name} (hell)"
+
+[fileIcons]
+en = "File icons"
+de = "Datei-Symbole"
+
+[reduceMotionNote]
+en = "With macOS \"Reduce motion\" on, the cursor does not glide and nothing scrolls smoothly."
+de = "Ist „Bewegung reduzieren“ in macOS an, gleitet der Cursor nicht und nichts scrollt weich."
+
+[autosave]
+en = "Autosave"
+de = "Automatisch speichern"
+
+[autosaveNote]
+en = "Autosave never overwrites a change made on disk; it stops and asks instead."
+de = "Automatisches Speichern überschreibt nie eine Änderung auf der Festplatte; es hält an und fragt."
+
+[formatOnSaveBefore]
+en = "Format on save (⌘S,"
+de = "Beim Speichern formatieren (⌘S,"
+
+[formatOnSaveAfter]
+en = ")"
+de = ")"
+
+[except]
+en = "Except"
+de = "Außer"
+
+[exceptPlaceholder]
+en = "e.g. markdown, python"
+de = "z. B. markdown, python"
+
+# The editor: language server, links, renaming, formatting.
+[noLanguageServer]
+en = "No language server for this file"
+de = "Kein Language-Server für diese Datei"
+
+[noCodeActionsHere]
+en = "No code actions here"
+de = "Hier gibt es keine Code-Aktionen"
+
+[serverNoCodeActions]
+en = "This language server offers no code actions"
+de = "Dieser Language-Server bietet keine Code-Aktionen"
+
+[fileReadOnly]
+en = "This file is read-only"
+de = "Diese Datei ist schreibgeschützt"
+
+[actionCouldNotRun]
+en = "Could not run “{title}”: {error}"
+de = "„{title}“ ließ sich nicht ausführen: {error}"
+
+[actionTextChanged]
+en = "The text changed meanwhile — the action was not run"
+de = "Der Text hat sich inzwischen geändert — die Aktion lief nicht"
+
+[actionChangesNothing]
+en = "“{title}” changes nothing"
+de = "„{title}“ ändert nichts"
+
+[actionFailed]
+en = "“{title}” failed: {error}"
+de = "„{title}“ ist fehlgeschlagen: {error}"
+
+[actionMovesFiles]
+en = "“{title}” would move files — do it in the file tree"
+de = "„{title}“ würde Dateien verschieben — mache das im Dateibaum"
+
+[actionNotApplied]
+en = "“{title}” was not applied: {reason}"
+de = "„{title}“ wurde nicht angewendet: {reason}"
+
+[actionNotChanged]
+en = "“{title}”: not changed: {list}"
+de = "„{title}“: nicht geändert: {list}"
+
+[definitionsOf]
+en = "Definitions of {symbol}"
+de = "Definitionen von {symbol}"
+
+[implementationsOf]
+en = "Implementations of {symbol}"
+de = "Implementierungen von {symbol}"
+
+[typeDefinitionsOf]
+en = "Type definitions of {symbol}"
+de = "Typdefinitionen von {symbol}"
+
+[referencesTo]
+en = "References to {symbol}"
+de = "Verwendungen von {symbol}"
+
+[noDefinition]
+en = "No definition found"
+de = "Keine Definition gefunden"
+
+[noImplementation]
+en = "No implementation found"
+de = "Keine Implementierung gefunden"
+
+[noTypeDefinition]
+en = "No type definition found"
+de = "Keine Typdefinition gefunden"
+
+[noReferences]
+en = "No references found"
+de = "Keine Verwendungen gefunden"
+
+[theSymbol]
+en = "the symbol"
+de = "dem Symbol"
+
+[placeNotFile]
+en = "That place is not a file"
+de = "Diese Stelle ist keine Datei"
+
+[wikilinksWorkspaceOnly]
+en = "Wikilinks lead to notes of the workspace"
+de = "Wikilinks führen zu Notizen im Workspace"
+
+[noHeading]
+en = "No heading “{heading}” in this note"
+de = "Keine Überschrift „{heading}“ in dieser Notiz"
+
+[vaultUnreadable]
+en = "The vault's notes could not be read"
+de = "Die Notizen im Vault ließen sich nicht lesen"
+
+[severalNotes]
+en = "“{target}” fits several notes — name its folder: {names}"
+de = "„{target}“ passt zu mehreren Notizen — nenne den Ordner: {names}"
+
+[fileNoteFirst]
+en = "File this note first (⌘S) — a linked note is created beside it"
+de = "Lege diese Notiz zuerst ab (⌘S) — eine verlinkte Notiz entsteht daneben"
+
+[unusableFileName]
+en = "“{target}” is no usable file name"
+de = "„{target}“ taugt nicht als Dateiname"
+
+[couldNotCreate]
+en = "Could not create {path}: {error}"
+de = "{path} ließ sich nicht anlegen: {error}"
+
+[created]
+en = "Created {path}"
+de = "{path} angelegt"
+
+[serverNoRename]
+en = "This language server does not rename"
+de = "Dieser Language-Server benennt nicht um"
+
+[nothingToRename]
+en = "Nothing to rename here"
+de = "Hier gibt es nichts umzubenennen"
+
+[renameMovesFiles]
+en = "This rename would move files — do it in the file tree"
+de = "Diese Umbenennung würde Dateien verschieben — mache das im Dateibaum"
+
+[couldNotRename]
+en = "Could not rename: {error}"
+de = "Umbenennen ging nicht: {error}"
+
+[renameTextChanged]
+en = "The text changed while renaming — nothing was renamed"
+de = "Der Text hat sich beim Umbenennen geändert — nichts wurde umbenannt"
+
+[nothingRenamed]
+en = "Nothing was renamed: {reason}"
+de = "Nichts wurde umbenannt: {reason}"
+
+[renamed]
+en = "Renamed to {name} in {files}"
+de = "In {files} zu {name} umbenannt"
+
+[renamedPartly]
+en = "Renamed to {name} in {files}; not changed: {list}"
+de = "In {files} zu {name} umbenannt; nicht geändert: {list}"
+
+[couldNotFormat]
+en = "Could not format: {error}"
+de = "Formatieren ging nicht: {error}"
+
+[notInstalled]
+en = "{name} is not installed"
+de = "{name} ist nicht installiert"
+
+[noFormatter]
+en = "No formatter for this file"
+de = "Kein Formatierer für diese Datei"
+
+[couldNotFile]
+en = "Could not file the note: {error}"
+de = "Die Notiz ließ sich nicht ablegen: {error}"
+
+[nothingBack]
+en = "Nothing to go back to"
+de = "Nichts zum Zurückgehen"
+
+[nothingForward]
+en = "Nothing to go forward to"
+de = "Nichts zum Vorgehen"
+
+[newName]
+en = "New name"
+de = "Neuer Name"
+
+# The editor's banners and footer.
+[recoveryKept]
+en = "Unsaved changes from {when} were kept."
+de = "Ungespeicherte Änderungen vom {when} wurden aufbewahrt."
+
+[changedSince]
+en = "The file has changed on disk since."
+de = "Die Datei hat sich seitdem auf der Festplatte geändert."
+
+[restore]
+en = "Restore"
+de = "Wiederherstellen"
+
+[reloadWarning]
+en = "Reloading throws your unsaved changes away."
+de = "Neu laden verwirft deine ungespeicherten Änderungen."
+
+[reloadAnyway]
+en = "Reload anyway"
+de = "Trotzdem neu laden"
+
+[changedOnDisk]
+en = "The file changed on disk while you have unsaved changes."
+de = "Die Datei hat sich auf der Festplatte geändert, während du ungespeicherte Änderungen hast."
+
+[reload]
+en = "Reload"
+de = "Neu laden"
+
+[keepMine]
+en = "Keep mine"
+de = "Meine behalten"
+
+[compare]
+en = "Compare"
+de = "Vergleichen"
+
+[overwriteQuestion]
+en = "The file was changed on disk. Save anyway and overwrite it?"
+de = "Die Datei wurde auf der Festplatte geändert. Trotzdem speichern und sie überschreiben?"
+
+[overwrite]
+en = "Overwrite"
+de = "Überschreiben"
+
+[deletedOnDisk]
+en = "The file was deleted on disk. Saving creates it again."
+de = "Die Datei wurde auf der Festplatte gelöscht. Speichern legt sie neu an."
+
+[reloaded]
+en = "Reloaded — the file changed on disk."
+de = "Neu geladen — die Datei hat sich auf der Festplatte geändert."
+
+[compareTitle]
+en = "On disk → your text"
+de = "Festplatte → dein Text"
+
+[compareSame]
+en = "On disk → your text (no difference)"
+de = "Festplatte → dein Text (kein Unterschied)"
+
+[wrapOn]
+en = "Wrap on"
+de = "Umbruch an"
+
+[wrapOff]
+en = "Wrap off"
+de = "Umbruch aus"
+
+[filingNote]
+en = "Filing the note…"
+de = "Die Notiz wird abgelegt…"
+
+[newNoteHint]
+en = "New note — ⌘S files it"
+de = "Neue Notiz — ⌘S legt sie ab"
+
+[largeFileTitle]
+en = "Over 2 MB: no syntax colours"
+de = "Über 2 MB: keine Syntaxfarben"
+
+[largeFile]
+en = "Large file — light mode"
+de = "Große Datei — leichter Modus"
+
+[readOnlyOutside]
+en = "Read-only — outside the project, shown by the language server"
+de = "Schreibgeschützt — außerhalb des Projekts, vom Language-Server gezeigt"
+
+[problemsTitle]
+en = "Problems from the language server — F8 / ⇧F8 to step through"
+de = "Probleme vom Language-Server — F8 / ⇧F8 zum Durchgehen"
+
+[modeSource]
+en = "Source"
+de = "Quelltext"
+
+[modePreview]
+en = "Preview"
+de = "Vorschau"
+
+[modeSplit]
+en = "Side by side"
+de = "Nebeneinander"
+
+[eolWasMixed]
+en = "LF (was mixed)"
+de = "LF (war gemischt)"
+
+[indentSpaces]
+en = { one = "1 space", other = "{n} spaces" }
+de = { one = "1 Leerzeichen", other = "{n} Leerzeichen" }
+
+[indentSpacesDefault]
+en = { one = "1 space (default)", other = "{n} spaces (default)" }
+de = { one = "1 Leerzeichen (Standard)", other = "{n} Leerzeichen (Standard)" }
+
+[cursorPosition]
+en = "Ln {line}, Col {col}"
+de = "Z {line}, Sp {col}"
+
+[settingsReadFailed]
+en = "Could not read editor-settings.json: {error}"
+de = "editor-settings.json ließ sich nicht lesen: {error}"
+
+[settingsSaveFailed]
+en = "Could not save editor-settings.json: {error}"
+de = "editor-settings.json ließ sich nicht speichern: {error}"
+
+# The Push button.
+[push]
+en = "Push"
+de = "Push"
+
+[pushNothingCommitted]
+en = "Nothing is committed yet"
+de = "Noch ist nichts committet"
+
+[pushDetached]
+en = "HEAD is detached; switch to a branch to push"
+de = "HEAD ist losgelöst; wechsle für den Push auf einen Branch"
+
+[publishBranch]
+en = "Publish branch"
+de = "Branch veröffentlichen"
+
+[publishBranchTitle]
+en = "Push {branch} to origin and follow it there"
+de = "{branch} nach origin pushen und dort verfolgen"
+
+[pushUpToDate]
+en = "{branch} is up to date with {upstream}"
+de = "{branch} ist auf dem Stand von {upstream}"
+
+[pushAhead]
+en = "Push ↑{n}"
+de = "Push ↑{n}"
+
+[pushTitle]
+en = { one = "Push 1 commit to {upstream} (never forced)", other = "Push {n} commits to {upstream} (never forced)" }
+de = { one = "1 Commit nach {upstream} pushen (nie erzwungen)", other = "{n} Commits nach {upstream} pushen (nie erzwungen)" }
+
+# Helpers: language servers, workspace edits, note completion.
+[serverMissing]
+en = "No {server} language server found — install it with: {install}"
+de = "Kein Language-Server für {server} gefunden — installiere ihn mit: {install}"
+
+[editOutsideProject]
+en = "outside the project"
+de = "außerhalb des Projekts"
+
+[editWouldCreate]
+en = "it would create {file}"
+de = "die Datei {file} würde neu entstehen"
+
+[editCannotRead]
+en = "it cannot read {file}"
+de = "{file} ist nicht lesbar"
+
+[editChangedOnDisk]
+en = "changed on disk meanwhile"
+de = "inzwischen auf der Festplatte geändert"
+
+[tagListed]
+en = "tag list"
+de = "Tag-Liste"
+
+[tagInVault]
+en = "in the vault"
+de = "im Vault"
+
+# The Git panel.
+[git]
+en = "Git"
+de = "Git"
+
+[deleteUntrackedConfirm]
+en = "Delete {name}? It is not in git, so it cannot be brought back."
+de = "{name} löschen? Die Datei ist nicht in Git, also lässt sie sich nicht zurückholen."
+
+[discardChangesConfirm]
+en = "Throw away the unstaged changes in {name}? They are not saved anywhere and cannot be brought back."
+de = "Die nicht vorgemerkten Änderungen in {name} verwerfen? Sie sind nirgends gespeichert und lassen sich nicht zurückholen."
+
+[committedNotPushed]
+en = "Committed, but not pushed: {error}"
+de = "Committet, aber nicht gepusht: {error}"
+
+[deletePath]
+en = "Delete {path}"
+de = "{path} löschen"
+
+[discardChangesIn]
+en = "Discard changes in {name}"
+de = "Änderungen in {name} verwerfen"
+
+[deleteUntracked]
+en = "Delete this untracked file"
+de = "Diese nicht verfolgte Datei löschen"
+
+[discardUnstaged]
+en = "Discard the unstaged changes"
+de = "Die nicht vorgemerkten Änderungen verwerfen"
+
+[unstagePath]
+en = "Unstage {path}"
+de = "{path} nicht mehr vormerken"
+
+[stagePath]
+en = "Stage {path}"
+de = "{path} vormerken"
+
+[unstage]
+en = "Unstage"
+de = "Nicht mehr vormerken"
+
+[stage]
+en = "Stage"
+de = "Vormerken"
+
+[noProjectOpen]
+en = "No project open"
+de = "Kein Projekt offen"
+
+[noProjectOpenGit]
+en = "Open one from the project bar above."
+de = "Öffne eins über die Projektleiste oben."
+
+[notGitRepo]
+en = "Not a git repository"
+de = "Kein Git-Repository"
+
+[noHistoryYet]
+en = "This project folder has no history yet."
+de = "Dieser Projektordner hat noch keine Geschichte."
+
+[createRepo]
+en = "Create repository"
+de = "Repository anlegen"
+
+[readingRepo]
+en = "Reading the repository…"
+de = "Das Repository wird gelesen…"
+
+[followsUpstream]
+en = "Follows {upstream} — switch branch"
+de = "Folgt {upstream} — Branch wechseln"
+
+[noUpstream]
+en = "No upstream — switch branch"
+de = "Kein Upstream — Branch wechseln"
+
+[detachedAt]
+en = "detached at {head}"
+de = "losgelöst bei {head}"
+
+[aheadTitle]
+en = "Commits not on the upstream"
+de = "Commits, die der Upstream nicht hat"
+
+[behindTitle]
+en = "Commits on the upstream you do not have"
+de = "Commits im Upstream, die dir fehlen"
+
+[newBranchHere]
+en = "New branch from here"
+de = "Neuer Branch von hier"
+
+[create]
+en = "Create"
+de = "Anlegen"
+
+[fetchRemote]
+en = "Fetch from the remote (only reads)"
+de = "Vom Remote holen (liest nur)"
+
+[pushing]
+en = "Pushing…"
+de = "Pushe…"
+
+[outgoingTitle]
+en = "What a push would publish"
+de = "Was ein Push veröffentlichen würde"
+
+[toPush]
+en = "To push"
+de = "Zu pushen"
+
+[noFileChanges]
+en = "No file changes (a merge)."
+de = "Keine Dateiänderungen (ein Merge)."
+
+[unstageAll]
+en = "Unstage all"
+de = "Keine mehr vormerken"
+
+[nothingStaged]
+en = "Nothing staged yet — the + on a change adds it."
+de = "Noch nichts vorgemerkt — das + an einer Änderung merkt sie vor."
+
+[stageAll]
+en = "Stage all"
+de = "Alle vormerken"
+
+[treeClean]
+en = "The working tree is clean."
+de = "Der Arbeitsbaum ist sauber."
+
+[writingMessage]
+en = "Writing a message from the staged diff…"
+de = "Eine Nachricht aus dem vorgemerkten Diff wird geschrieben…"
+
+[commitPlaceholder]
+en = "Commit message  (⌘↩ commits)"
+de = "Commit-Nachricht  (⌘↩ committet)"
+
+[suggestNeedsStaged]
+en = "Stage changes to have a message written"
+de = "Merk Änderungen vor, damit eine Nachricht geschrieben wird"
+
+[suggestMessage]
+en = "Write a message: sends the staged diff (not .env or key files) to the skill provider's model — one paid call"
+de = "Nachricht schreiben: schickt den vorgemerkten Diff (ohne .env- oder Schlüsseldateien) an das Modell des Skill-Anbieters — ein bezahlter Aufruf"
+
+[commit]
+en = "Commit"
+de = "Commit"
+
+[commitN]
+en = "Commit ({n})"
+de = "Commit ({n})"
+
+[commitPushTitle]
+en = "Commit what is staged, then push the branch (never forced)"
+de = "Vorgemerktes committen, dann den Branch pushen (nie erzwungen)"
+
+[commitPush]
+en = "Commit & Push"
+de = "Commit & Push"
+
+# The editor surface.
+[editor]
+en = "Editor"
+de = "Editor"
+
+[foldedLines]
+en = { one = "1 line", other = "{n} lines" }
+de = { one = "1 Zeile", other = "{n} Zeilen" }
+
+[goToLine]
+en = "Go to line {line}"
+de = "Zu Zeile {line} springen"
+
+[fix]
+en = "Fix…"
+de = "Beheben…"
+
+[viSaveFailed]
+en = "Could not save editor-vi.json: {error}"
+de = "editor-vi.json ließ sich nicht speichern: {error}"
