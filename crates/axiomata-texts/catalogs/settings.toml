@@ -1,0 +1,870 @@
+# The texts of Settings (`shell/Settings.svelte` and its parts, `core/settingsTabs.ts`). Provider, harness, model and
+# theme names stay as they are (`docs/plans/i18n.md`, Q13). A text that wraps a `<code>` piece is split around it
+# (`…Before` / `…After`), so German may place the piece where its word order needs it.
+
+[language]
+en = "Language"
+de = "Sprache"
+
+[ollamaNoTools]
+en = "Ollama (no tools)"
+de = "Ollama (ohne Werkzeuge)"
+
+[languageSystem]
+en = "System ({lang})"
+de = "System ({lang})"
+
+[languageHint]
+en = "The app's buttons, notes and the handbook. Names like Studio, Canvas, Flow or Skills stay as they are; the agents always work in English."
+de = "Knöpfe, Hinweise und das Handbuch der App. Namen wie Studio, Canvas, Flow oder Skills bleiben, wie sie sind; die Agenten arbeiten immer auf Englisch."
+
+[langDe]
+en = "Deutsch"
+de = "Deutsch"
+
+[langEn]
+en = "English"
+de = "English"
+
+# The dialog and its tabs.
+[title]
+en = "Settings"
+de = "Einstellungen"
+
+[tabAppearance]
+en = "Appearance"
+de = "Darstellung"
+
+[tabWorkspace]
+en = "Workspace"
+de = "Workspace"
+
+[tabProviders]
+en = "AI providers"
+de = "KI-Anbieter"
+
+[tabVoice]
+en = "Voice"
+de = "Stimme"
+
+[tabStorage]
+en = "Storage"
+de = "Speicher"
+
+[tabAbout]
+en = "About"
+de = "Über"
+
+# Appearance.
+[theme]
+en = "Theme"
+de = "Theme"
+
+[typeface]
+en = "Typeface"
+de = "Schrift"
+
+[fontSample]
+en = "Aa"
+de = "Aa"
+
+[typefaceHint]
+en = "For the whole interface. Code in the editor and the terminal keep their own fonts."
+de = "Für die ganze Oberfläche. Code im Editor und das Terminal behalten ihre eigenen Schriften."
+
+[motion]
+en = "Motion"
+de = "Bewegung"
+
+[movement]
+en = "Movement"
+de = "Bewegung"
+
+[motionHint]
+en = "Full: the glow breathes, sparks fly, the Orbit turns. Calm: the glow holds still, nothing flies, the Orbit still turns. Off: nothing moves by itself."
+de = "Voll: das Glühen atmet, Funken fliegen, der Orbit dreht sich. Ruhig: das Glühen steht still, nichts fliegt, der Orbit dreht sich weiter. Aus: nichts bewegt sich von selbst."
+
+[reduceMotionOn]
+en = "macOS “Reduce motion” is on, so motion is off."
+de = "„Bewegung reduzieren“ von macOS ist an, deshalb ist die Bewegung aus."
+
+[light]
+en = "Light"
+de = "Licht"
+
+[pointerLight]
+en = "Light under the pointer"
+de = "Licht unter dem Zeiger"
+
+[pointerLightHint]
+en = "(the hex lines glow where the mouse is)"
+de = "(die Hex-Linien glühen, wo die Maus ist)"
+
+[dayLight]
+en = "Time-of-day light"
+de = "Tageszeit-Licht"
+
+[dayLightHint]
+en = "(a faint light that moves with the sun)"
+de = "(ein schwaches Licht, das mit der Sonne wandert)"
+
+[ignition]
+en = "Start ignition"
+de = "Zündung beim Start"
+
+[ignitionHint]
+en = "(the logo lights up when the app starts; motion Full only)"
+de = "(das Logo leuchtet auf, wenn die App startet; nur bei Bewegung Voll)"
+
+[sound]
+en = "Sound"
+de = "Ton"
+
+[sounds]
+en = "Sounds"
+de = "Töne"
+
+[soundsHint]
+en = "(only while Axiomata is in the background)"
+de = "(nur, während Axiomata im Hintergrund ist)"
+
+[canvas]
+en = "Canvas"
+de = "Canvas"
+
+[showGrid]
+en = "Show dot grid"
+de = "Punktraster zeigen"
+
+[showGridHint]
+en = "(tiles snap to it either way)"
+de = "(Kacheln rasten so oder so daran ein)"
+
+[magneticEdges]
+en = "Magnetic edges"
+de = "Magnetische Kanten"
+
+[magneticEdgesHint]
+en = "(tiles stick to their neighbours within 8 px)"
+de = "(Kacheln haften bis 8 px an ihren Nachbarn)"
+
+[orbitBrain]
+en = "Orbit & Second Brain"
+de = "Orbit & Second Brain"
+
+[speed]
+en = "Speed"
+de = "Tempo"
+
+[labels]
+en = "Labels"
+de = "Beschriftungen"
+
+[labelsHint]
+en = "(skills, areas and the hub)"
+de = "(Skills, Bereiche und die Mitte)"
+
+[fileNames]
+en = "File names"
+de = "Dateinamen"
+
+[fileNamesHint]
+en = "(next to every note in the Second Brain)"
+de = "(neben jeder Notiz im Second Brain)"
+
+[shimmer]
+en = "Shimmer"
+de = "Schimmer"
+
+[shimmerHint]
+en = "(how the hex cells catch the light; still unless motion is Full)"
+de = "(wie die Hex-Zellen das Licht fangen; still, außer bei Bewegung Voll)"
+
+[layout]
+en = "Layout"
+de = "Anordnung"
+
+[layoutHint]
+en = "(the Second Brain: a ring of bundled links, countries or a honeycomb)"
+de = "(das Second Brain: ein Ring gebündelter Links, Länder oder eine Wabe)"
+
+[uiSize]
+en = "UI size"
+de = "UI-Größe"
+
+[auto]
+en = "Auto"
+de = "Auto"
+
+[autoHint]
+en = "({percent}% on this display)"
+de = "({percent} % auf diesem Bildschirm)"
+
+[textAndControls]
+en = "Text and controls"
+de = "Text und Bedienelemente"
+
+[uiSizeHint]
+en = "“Auto” follows the real pixel density of the display the window is on: on a dense monitor the interface grows so it reads as well as on a MacBook. The fonts of the editor and the terminal are not affected."
+de = "„Auto“ folgt der echten Pixeldichte des Bildschirms, auf dem das Fenster liegt: auf einem dichten Monitor wächst die Oberfläche, damit sie sich so gut liest wie auf einem MacBook. Die Schriften von Editor und Terminal bleiben, wie sie sind."
+
+[keyboard]
+en = "Keyboard"
+de = "Tastatur"
+
+[shortcutsFollow]
+en = "Shortcuts follow"
+de = "Tastenkürzel nach"
+
+[keyboardHint]
+en = "Mac: ⌘ is the main key. Windows & Linux: Ctrl is, and in a terminal an app shortcut takes Ctrl+Shift, because Ctrl belongs to the shell there. “Auto” follows this machine; the other two let you try the other keys here."
+de = "Mac: ⌘ ist die Haupttaste. Windows & Linux: Ctrl ist es, und im Terminal nimmt ein App-Kürzel Ctrl+Shift, weil Ctrl dort der Shell gehört. „Auto“ folgt diesem Rechner; mit den anderen beiden kannst du die anderen Tasten hier ausprobieren."
+
+[glass]
+en = "Glass"
+de = "Glas"
+
+[transparency]
+en = "Transparency"
+de = "Transparenz"
+
+[blur]
+en = "Blur"
+de = "Unschärfe"
+
+[backgroundImage]
+en = "Background image"
+de = "Hintergrundbild"
+
+[chooseAnother]
+en = "Choose another…"
+de = "Anderes wählen…"
+
+[chooseImage]
+en = "Choose image…"
+de = "Bild wählen…"
+
+[remove]
+en = "Remove"
+de = "Entfernen"
+
+[imageNotTaken]
+en = "The image was not taken: {error}"
+de = "Das Bild wurde nicht übernommen: {error}"
+
+[imageNotRemoved]
+en = "The image could not be removed: {error}"
+de = "Das Bild ließ sich nicht entfernen: {error}"
+
+[imageDim]
+en = "Image dim"
+de = "Bild abdunkeln"
+
+[pixels]
+en = "{n} px"
+de = "{n} px"
+
+[glassHint]
+en = "Transparency: how much of the ground shows through the surfaces — 0% solid, 100% clear, 50% the theme's own look. Blur: how soft the ground is, and with it everything seen through the glass. The ground is the theme's own or your image, blurred once, so a softer one costs nothing while you work. Image dim: how strongly the theme's own ground veils your image — darker in a dark theme, lighter in a light one —, so text stays readable. Menus and text overlays stay dense either way, and macOS “Reduce transparency” makes all of it solid."
+de = "Transparenz: wie viel vom Grund durch die Flächen scheint — 0 % deckend, 100 % klar, 50 % der eigene Look des Themes. Unschärfe: wie weich der Grund ist, und mit ihm alles, was man durchs Glas sieht. Der Grund ist der des Themes oder dein Bild, einmal weichgezeichnet, also kostet ein weicherer nichts, während du arbeitest. Bild abdunkeln: wie stark der Grund des Themes dein Bild verschleiert — dunkler in einem dunklen Theme, heller in einem hellen —, damit Text lesbar bleibt. Menüs und Text-Overlays bleiben so oder so dicht, und „Transparenz reduzieren“ von macOS macht alles deckend."
+
+[reduceTransparencyOn]
+en = "macOS “Reduce transparency” is on: the glass is solid now."
+de = "„Transparenz reduzieren“ von macOS ist an: das Glas ist jetzt deckend."
+
+[customCss]
+en = "Custom CSS"
+de = "Eigenes CSS"
+
+[notLoaded]
+en = "Not loaded."
+de = "Nicht geladen."
+
+[reloading]
+en = "Reloading…"
+de = "Lädt neu…"
+
+[reloadCss]
+en = "Reload custom CSS"
+de = "Eigenes CSS neu laden"
+
+[copyTemplate]
+en = "Copy template"
+de = "Vorlage kopieren"
+
+[templateCopied]
+en = "Template copied — save it as ~/.axiomata/theme.css."
+de = "Vorlage kopiert — speichere sie als ~/.axiomata/theme.css."
+
+[customAbsent]
+en = "No ~/.axiomata/theme.css."
+de = "Keine ~/.axiomata/theme.css."
+
+[customApplied]
+en = "Custom CSS applied."
+de = "Eigenes CSS angewendet."
+
+[customRejected]
+en = "Custom CSS rejected; built-in theme kept."
+de = "Eigenes CSS abgelehnt; das eingebaute Theme bleibt."
+
+# The choices of Appearance's selects and buttons (`core/motion.ts`, `core/sounds.ts`, `core/brainView.ts`,
+# `core/keys.ts`); the ids they stand for stay as they are.
+[motionFull]
+en = "Full"
+de = "Voll"
+
+[motionCalm]
+en = "Calm"
+de = "Ruhig"
+
+[motionOff]
+en = "Off"
+de = "Aus"
+
+[cueWaiting]
+en = "An agent waits for you"
+de = "Ein Agent wartet auf dich"
+
+[cueDone]
+en = "An agent finished its turn"
+de = "Ein Agent hat seinen Schritt beendet"
+
+[cueRoutine]
+en = "A routine fired"
+de = "Eine der Routines wurde ausgelöst"
+
+[shineCalm]
+en = "Calm"
+de = "Ruhig"
+
+[shineTwinkle]
+en = "Twinkle"
+de = "Funkeln"
+
+[shineMetal]
+en = "Metal"
+de = "Metall"
+
+[layoutBundle]
+en = "Bundle"
+de = "Bündel"
+
+[layoutMap]
+en = "Map"
+de = "Karte"
+
+[layoutHex]
+en = "Hex"
+de = "Hex"
+
+[keyboardAuto]
+en = "Auto"
+de = "Auto"
+
+[keyboardMac]
+en = "Mac"
+de = "Mac"
+
+[keyboardOther]
+en = "Windows & Linux"
+de = "Windows & Linux"
+
+# The themes' one-liners (`core/themes.ts`); their names stay as they are.
+[blurbGraphite]
+en = "Near-black, orange accent, hex mesh"
+de = "Fast schwarz, orangener Akzent, Hex-Gitter"
+
+[blurbPaper]
+en = "Warm cream, ink text, clay accent"
+de = "Warmes Creme, Tinte als Schrift, Lehm-Akzent"
+
+[blurbSteampunk]
+en = "Bronze and leather, brass accent"
+de = "Bronze und Leder, Messing-Akzent"
+
+[blurbForest]
+en = "Pine and moss, autumn-amber accent"
+de = "Kiefer und Moos, Akzent in Herbstbernstein"
+
+[blurbOcean]
+en = "Deep-sea navy, coral accent"
+de = "Tiefseeblau, Korallen-Akzent"
+
+[blurbCatppuccinMocha]
+en = "Soft dark, mauve accent"
+de = "Sanft dunkel, Mauve-Akzent"
+
+[blurbCatppuccinMacchiato]
+en = "Soft dark, a touch lighter"
+de = "Sanft dunkel, eine Spur heller"
+
+[blurbCatppuccinFrappe]
+en = "Soft dim, mauve accent"
+de = "Sanft gedämpft, Mauve-Akzent"
+
+[blurbCatppuccinLatte]
+en = "Soft light, mauve accent"
+de = "Sanft hell, Mauve-Akzent"
+
+[blurbCatppuccinEspresso]
+en = "Macchiato on near-black"
+de = "Macchiato auf fast Schwarz"
+
+[blurbTokyoNight]
+en = "Deep indigo, blue accent"
+de = "Tiefes Indigo, blauer Akzent"
+
+[blurbGithubDark]
+en = "Familiar dark, blue accent"
+de = "Vertrautes Dunkel, blauer Akzent"
+
+[blurbGithubLight]
+en = "Familiar light, blue accent"
+de = "Vertrautes Hell, blauer Akzent"
+
+# The harnesses' and web-search providers' one-liners (`core/harness.ts`, `core/webSettings.ts`).
+[harnessClaudeCode]
+en = "Anthropic only, on the app's own login"
+de = "Nur Anthropic, mit der eigenen Anmeldung der App"
+
+[harnessGlut]
+en = "Axiomata's own harness — OpenRouter or Ollama"
+de = "Axiomatas eigener Harness — OpenRouter oder Ollama"
+
+[webExaHint]
+en = "Works without a key (rate limited); a key raises the limit"
+de = "Geht auch ohne Schlüssel (begrenzt); ein Schlüssel hebt die Grenze an"
+
+[webTinyfishHint]
+en = "Asked when Exa is limited or fails"
+de = "Wird gefragt, wenn Exa begrenzt ist oder scheitert"
+
+[webTavilyHint]
+en = "Asked last, only up to the monthly limit below (the account holds a card)"
+de = "Wird zuletzt gefragt, nur bis zur Monatsgrenze unten (auf dem Konto liegt eine Karte)"
+
+# Workspace.
+[vault]
+en = "Vault"
+de = "Vault"
+
+[vaultLead]
+en = "Root folder of the Second Brain workspace. A change takes effect after a restart."
+de = "Wurzelordner des Second-Brain-Workspace. Eine Änderung wirkt nach einem Neustart."
+
+[path]
+en = "Path"
+de = "Pfad"
+
+[vaultPlaceholder]
+en = "/Users/…/Vault"
+de = "/Users/…/Vault"
+
+[saving]
+en = "Saving…"
+de = "Speichere…"
+
+[saveRestart]
+en = "Save & restart"
+de = "Speichern & neu starten"
+
+[vaultEmpty]
+en = "The vault path must not be empty."
+de = "Der Vault-Pfad darf nicht leer sein."
+
+[vaultSavedRestart]
+en = "Vault path saved — restart Axiomata-OS to switch."
+de = "Vault-Pfad gespeichert — starte Axiomata-OS neu, um zu wechseln."
+
+[vaultSaved]
+en = "Vault path saved."
+de = "Vault-Pfad gespeichert."
+
+[savingFailed]
+en = "Saving failed: {error}"
+de = "Speichern fehlgeschlagen: {error}"
+
+# AI providers: the providers themselves.
+[editProviders]
+en = "Edit providers"
+de = "Anbieter bearbeiten"
+
+[editProvidersLead]
+en = "A provider is where the model runs — its endpoint, key and models. Every provider is configured independently here; which harness and provider serve the chat and the skills is set in the next section."
+de = "Ein Anbieter ist, wo das Modell läuft — sein Endpoint, sein Schlüssel und seine Modelle. Jeder Anbieter wird hier für sich eingerichtet; welcher Harness und welcher Anbieter Chat und Skills bedienen, legst du im nächsten Abschnitt fest."
+
+[badgeChat]
+en = "Chat"
+de = "Chat"
+
+[badgeSkills]
+en = "Skills"
+de = "Skills"
+
+[blurbAnthropic]
+en = "Billed through the subscription — no key"
+de = "Über das Abo abgerechnet — kein Schlüssel"
+
+[blurbOpenRouter]
+en = "Anthropic-compatible endpoint"
+de = "Anthropic-kompatibler Endpoint"
+
+[blurbOllama]
+en = "Local model on this machine"
+de = "Lokales Modell auf diesem Rechner"
+
+[anthropicNoKey]
+en = "No key or base URL needed — Anthropic is billed through the subscription's CLI login."
+de = "Kein Schlüssel und keine Basis-URL nötig — Anthropic wird über den CLI-Login des Abos abgerechnet."
+
+[baseUrl]
+en = "Base URL"
+de = "Basis-URL"
+
+[apiKey]
+en = "API key"
+de = "API-Schlüssel"
+
+[apiKeyOptional]
+en = "API key (optional)"
+de = "API-Schlüssel (optional)"
+
+[keySaved]
+en = "•••••• saved — leave empty to keep"
+de = "•••••• gespeichert — leer lassen, um ihn zu behalten"
+
+[keyOllama]
+en = "A placeholder is enough for a local Ollama"
+de = "Für ein lokales Ollama reicht ein Platzhalter"
+
+[keyRequired]
+en = "required"
+de = "erforderlich"
+
+[keyDeletedOnSave]
+en = "The key is deleted on save."
+de = "Der Schlüssel wird beim Speichern gelöscht."
+
+[chatModel]
+en = "Chat model"
+de = "Chat-Modell"
+
+[skillsModel]
+en = "Skills/routines model"
+de = "Modell für Skills/Routines"
+
+[modelExample]
+en = "e.g. {model}"
+de = "z. B. {model}"
+
+[modelOverrideBefore]
+en = "A"
+de = "Ein"
+
+[modelOverrideAfter]
+en = "in the SKILL.md frontmatter still overrides the skills model."
+de = "im Frontmatter der SKILL.md hat weiterhin Vorrang vor dem Skills-Modell."
+
+[unknownProvider]
+en = "Unknown provider “{id}” — no settings to edit. Pick one of the known providers above."
+de = "Unbekannter Anbieter „{id}“ — keine Einstellungen zum Bearbeiten. Wähle oben einen der bekannten Anbieter."
+
+[saveProvider]
+en = "Save provider"
+de = "Anbieter speichern"
+
+[providersSaved]
+en = "Provider settings saved — they apply from the next agent call."
+de = "Anbieter-Einstellungen gespeichert — sie gelten ab dem nächsten Agent-Aufruf."
+
+# AI providers: what a save refuses (Rust's `validate_for_save` is the authority).
+[roleChat]
+en = "Chat"
+de = "Chat"
+
+[roleSkills]
+en = "Skills"
+de = "Skills"
+
+[fieldChatModel]
+en = "chat model"
+de = "Chat-Modell"
+
+[fieldSkillsModel]
+en = "skills model"
+de = "Skills-Modell"
+
+[noProviderSettings]
+en = "{role}: provider “{id}” has no settings."
+de = "{role}: Anbieter „{id}“ hat keine Einstellungen."
+
+[needsKey]
+en = "{role} ({provider}) needs an API key."
+de = "{role} ({provider}) braucht einen API-Schlüssel."
+
+[modelEmpty]
+en = "{role} ({provider}): {field} must not be empty."
+de = "{role} ({provider}): {field} darf nicht leer sein."
+
+[modelSpaces]
+en = "{role} ({provider}): {field} contains spaces."
+de = "{role} ({provider}): {field} enthält Leerzeichen."
+
+[modelBrackets]
+en = "{role} ({provider}): {field} has unbalanced brackets — “{value}”."
+de = "{role} ({provider}): {field} hat unpaarige Klammern — „{value}“."
+
+[baseUrlHttps]
+en = "{role} ({provider}): Base URL must start with https://."
+de = "{role} ({provider}): die Basis-URL muss mit https:// beginnen."
+
+# AI providers: the model lists.
+[catalogBuiltIn]
+en = "Built-in list — Anthropic has no model list to ask without an API key."
+de = "Eingebaute Liste — Anthropic hat ohne API-Schlüssel keine Modellliste zum Abfragen."
+
+[catalogNone]
+en = "No model list yet."
+de = "Noch keine Modellliste."
+
+[catalogFailed]
+en = "The last fetch failed: {error}"
+de = "Der letzte Abruf ist fehlgeschlagen: {error}"
+
+[catalogFetched]
+en = { one = "{n} model, fetched {when}; refreshed at start and once a day.", other = "{n} models, fetched {when}; refreshed at start and once a day." }
+de = { one = "{n} Modell, abgerufen {when}; aktualisiert beim Start und einmal am Tag.", other = "{n} Modelle, abgerufen {when}; aktualisiert beim Start und einmal am Tag." }
+
+[pricesNotSaved]
+en = "The prices could not be saved: {error}"
+de = "Die Preise ließen sich nicht speichern: {error}"
+
+[pricesUpdated]
+en = "Prices updated: {models}"
+de = "Preise aktualisiert: {models}"
+
+[modelListFailed]
+en = "Could not fetch the model list: {error}"
+de = "Die Modellliste ließ sich nicht abrufen: {error}"
+
+# AI providers: harness and provider per role.
+[harnessAssignment]
+en = "Harness & provider assignment"
+de = "Harness & Anbieter zuordnen"
+
+[harnessLeadBefore]
+en = "The harness drives the agent — its tools, rights and loop; the provider serves the model. Each role picks both, e.g. Claude Code for the chat and Glut with a local Ollama for the digests. A skill's own"
+de = "Der Harness steuert den Agenten — seine Werkzeuge, Rechte und Schleife; der Anbieter liefert das Modell. Jede Rolle wählt beides, z. B. Claude Code für den Chat und Glut mit einem lokalen Ollama für die Digests. Das eigene"
+
+[harnessLeadAfter]
+en = "still wins over the harness set here."
+de = "eines Skills hat weiterhin Vorrang vor dem hier gesetzten Harness."
+
+[forChat]
+en = "chat"
+de = "Chat"
+
+[forSkills]
+en = "skills & routines"
+de = "Skills & Routines"
+
+[harnessFor]
+en = "Harness for {role}"
+de = "Harness für {role}"
+
+[providerFor]
+en = "Provider for {role}"
+de = "Anbieter für {role}"
+
+[effortFor]
+en = "Effort for {role}"
+de = "Effort für {role}"
+
+[glutOwnEffort]
+en = "Glut's own setting"
+de = "Einstellung von Glut"
+
+[glutOwnEffortElse]
+en = "Glut's own setting, else {level}"
+de = "Einstellung von Glut, sonst {level}"
+
+[effortNotListed]
+en = "{level} (not listed)"
+de = "{level} (nicht gelistet)"
+
+[webSkillBefore]
+en = "A skill that reads the web ("
+de = "Ein Skill, der im Web liest ("
+
+[webSkillAfter]
+en = ") uses Glut's web search — its keys and limits are in the Web search block below."
+de = "), nutzt die Websuche von Glut — ihre Schlüssel und Grenzen stehen unten im Block Websuche."
+
+# AI providers: the app's own Claude Code sign-in.
+[claudeSignIn]
+en = "Claude Code sign-in"
+de = "Claude-Code-Anmeldung"
+
+[signedInAs]
+en = "Signed in as {email}"
+de = "Angemeldet als {email}"
+
+[unknownEmail]
+en = "unknown"
+de = "unbekannt"
+
+[ownLogin]
+en = "— the app's own login, apart from yours in"
+de = "— der eigene Login der App, getrennt von deinem in"
+
+[claudeUnreachable]
+en = "Claude Code cannot be asked: {error}"
+de = "Claude Code lässt sich nicht fragen: {error}"
+
+[notSignedIn]
+en = "Not signed in — chat and skills on Claude Code fail until the app's Claude Code signs in."
+de = "Nicht angemeldet — Chat und Skills auf Claude Code schlagen fehl, bis sich das Claude Code der App anmeldet."
+
+[waitingForBrowser]
+en = "Waiting for the browser…"
+de = "Wartet auf den Browser…"
+
+[signInAnthropic]
+en = "Sign in with Anthropic"
+de = "Mit Anthropic anmelden"
+
+[signInCode]
+en = "Code (only if the browser page shows one)"
+de = "Code (nur, wenn die Browserseite einen zeigt)"
+
+[send]
+en = "Send"
+de = "Senden"
+
+[signOut]
+en = "Sign out"
+de = "Abmelden"
+
+[signedIn]
+en = "Claude Code is signed in."
+de = "Claude Code ist angemeldet."
+
+[signInIncomplete]
+en = "The sign-in did not complete."
+de = "Die Anmeldung wurde nicht abgeschlossen."
+
+[signInFailed]
+en = "Sign-in failed: {error}"
+de = "Anmeldung fehlgeschlagen: {error}"
+
+[codeNotTaken]
+en = "The code was not taken: {error}"
+de = "Der Code wurde nicht angenommen: {error}"
+
+[signedOut]
+en = "Claude Code is signed out."
+de = "Claude Code ist abgemeldet."
+
+[signOutFailed]
+en = "Sign-out failed: {error}"
+de = "Abmelden fehlgeschlagen: {error}"
+
+# AI providers: Glut's web search.
+[webSearch]
+en = "Web search (Glut)"
+de = "Websuche (Glut)"
+
+[webSearchBefore]
+en = "Glut's"
+de = "Glut fragt mit"
+
+[webSearchMiddle]
+en = "asks Exa first, then TinyFish, then Tavily — a provider without its key is skipped. Keys are stored in"
+de = "zuerst Exa, dann TinyFish, dann Tavily — ein Anbieter ohne Schlüssel wird übersprungen. Die Schlüssel liegen in"
+
+[webSearchAfter]
+en = "and never shown again."
+de = "und werden nie wieder angezeigt."
+
+[webKey]
+en = "{name} key"
+de = "{name}-Schlüssel"
+
+[optional]
+en = "optional"
+de = "optional"
+
+[notSet]
+en = "not set"
+de = "nicht gesetzt"
+
+[searchesPerDay]
+en = "Searches per day (all providers)"
+de = "Suchen pro Tag (alle Anbieter)"
+
+[tavilyPerMonth]
+en = "Tavily searches per month"
+de = "Tavily-Suchen pro Monat"
+
+[webLimitsHint]
+en = "0 turns the search (or Tavily) off. {n} Tavily searches a month are its free credits."
+de = "0 schaltet die Suche (oder Tavily) ab. {n} Tavily-Suchen im Monat sind ihr Gratis-Kontingent."
+
+# AI providers: spend.
+[spend]
+en = "Spend"
+de = "Ausgaben"
+
+[spendToday]
+en = "{amount} today"
+de = "{amount} heute"
+
+[spendCap]
+en = "/ {amount} limit"
+de = "/ {amount} Grenze"
+
+[spendMonth]
+en = "· {amount} this month"
+de = "· {amount} diesen Monat"
+
+[roleToProvider]
+en = "{role} → {provider}"
+de = "{role} → {provider}"
+
+[subscriptionBilled]
+en = "{role} → {provider} is billed through the subscription — no cost tracking."
+de = "{role} → {provider} wird über das Abo abgerechnet — keine Kostenerfassung."
+
+[dailyLimit]
+en = "Daily limit (USD, paid providers)"
+de = "Tagesgrenze (USD, bezahlte Anbieter)"
+
+[noLimit]
+en = "empty = no limit"
+de = "leer = keine Grenze"
+
+[dailyLimitHint]
+en = "Once today's total reaches the limit, the next agent call through a paid provider is refused."
+de = "Sobald die heutige Summe die Grenze erreicht, wird der nächste Agent-Aufruf über einen bezahlten Anbieter abgelehnt."
+
+[saveAssignment]
+en = "Save assignment"
+de = "Zuordnung speichern"
+
+# About.
+[owner]
+en = "Owner"
+de = "Owner"
+
+[ownerUnset]
+en = "— (set `owner` in ~/.axiomata/config.toml)"
+de = "— (setze `owner` in ~/.axiomata/config.toml)"
+
+[workspace]
+en = "Workspace"
+de = "Workspace"
+
+[version]
+en = "Version"
+de = "Version"
