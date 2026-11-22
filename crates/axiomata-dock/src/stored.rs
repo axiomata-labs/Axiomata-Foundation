@@ -36,6 +36,12 @@ impl Layout {
             .expect("a layout of strings, finite numbers and JSON values serialises")
     }
 
+    /// The stored form as a JSON value, for a caller that stores the layout inside a document of its own.
+    #[must_use]
+    pub fn to_stored_value(&self) -> Value {
+        serde_json::json!({ "version": LAYOUT_VERSION, "root": &self.root })
+    }
+
     /// A stored layout read back: JSON text.
     #[must_use]
     pub fn from_stored(raw: &str) -> Option<Self> {
@@ -200,6 +206,11 @@ mod tests {
         assert_eq!(Layout::from_stored(&stored), Some(layout));
         let value: Value = serde_json::from_str(&stored).unwrap();
         assert_eq!(value["version"], LAYOUT_VERSION);
+        assert_eq!(
+            layout.to_stored_value(),
+            value,
+            "the text and the value say the same"
+        );
     }
 
     #[test]
