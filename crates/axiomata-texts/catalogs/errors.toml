@@ -406,6 +406,11 @@ de = "Ein Planer braucht einen eigenen Worktree, und dieses Projekt ist kein Git
 en = "A planner needs the team tools, and no `axiomata-cli` was found next to the app (build the workspace, or set AXIOMATA_CLI)."
 de = "Ein Planer braucht die Team-Werkzeuge, und neben der App wurde kein `axiomata-cli` gefunden (bau den Workspace, oder setze AXIOMATA_CLI)."
 
+# The studio's layout (`src-tauri/src/studio.rs`).
+["studio.noProject"]
+en = "No project is open in the studio."
+de = "Im Studio ist kein Projekt offen."
+
 # The small browser (`src-tauri/src/browser.rs`).
 ["browser.badUrl"]
 en = "“{url}” is not a web address (http or https)."
