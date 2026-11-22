@@ -1,0 +1,954 @@
+# The texts of the Studio's agents, models and roles: the Agents tab (`ide/AgentsPanel.svelte`,
+# `ide/AgentStart.svelte`), the Models & roles pane (`ide/panes/RosterPane.svelte`, `ide/ModelsSection.svelte`,
+# `ide/RolesSection.svelte`, `ide/EnginesSection.svelte` and its notices), an agent's pane
+# (`ide/panes/AgentPane.svelte`) and the helpers whose words these show (`ide/agentStatus.ts`, `ide/models.ts`,
+# `ide/agentsMigration.ts`, `ide/rosterLook.ts`, `ide/agents.ts`, `ide/agentRemoval.ts`). Harness, model and role
+# names, the tiers Light/Medium/Heavy and a session's name ("Glut Medium Allrounder (Sonnet 5.5)") are names and data
+# and stay as they are (`docs/plans/i18n.md`, Q13).
+
+# An agent's status (`agentStatus.ts`): the word beside its dot and the tooltip.
+[statusStarting]
+en = "starting"
+de = "startet"
+
+[statusStartingTitle]
+en = "Started — the harness has not reported yet"
+de = "Gestartet — der Harness hat sich noch nicht gemeldet"
+
+[statusIdle]
+en = "idle"
+de = "bereit"
+
+[statusIdleTitle]
+en = "Finished its turn, ready for the next prompt"
+de = "Schritt fertig, bereit für den nächsten Prompt"
+
+[statusWorking]
+en = "working"
+de = "arbeitet"
+
+[statusWorkingTitle]
+en = "In the middle of a turn"
+de = "Mitten in einem Schritt"
+
+[statusWaiting]
+en = "waiting"
+de = "wartet"
+
+[statusWaitingTitle]
+en = "Waiting for you — a permission prompt or a question"
+de = "Wartet auf dich — eine Freigabe oder eine Frage"
+
+[statusEnded]
+en = "ended"
+de = "beendet"
+
+[statusEndedTitle]
+en = "The harness has exited"
+de = "Der Harness hat sich beendet"
+
+[statusNone]
+en = "no status"
+de = "kein Status"
+
+[statusNoneTitle]
+en = "No status channel (own command). For Claude Code, add {flag} to the command."
+de = "Kein Statuskanal (eigener Befehl). Für Claude Code ergänze {flag} im Befehl."
+
+[statusClosed]
+en = "closed"
+de = "geschlossen"
+
+[statusClosedTitle]
+en = "No pane is open for this agent"
+de = "Für diesen Agenten ist kein Pane offen"
+
+# Shared words.
+[agents]
+en = "Agents"
+de = "Agenten"
+
+[name]
+en = "Name"
+de = "Name"
+
+[role]
+en = "Role"
+de = "Rolle"
+
+[engine]
+en = "Engine"
+de = "Engine"
+
+[tier]
+en = "Tier"
+de = "Stufe"
+
+[model]
+en = "Model"
+de = "Modell"
+
+[save]
+en = "Save"
+de = "Speichern"
+
+[saving]
+en = "Saving…"
+de = "Speichere…"
+
+[cancel]
+en = "Cancel"
+de = "Abbrechen"
+
+[loading]
+en = "Loading…"
+de = "Lade…"
+
+[advanced]
+en = "Advanced"
+de = "Erweitert"
+
+[modelsAndRoles]
+en = "Models & roles"
+de = "Modelle & Rollen"
+
+[defaultModel]
+en = "default model"
+de = "Standardmodell"
+
+[checkCost]
+en = "Cost limit: a number, or empty."
+de = "Kostengrenze: eine Zahl oder leer."
+
+[checkTokens]
+en = "Token limit: a whole number, or empty."
+de = "Token-Grenze: eine ganze Zahl oder leer."
+
+[checkSteps]
+en = "Step limit: a whole number, or empty."
+de = "Schrittgrenze: eine ganze Zahl oder leer."
+
+[local]
+en = "local"
+de = "lokal"
+
+[pricePerMOut]
+en = "{price} / M out"
+de = "{price} / M Ausgabe"
+
+[subscription]
+en = "subscription"
+de = "Abo"
+
+[metered]
+en = "metered"
+de = "nach Verbrauch"
+
+[tierHintLight]
+en = "Small, well-specified changes"
+de = "Kleine, klar umrissene Änderungen"
+
+[tierHintMedium]
+en = "The normal case"
+de = "Der Normalfall"
+
+[tierHintHeavy]
+en = "Large or delicate changes; where escalation ends"
+de = "Große oder heikle Änderungen; hier endet die Eskalation"
+
+[billingMetered]
+en = "Per token"
+de = "Pro Token"
+
+[billingMeteredHint]
+en = "Limits in dollars"
+de = "Grenzen in Dollar"
+
+[billingSubscription]
+en = "Subscription"
+de = "Abo"
+
+[billingSubscriptionHint]
+en = "Limits in tokens (Claude Code on the account)"
+de = "Grenzen in Tokens (Claude Code über das Konto)"
+
+# The Agents tab (`AgentsPanel.svelte`).
+[masterPanes]
+en = "Master panes"
+de = "Master-Panes"
+
+[masterOpencodeTitle]
+en = "Opencode as you run it yourself — your settings, your models, in the project folder; no team tools"
+de = "Opencode, wie du es selbst startest — deine Einstellungen, deine Modelle, im Projektordner; ohne Team-Werkzeuge"
+
+[masterTitle]
+en = "{harness} as you use it outside — your settings and rules, in the project folder, with the team tools. Click again while it is open for one more beside it"
+de = "{harness}, wie du es außerhalb nutzt — deine Einstellungen und Regeln, im Projektordner, mit den Team-Werkzeugen. Klicke erneut, während es offen ist, für ein weiteres daneben"
+
+[removeMaster]
+en = "Remove the {harness} master"
+de = "{harness}-Master entfernen"
+
+[removeMasterAsk]
+en = "Remove the {harness} master? Panes already running it stay open."
+de = "{harness}-Master entfernen? Panes, in denen er schon läuft, bleiben offen."
+
+[favorites]
+en = "Favorites"
+de = "Favoriten"
+
+[startNamed]
+en = "Start {name}"
+de = "{name} starten"
+
+[unavailable]
+en = "unavailable"
+de = "nicht verfügbar"
+
+[tierDefault]
+en = "tier default"
+de = "Standard der Stufe"
+
+[removeFavoriteNamed]
+en = "Remove {name} from the favorites"
+de = "{name} aus den Favoriten entfernen"
+
+[branchTitle]
+en = "Checked out in its worktree"
+de = "In seinem Worktree ausgecheckt"
+
+[stepsDone]
+en = "{done} of {total} steps done"
+de = "{done} von {total} Schritten erledigt"
+
+[lastState]
+en = "last"
+de = "zuletzt"
+
+[removeAgentFavorite]
+en = "Remove this agent from the favorites"
+de = "Diesen Agenten aus den Favoriten entfernen"
+
+[keepAgentFavorite]
+en = "Keep this agent as a favorite"
+de = "Diesen Agenten als Favoriten behalten"
+
+[editNamed]
+en = "Edit {name}"
+de = "{name} bearbeiten"
+
+[removeNamed]
+en = "Remove {name}"
+de = "{name} entfernen"
+
+[removeAgentAsk]
+en = "Remove the agent “{name}”? Its worktree and branch go with it; panes already running it stay open."
+de = "Den Agenten „{name}“ entfernen? Sein Worktree und Branch gehen mit; Panes, in denen er schon läuft, bleiben offen."
+
+[unsavedWorkQuestion]
+en = "Unsaved work in the worktree — delete anyway?"
+de = "Ungespeicherte Arbeit im Worktree — trotzdem löschen?"
+
+[sessions]
+en = "Sessions"
+de = "Sitzungen"
+
+[waitingForYou]
+en = "Waiting for you: take over or discard"
+de = "Wartet auf dich: übernehmen oder verwerfen"
+
+[openProjectForAgents]
+en = "Open a project to work with agents."
+de = "Öffne ein Projekt, um mit Agenten zu arbeiten."
+
+[noSession]
+en = "No session runs or waits for you."
+de = "Keine Sitzung läuft oder wartet auf dich."
+
+[modelsAndRolesMore]
+en = "Models & roles…"
+de = "Modelle & Rollen…"
+
+[editAgent]
+en = "Edit agent"
+de = "Agenten bearbeiten"
+
+[pickEngine]
+en = "Engine…"
+de = "Engine…"
+
+[editHint]
+en = "Another role or engine for this session only. Models, engines and roles are made and changed under"
+de = "Eine andere Rolle oder Engine nur für diese Sitzung. Modelle, Engines und Rollen legst du an und änderst du unter"
+
+# "Start an agent" (`AgentStart.svelte`).
+[startAgent]
+en = "Start an agent"
+de = "Agenten starten"
+
+[enginesUnreadable]
+en = "Could not load the engines: {error}"
+de = "Die Engines ließen sich nicht laden: {error}"
+
+[tierDefaultEngine]
+en = "Default of the tier"
+de = "Standard der Stufe"
+
+[noEngineOfTier]
+en = "no engine of this tier can run"
+de = "keine Engine dieser Stufe kann laufen"
+
+[standard]
+en = "standard"
+de = "Standard"
+
+[start]
+en = "Start"
+de = "Starten"
+
+[starting]
+en = "Starting…"
+de = "Starte…"
+
+[removeChoiceFavorite]
+en = "Remove this choice from the favorites"
+de = "Diese Wahl aus den Favoriten entfernen"
+
+[keepChoiceFavorite]
+en = "Keep this choice as a favorite"
+de = "Diese Wahl als Favoriten behalten"
+
+[pickRoleHint]
+en = "Pick a role, then its tier and model below."
+de = "Wähle eine Rolle, darunter dann ihre Stufe und ihr Modell."
+
+# The Models & roles pane (`panes/RosterPane.svelte`).
+[modelsOrRoles]
+en = "Models or roles"
+de = "Modelle oder Rollen"
+
+[models]
+en = "Models"
+de = "Modelle"
+
+[roles]
+en = "Roles"
+de = "Rollen"
+
+[chainModel]
+en = "Model"
+de = "Modell"
+
+[chainModelText]
+en = "= what thinks, at a tier (light · medium · heavy), on the harness that runs it ·"
+de = "= was denkt, auf einer Stufe (light · medium · heavy), im Harness, der es ausführt ·"
+
+[chainRole]
+en = "Role"
+de = "Rolle"
+
+[chainRoleText]
+en = "= what it is for (instructions, rights, limits, a default tier) ·"
+de = "= wofür es da ist (Anweisungen, Rechte, Grenzen, eine Standardstufe) ·"
+
+[chainAgent]
+en = "Agent"
+de = "Agent"
+
+[chainAgentText]
+en = "= a role at a tier on an engine, started as a session with its own branch."
+de = "= eine Rolle auf einer Stufe auf einer Engine, gestartet als Sitzung mit eigenem Branch."
+
+# The Models tab (`ModelsSection.svelte`, `models.ts`).
+[modelsUnreadable]
+en = "Could not load the models: {error}"
+de = "Die Modelle ließen sich nicht laden: {error}"
+
+[researching]
+en = "Researching model tiers…"
+de = "Stufen der Modelle werden recherchiert…"
+
+[researchingBefore]
+en = "The"
+de = "Der Skill"
+
+[researchingAfter]
+en = "skill looks the models up on rating sites and proposes a tier for each. Its proposals appear here as “not reviewed”; your own tier always wins."
+de = "schlägt die Modelle auf Bewertungsseiten nach und schlägt für jedes eine Stufe vor. Seine Vorschläge erscheinen hier als „nicht geprüft“; deine eigene Stufe gewinnt immer."
+
+[defaultEnginePerTier]
+en = "Default engine per tier"
+de = "Standard-Engine je Stufe"
+
+[defaultEngineHint]
+en = "What a session of a tier starts on. Without a choice the cheapest engine of the tier runs; when one cannot run, the next of the same tier takes over."
+de = "Worauf eine Sitzung einer Stufe startet. Ohne Wahl läuft die günstigste Engine der Stufe; kann eine nicht laufen, übernimmt die nächste derselben Stufe."
+
+[cheapestNamed]
+en = "Cheapest: {engine}"
+de = "Günstigste: {engine}"
+
+[cheapestOfTier]
+en = "Cheapest of the tier"
+de = "Günstigste der Stufe"
+
+[notOfThisTier]
+en = "{engine} — not of this tier"
+de = "{engine} — nicht von dieser Stufe"
+
+[priceLimits]
+en = "Price limits"
+de = "Preisgrenzen"
+
+[priceLimitsHint]
+en = "The tier a model's output price proposes until research or you say otherwise (USD per million output tokens)."
+de = "Die Stufe, die der Ausgabepreis eines Modells vorschlägt, bis Recherche oder du etwas anderes sagen (USD pro Million Ausgabe-Tokens)."
+
+[lightBelow]
+en = "Light below"
+de = "Light unter"
+
+[heavyAbove]
+en = "Heavy above"
+de = "Heavy über"
+
+[saveLimits]
+en = "Save limits"
+de = "Grenzen speichern"
+
+[proposeAllAgain]
+en = "Propose all again"
+de = "Alle neu vorschlagen"
+
+[modelsHint]
+en = "Each model that is on is an engine of its harness. Its tier comes from you, else from research, else from its price; a model without any is no agent yet."
+de = "Jedes eingeschaltete Modell ist eine Engine seines Harness. Seine Stufe kommt von dir, sonst aus der Recherche, sonst aus seinem Preis; ein Modell ohne Stufe ist noch kein Agent."
+
+[modelsOn]
+en = "{on} of {total} on"
+de = "{on} von {total} an"
+
+[filterModels]
+en = "Filter {n} models…"
+de = "{n} Modelle filtern…"
+
+[switchOff]
+en = "Switch off"
+de = "Ausschalten"
+
+[switchOn]
+en = "Switch on"
+de = "Einschalten"
+
+[modelOn]
+en = "{name} on"
+de = "{name} an"
+
+[tierOf]
+en = "Tier of {name}"
+de = "Stufe von {name}"
+
+[yourTierDrop]
+en = "Your tier — click to drop it"
+de = "Deine Stufe — klicke, um sie zu entfernen"
+
+[setYourTier]
+en = "Set {tier} as your tier"
+de = "{tier} als deine Stufe setzen"
+
+[waitsForReview]
+en = "Waits for your review"
+de = "Wartet auf deine Prüfung"
+
+[proposeAgainFor]
+en = "Propose again for {name}"
+de = "Für {name} neu vorschlagen"
+
+[acceptTier]
+en = "Accept {tier}"
+de = "{tier} übernehmen"
+
+[noModelMatches]
+en = "No model matches “{query}”."
+de = "Kein Modell passt zu „{query}“."
+
+[ownEngines]
+en = "Own engines"
+de = "Eigene Engines"
+
+[ownEnginesHint]
+en = "An engine of your own: a command or an environment the automatic ones do not have. Automatic engines are not edited here — switch their model on or off above."
+de = "Eine eigene Engine: ein Befehl oder eine Umgebung, die die automatischen nicht haben. Automatische Engines bearbeitest du nicht hier — schalte ihr Modell oben an oder aus."
+
+[originYours]
+en = "Yours"
+de = "Deine"
+
+[originYoursProposal]
+en = "Yours · the proposal says {tier}"
+de = "Deine · der Vorschlag sagt {tier}"
+
+[originResearch]
+en = "Proposal · not reviewed"
+de = "Vorschlag · nicht geprüft"
+
+[originPrice]
+en = "From the price"
+de = "Aus dem Preis"
+
+[originUnrated]
+en = "Unrated · no agent until it has a tier"
+de = "Ohne Stufe · kein Agent, bis es eine Stufe hat"
+
+[noPrice]
+en = "no price"
+de = "kein Preis"
+
+[contextK]
+en = "{n}K context"
+de = "{n}K Kontext"
+
+[contextM]
+en = "{n}M context"
+de = "{n}M Kontext"
+
+[researchNone]
+en = "No model is switched on to research."
+de = "Kein Modell ist zum Recherchieren eingeschaltet."
+
+[researchOne]
+en = "Researching the model's tier…"
+de = "Die Stufe des Modells wird recherchiert…"
+
+[researchMany]
+en = "Researching the tiers of {n} models…"
+de = "Die Stufen von {n} Modellen werden recherchiert…"
+
+# The Roles tab (`RolesSection.svelte`, `MigrationNotice.svelte`).
+[rolesUnreadable]
+en = "Could not load the roles: {error}"
+de = "Die Rollen ließen sich nicht laden: {error}"
+
+[deleteRoleAsk]
+en = "Delete the role “{name}”? Its AGENT.md file is removed."
+de = "Die Rolle „{name}“ löschen? Ihre AGENT.md-Datei wird entfernt."
+
+[addRole]
+en = "Add role…"
+de = "Rolle hinzufügen…"
+
+[noRoles]
+en = "No roles yet."
+de = "Noch keine Rollen."
+
+[defaultTierNamed]
+en = "default tier {tier}"
+de = "Standardstufe {tier}"
+
+[deleteNamed]
+en = "Delete {name}"
+de = "{name} löschen"
+
+[skippedRole]
+en = "Skipped:"
+de = "Übersprungen:"
+
+[allRoles]
+en = "← All roles"
+de = "← Alle Rollen"
+
+[newRole]
+en = "New role"
+de = "Neue Rolle"
+
+[roleNamePlaceholder]
+en = "e.g. Reviewer light"
+de = "z. B. Reviewer light"
+
+[idAndFile]
+en = "ID and file name:"
+de = "ID und Dateiname:"
+
+[description]
+en = "Description"
+de = "Beschreibung"
+
+[kindOfWork]
+en = "Kind of work"
+de = "Art der Arbeit"
+
+[defaultTier]
+en = "Default tier"
+de = "Standardstufe"
+
+[instructions]
+en = "Working instructions (Markdown)"
+de = "Arbeitsanweisungen (Markdown)"
+
+[rights]
+en = "Rights (harness rules, one per line)"
+de = "Rechte (Harness-Regeln, eine pro Zeile)"
+
+[sessionLimits]
+en = "Limits of a session (empty = the tier's default)"
+de = "Grenzen einer Sitzung (leer = Standard der Stufe)"
+
+[costLimit]
+en = "Cost limit (USD)"
+de = "Kostengrenze (USD)"
+
+[tokenLimit]
+en = "Token limit"
+de = "Token-Grenze"
+
+[stepLimit]
+en = "Step limit"
+de = "Schrittgrenze"
+
+[emptyIsDefault]
+en = "empty = default"
+de = "leer = Standard"
+
+[createsCards]
+en = "Creates cards without asking (kinds, comma-separated)"
+de = "Legt Karten an, ohne zu fragen (Arten, durch Komma getrennt)"
+
+[createsPlaceholder]
+en = "e.g. test, doc"
+de = "z. B. test, doc"
+
+[saveRole]
+en = "Save role"
+de = "Rolle speichern"
+
+[rolesHintBefore]
+en = "A role says what an agent is for: kind of work, default tier, rights, limits and the working instructions — no engine: the tier's engine runs (Models tab). It lives as a file at"
+de = "Eine Rolle sagt, wofür ein Agent da ist: Art der Arbeit, Standardstufe, Rechte, Grenzen und die Arbeitsanweisungen — keine Engine: die Engine der Stufe läuft (Reiter Modelle). Sie liegt als Datei unter"
+
+[rolesHintAfter]
+en = "and can never start a program itself. Pick one on the left to change it, or add a new one."
+de = "und kann selbst nie ein Programm starten. Wähle links eine aus, um sie zu ändern, oder füge eine neue hinzu."
+
+[migrationFailed]
+en = "The move to roles at tiers did not run"
+de = "Die Umstellung auf Rollen mit Stufen ist nicht gelaufen"
+
+[migrationBackupBefore]
+en = "The originals are in"
+de = "Die Originale liegen in"
+
+[migrationBackupAfter]
+en = "; delete it in Settings → Storage."
+de = "; lösche den Ordner unter Einstellungen → Speicher."
+
+[migrationLeft]
+en = "Left as they were: {items}."
+de = "Unverändert gelassen: {items}."
+
+[migrationDefaults]
+en = "Default engines per tier: {items}."
+de = "Standard-Engines je Stufe: {items}."
+
+[ok]
+en = "OK"
+de = "OK"
+
+[migMoved]
+en = { one = "{n} copied role moved", other = "{n} copied roles moved" }
+de = { one = "{n} kopierte Rolle verschoben", other = "{n} kopierte Rollen verschoben" }
+
+[migAdded]
+en = "{names} added"
+de = "{names} hinzugefügt"
+
+[migEngines]
+en = { one = "{n} engine now automatic", other = "{n} engines now automatic" }
+de = { one = "{n} Engine jetzt automatisch", other = "{n} Engines jetzt automatisch" }
+
+[migSessions]
+en = { one = "{n} session moved along", other = "{n} sessions moved along" }
+de = { one = "{n} Sitzung mitgezogen", other = "{n} Sitzungen mitgezogen" }
+
+[migTidied]
+en = "Roles and engines tidied: {parts}."
+de = "Rollen und Engines aufgeräumt: {parts}."
+
+[migAlreadyTidy]
+en = "Roles and engines were already tidy."
+de = "Rollen und Engines waren schon aufgeräumt."
+
+# A project's own roles (`ProjectRolesNotice.svelte`).
+[projectRolesError]
+en = "Project roles: {error}"
+de = "Projektrollen: {error}"
+
+[limitTokens]
+en = "{n} tokens"
+de = "{n} Tokens"
+
+[limitSteps]
+en = "{n} steps"
+de = "{n} Schritte"
+
+[factDescription]
+en = "description: {text}"
+de = "Beschreibung: {text}"
+
+[factKindTier]
+en = "kind: {kind}, tier: {tier}"
+de = "Art: {kind}, Stufe: {tier}"
+
+[factNamesEngine]
+en = "names an engine ({engines}) — ignored: the engine of the tier runs"
+de = "nennt eine Engine ({engines}) — ignoriert: die Engine der Stufe läuft"
+
+[factCreates]
+en = "creates cards without asking: {kinds}"
+de = "legt Karten an, ohne zu fragen: {kinds}"
+
+[factRights]
+en = "rights, granted without asking in sessions started for a card: {rights}"
+de = "Rechte, ohne Nachfrage gewährt in Sitzungen, die für eine Karte gestartet sind: {rights}"
+
+[factLimits]
+en = "limits: {limits}"
+de = "Grenzen: {limits}"
+
+[factNoLimits]
+en = "limits: none of its own"
+de = "Grenzen: keine eigenen"
+
+[projectRolesApply]
+en = "Roles from this project apply (confirmed): {roles}."
+de = "Rollen aus diesem Projekt gelten (bestätigt): {roles}."
+
+[noneReadable]
+en = "none that could be read"
+de = "keine lesbaren"
+
+[allowRoles]
+en = "Allow these roles"
+de = "Diese Rollen erlauben"
+
+[projectRolesReview]
+en = "Project roles need your review"
+de = "Projektrollen brauchen deine Prüfung"
+
+[projectRolesBefore]
+en = "This project has its own agent roles in"
+de = "Dieses Projekt hat eigene Agentenrollen in"
+
+[projectRolesAfter]
+en = "Their instructions are what an agent will obey — and the rights they list are granted without asking in a session started for a card, where nobody watches each step — so they stay off until you have read them."
+de = "Ihre Anweisungen befolgt ein Agent — und die Rechte, die sie nennen, gelten ohne Nachfrage in einer Sitzung, die für eine Karte gestartet ist, wo niemand jeden Schritt sieht — darum bleiben sie aus, bis du sie gelesen hast."
+
+[review]
+en = "Review…"
+de = "Prüfen…"
+
+[cannotConfirm]
+en = "They cannot be confirmed: {reason}."
+de = "Sie lassen sich nicht bestätigen: {reason}."
+
+[skippedNamed]
+en = "Skipped"
+de = "Übersprungen"
+
+[replacesYours]
+en = { one = "Replaces your own role: {names}.", other = "Replaces your own roles: {names}." }
+de = { one = "Ersetzt deine eigene Rolle: {names}.", other = "Ersetzt deine eigenen Rollen: {names}." }
+
+[namesEngine]
+en = { one = "{names} names an engine. A role chooses no engine any more, so it is ignored: the engine of the role's tier runs.", other = "{names} name an engine. A role chooses no engine any more, so it is ignored: the engine of the role's tier runs." }
+de = { one = "{names} nennt eine Engine. Eine Rolle wählt keine Engine mehr, darum wird sie ignoriert: die Engine der Stufe der Rolle läuft.", other = "{names} nennen eine Engine. Eine Rolle wählt keine Engine mehr, darum wird sie ignoriert: die Engine der Stufe der Rolle läuft." }
+
+# Engines (`EnginesSection.svelte`, `agents.ts`).
+[claudeCodeHint]
+en = "Anthropic's CLI"
+de = "Die CLI von Anthropic"
+
+[glutHint]
+en = "Axiomata's own harness: sandbox, network gate, refusal limits"
+de = "Axiomatas eigener Harness: Sandbox, Netz-Schranke, Grenzen für Ablehnungen"
+
+[agentCount]
+en = { one = "{n} agent", other = "{n} agents" }
+de = { one = "{n} Agent", other = "{n} Agenten" }
+
+[removeEngineAsk]
+en = "Remove the engine “{label}”?"
+de = "Die Engine „{label}“ entfernen?"
+
+[engines]
+en = "Engines"
+de = "Engines"
+
+[addEngine]
+en = "Add engine…"
+de = "Engine hinzufügen…"
+
+[noOwnEngines]
+en = "No own engines. The models that are on already make one engine each."
+de = "Keine eigenen Engines. Die eingeschalteten Modelle ergeben schon je eine Engine."
+
+[itsModelsTier]
+en = "{tier} (its model's)"
+de = "{tier} (die seines Modells)"
+
+[unrated]
+en = "unrated"
+de = "ohne Stufe"
+
+[allEngines]
+en = "← All engines"
+de = "← Alle Engines"
+
+[newEngine]
+en = "New engine"
+de = "Neue Engine"
+
+[label]
+en = "Label"
+de = "Bezeichnung"
+
+[labelPlaceholder]
+en = "e.g. Claude Code · Opus"
+de = "z. B. Claude Code · Opus"
+
+[harness]
+en = "Harness"
+de = "Harness"
+
+[billing]
+en = "Billing"
+de = "Abrechnung"
+
+[tierOfModel]
+en = "The tier of its model"
+de = "Die Stufe seines Modells"
+
+[modelPlaceholder]
+en = "empty = the harness picks; Glut: openrouter/… or ollama/… picks the provider"
+de = "leer = der Harness wählt; Glut: openrouter/… oder ollama/… wählt den Anbieter"
+
+[idFixed]
+en = "ID (fixed)"
+de = "ID (fest)"
+
+[id]
+en = "ID"
+de = "ID"
+
+[command]
+en = "Command (empty = the harness default)"
+de = "Befehl (leer = Standard des Harness)"
+
+[environment]
+en = "Environment"
+de = "Umgebung"
+
+[perLine]
+en = "per line"
+de = "pro Zeile"
+
+[saveEngine]
+en = "Save engine"
+de = "Engine speichern"
+
+[enginesHint]
+en = "An own engine is harness + model + environment of your choosing — the part that costs money and can be unreachable — with a tier of its own if you give it one. Pick one on the left to change it, or add a new one."
+de = "Eine eigene Engine ist Harness + Modell + Umgebung nach deiner Wahl — der Teil, der Geld kostet und unerreichbar sein kann — mit einer eigenen Stufe, wenn du ihr eine gibst. Wähle links eine aus, um sie zu ändern, oder füge eine neue hinzu."
+
+# An agent's pane (`panes/AgentPane.svelte`).
+[sideTerminal]
+en = "Terminal"
+de = "Terminal"
+
+[sidePlan]
+en = "Plan"
+de = "Plan"
+
+[sideDiffs]
+en = "Diffs"
+de = "Diffs"
+
+[sideInbox]
+en = "Inbox"
+de = "Posteingang"
+
+[notInsideFolder]
+en = "“{path}” is not inside this agent's folder."
+de = "„{path}“ liegt nicht im Ordner dieses Agenten."
+
+[asksPermission]
+en = "{name} asks for a permission"
+de = "{name} bittet um eine Freigabe"
+
+[preparingWorktree]
+en = "Preparing this agent's worktree…"
+de = "Der Worktree dieses Agenten wird vorbereitet…"
+
+[tasks]
+en = "Tasks"
+de = "Aufgaben"
+
+[tasksDone]
+en = "{done} / {total} done"
+de = "{done} / {total} erledigt"
+
+[fromEarlierSession]
+en = "From an earlier session — the agent has not written new tasks since it started."
+de = "Aus einer früheren Sitzung — der Agent hat seit seinem Start keine neuen Aufgaben geschrieben."
+
+[noTasksYet]
+en = "No tasks yet — they appear once the agent starts working on the plan below."
+de = "Noch keine Aufgaben — sie erscheinen, sobald der Agent am Plan unten arbeitet."
+
+[planModeDoc]
+en = "Plan (plan mode) · {name}"
+de = "Plan (Plan-Modus) · {name}"
+
+[earlierSession]
+en = "earlier session"
+de = "frühere Sitzung"
+
+[noPlanYet]
+en = "No plan yet. It appears here as soon as the agent writes one."
+de = "Noch kein Plan. Er erscheint hier, sobald der Agent einen schreibt."
+
+[agentViews]
+en = "{name} views"
+de = "Ansichten von {name}"
+
+[sharedFolderTitle]
+en = "The project is not a git repository, so agents share its folder"
+de = "Das Projekt ist kein Git-Repository, darum teilen sich die Agenten seinen Ordner"
+
+[sharedFolder]
+en = "shared folder"
+de = "geteilter Ordner"
+
+[restartAgent]
+en = "Restart the agent"
+de = "Agenten neu starten"
+
+# The role picker of a planner or grilling start (`panes/SessionPicker.svelte`).
+[engineFor]
+en = "Engine for “{role}”"
+de = "Engine für „{role}“"
+
+[savedInRole]
+en = "(saved in the role)"
+de = "(wird in der Rolle gespeichert)"
+
+[engineForLabel]
+en = "Engine for {role}"
+de = "Engine für {role}"
+
+[engineBelongsToRole]
+en = "The engine belongs to the role; change it under Models & roles"
+de = "Die Engine gehört zur Rolle; ändere sie unter Modelle & Rollen"
+
+[runsOn]
+en = "runs on {engine}"
+de = "läuft auf {engine}"
