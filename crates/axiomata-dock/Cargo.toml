@@ -1,0 +1,26 @@
+[package]
+name = "axiomata-dock"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "A dock layout: a tree of splits and tab groups, every operation a view performs on it, where a dragged pane lands, and the stored form. No UI — the Axiomata studio draws it in a webview, Lohe on Schimmer."
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+# A fresh node's id, random like the ids the layouts already stored carry (`crypto.randomUUID`).
+getrandom.workspace = true
+# Only for the Axiomata app's generated TypeScript types (feature `ts`).
+ts-rs = { workspace = true, optional = true }
+
+[features]
+# Derive the TypeScript types of the layout (Axiomata-OS `apps/axiomata/src-tauri/src/bindings.rs`).
+ts = ["dep:ts-rs"]
+
+[lints.rust]
+missing_docs = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }

@@ -59,3 +59,7 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 sha2 = "0.10"
 # A plugin's version and the interface version it was built against.
 semver = { version = "1", features = ["serde"] }
+# Random ids for `axiomata-dock`'s nodes, the version Axiomata-OS has.
+getrandom = "0.3"
+# TypeScript types the Axiomata app generates from the Rust ones (feature `ts` of a crate), as Axiomata-OS pins it.
+ts-rs = { version = "12.0.1", default-features = false, features = ["serde-compat", "no-serde-warnings"] }
