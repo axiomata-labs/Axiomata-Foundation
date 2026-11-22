@@ -1,0 +1,843 @@
+# The texts of the Studio's Flow mode and its planning: the Planning pane (`ide/panes/PlanPane.svelte`,
+# `ide/panes/ProposalEditor.svelte`), the Agents tab (`ide/panes/TeamPane.svelte`, `ide/SessionMail.svelte`,
+# `ide/AgentTeamEntry.svelte`), the Flow view (`ide/panes/GraphPane.svelte`) and the pure helpers whose words only they
+# show (`ide/planning.ts`, `ide/flowGraph.ts`, `ide/team.ts`, `ide/agentEntry.ts`). Role, engine, tier and git names
+# stay as they are (`docs/plans/i18n.md`, Q13).
+
+# A plan's status, as the list and the header show it.
+[statusDraft]
+en = "draft"
+de = "Entwurf"
+
+[statusReleased]
+en = "released"
+de = "freigegeben"
+
+[statusClosed]
+en = "closed"
+de = "geschlossen"
+
+[cardFallback]
+en = "Card #{id}"
+de = "Karte #{id}"
+
+[needs]
+en = "needs {ids}"
+de = "braucht {ids}"
+
+# What the plans that run by themselves did, toast-sized (`planning.ts` `runEventNote`).
+[eventStarted]
+en = "Plan #{plan}: card #{card} starts by itself."
+de = "Plan #{plan}: Karte #{card} startet von selbst."
+
+[eventIntegrated]
+en = "Card #{card} is integrated into plan #{plan}."
+de = "Karte #{card} ist in Plan #{plan} integriert."
+
+[eventGaveUp]
+en = "Card #{card} does not fit the plan the second time either ({files}); it stays as it is. You decide."
+de = "Karte #{card} passt auch beim zweiten Mal nicht in den Plan ({files}); sie bleibt, wie sie ist. Du entscheidest."
+
+[eventRedo]
+en = "Card #{card} no longer fit the plan ({files}) and will be redone on the new state."
+de = "Karte #{card} passte nicht mehr in den Plan ({files}) und wird auf dem neuen Stand neu gemacht."
+
+[eventBlocked]
+en = "Card #{card} made no progress: {reason}"
+de = "Karte #{card} kam nicht voran: {reason}"
+
+[eventReady]
+en = "The plan “{name}” is finished: all cards are integrated. Ready to take over."
+de = "Der Plan „{name}“ ist fertig: alle Karten sind integriert. Bereit zum Übernehmen."
+
+[eventEscalated]
+en = "Card #{card} was returned twice: “{role}” on “{engine}” takes over from “{from}” (same worktree, same branch). If that does not work either, you decide."
+de = "Karte #{card} kam zweimal zurück: „{role}“ auf „{engine}“ übernimmt von „{from}“ (gleicher Worktree, gleicher Branch). Klappt auch das nicht, entscheidest du."
+
+[eventPaused]
+en = "Plan “{name}” is paused: {reason}. Nothing new starts until you say “Continue” in the Flow."
+de = "Plan „{name}“ ist pausiert: {reason}. Nichts Neues startet, bis du im Flow „Weiter“ sagst."
+
+[eventDayCap]
+en = "Daily limit of the Studio sessions reached ({reason}). Nothing new starts until tomorrow or until you raise it in the config."
+de = "Tagesgrenze der Studio-Sitzungen erreicht ({reason}). Nichts Neues startet bis morgen oder bis du sie in der Config anhebst."
+
+[spendTokens]
+en = "{spent} of {limit} tokens"
+de = "{spent} von {limit} Tokens"
+
+[spendCost]
+en = "{spent} of {limit}"
+de = "{spent} von {limit}"
+
+# The graph's goal and review nodes (`flowGraph.ts`).
+[endClosed]
+en = "closed"
+de = "geschlossen"
+
+[endReady]
+en = "ready to take over"
+de = "bereit zum Übernehmen"
+
+[endBlocked]
+en = "blocked"
+de = "blockiert"
+
+[endOpen]
+en = "open"
+de = "offen"
+
+[reviewRunning]
+en = "being reviewed"
+de = "wird geprüft"
+
+[reviewSigned]
+en = "signed off"
+de = "abgezeichnet"
+
+[reviewReturned]
+en = "returned ({n}×)"
+de = "zurückgegeben ({n}×)"
+
+# The Agents tab's tiles (`team.ts`, `TeamPane.svelte`).
+[noPlan]
+en = "No plan"
+de = "Kein Plan"
+
+[planGroup]
+en = "Plan #{id} · {name}"
+de = "Plan #{id} · {name}"
+
+[dutyWorker]
+en = "works on"
+de = "arbeitet an"
+
+[dutyReviewer]
+en = "reviews"
+de = "prüft"
+
+[dutyPlanner]
+en = "plans"
+de = "plant"
+
+[thePlan]
+en = "the plan"
+de = "den Plan"
+
+[nothingRecorded]
+en = "nothing recorded yet"
+de = "noch nichts aufgezeichnet"
+
+[noStepYet]
+en = "no step yet"
+de = "noch kein Schritt"
+
+[nothingRunning]
+en = "Nothing is running yet"
+de = "Noch läuft nichts"
+
+[nothingRunningText]
+en = "Once a plan is approved and its cards start (or a planner works), every session appears here as a tile — with what it is doing right now."
+de = "Sobald ein Plan freigegeben ist und seine Karten starten (oder ein Planer arbeitet), erscheint hier jede Sitzung als Kachel — mit dem, was sie gerade tut."
+
+[branchTitle]
+en = "Checked out in its worktree: {branch}"
+de = "In ihrem Worktree ausgecheckt: {branch}"
+
+[unreadTitle]
+en = "Unread messages in the session's inbox"
+de = "Ungelesene Nachrichten im Posteingang der Sitzung"
+
+[watchTitle]
+en = "Follow this session read-only in a pane of its own: nothing typed there reaches it"
+de = "Sieh dieser Sitzung nur lesend in einem eigenen Pane zu: nichts, was du dort tippst, erreicht sie"
+
+[watch]
+en = "Watch"
+de = "Zusehen"
+
+[terminalTitle]
+en = "Bring this session's terminal to the front; it does not start a new one"
+de = "Holt das Terminal dieser Sitzung nach vorn; es startet kein neues"
+
+[terminal]
+en = "Terminal"
+de = "Terminal"
+
+[waitingForYou]
+en = "Waiting for you: a question or an approval in the terminal."
+de = "Wartet auf dich: eine Frage oder eine Freigabe im Terminal."
+
+[asks]
+en = "Asks: {question}"
+de = "Fragt: {question}"
+
+[latestSteps]
+en = "Latest steps"
+de = "Letzte Schritte"
+
+# A session's MCP entry (`agentEntry.ts`, `AgentTeamEntry.svelte`).
+[teamTools]
+en = "Team tools"
+de = "Team-Werkzeuge"
+
+[entryPreparing]
+en = "Preparing…"
+de = "Wird vorbereitet…"
+
+[entryConnected]
+en = "Team tools connected"
+de = "Team-Werkzeuge verbunden"
+
+[entryConnectedDetail]
+en = "This session can reach the other sessions and the board through the tools below."
+de = "Diese Sitzung erreicht die anderen Sitzungen und das Board über die Werkzeuge unten."
+
+[entryUnavailable]
+en = "Team tools unavailable"
+de = "Team-Werkzeuge nicht verfügbar"
+
+[entryUnavailableDetail]
+en = "The session runs without them."
+de = "Die Sitzung läuft ohne sie."
+
+[entryOff]
+en = "Team tools off"
+de = "Team-Werkzeuge aus"
+
+[entryCommandTitle]
+en = "The program the harness starts as the {server} MCP server"
+de = "Das Programm, das der Harness als MCP-Server {server} startet"
+
+# A session's conversation (`SessionMail.svelte`).
+[messages]
+en = "Messages"
+de = "Nachrichten"
+
+[noMessages]
+en = "No messages yet."
+de = "Noch keine Nachrichten."
+
+[unread]
+en = "unread"
+de = "ungelesen"
+
+[mailHeld]
+en = "held"
+de = "zurückgehalten"
+
+[mailUndeliverable]
+en = "undeliverable"
+de = "nicht zustellbar"
+
+[savedUnread]
+en = "Saved, but nobody reads it: {reason}"
+de = "Gespeichert, aber niemand liest es: {reason}"
+
+[writePlaceholder]
+en = "Write to the session… (⌘↩ sends)"
+de = "Schreibe der Sitzung… (⌘↩ sendet)"
+
+[send]
+en = "Send"
+de = "Senden"
+
+# A proposal's editor (`ProposalEditor.svelte`).
+[title]
+en = "Title"
+de = "Titel"
+
+[description]
+en = "Description"
+de = "Beschreibung"
+
+[acceptance]
+en = "Acceptance criteria"
+de = "Abnahmekriterien"
+
+[acceptancePlaceholder]
+en = "How do you tell the card is done?"
+de = "Woran erkennst du, dass die Karte fertig ist?"
+
+[role]
+en = "Role"
+de = "Rolle"
+
+[level]
+en = "Level"
+de = "Stufe"
+
+[needsFirst]
+en = "Needs first"
+de = "Braucht zuerst"
+
+[noCandidates]
+en = "The plan has no other card this one could wait for."
+de = "Der Plan hat keine andere Karte, auf die diese warten könnte."
+
+[save]
+en = "Save"
+de = "Speichern"
+
+[addCard]
+en = "Add card"
+de = "Karte hinzufügen"
+
+[cancel]
+en = "Cancel"
+de = "Abbrechen"
+
+[cardInProgress]
+en = "The card is already in progress or done; it can no longer be changed here."
+de = "Die Karte ist schon in Arbeit oder fertig; hier lässt sie sich nicht mehr ändern."
+
+[noColumn]
+en = "The board has no column for it."
+de = "Das Board hat keine Spalte dafür."
+
+# The Flow view (`GraphPane.svelte`).
+[legend]
+en = "Colours"
+de = "Farben"
+
+[legendIdle]
+en = "ready / waiting"
+de = "bereit / wartet"
+
+[legendActive]
+en = "in progress"
+de = "in Arbeit"
+
+[legendQuestion]
+en = "question"
+de = "Frage"
+
+[legendReview]
+en = "in review"
+de = "in Prüfung"
+
+[legendDone]
+en = "checked / in the plan"
+de = "geprüft / im Plan"
+
+[legendFailed]
+en = "failed"
+de = "fehlgeschlagen"
+
+[noPlanYet]
+en = "No plan yet"
+de = "Noch kein Plan"
+
+[noPlanYetText]
+en = "Create one under Planning; its cards appear here as a graph."
+de = "Lege einen unter Planung an; seine Karten erscheinen hier als Graph."
+
+[noCardsYet]
+en = "The plan has no cards yet"
+de = "Der Plan hat noch keine Karten"
+
+[noCardsYetText]
+en = "The planner creates them as proposals."
+de = "Der Planer legt sie als Vorschläge an."
+
+[graphLabel]
+en = "Graph of the plan {name}"
+de = "Graph des Plans {name}"
+
+[startLabel]
+en = "Start of the plan"
+de = "Start des Plans"
+
+[start]
+en = "Start"
+de = "Start"
+
+[goalLabel]
+en = "Goal of the plan: {label}"
+de = "Ziel des Plans: {label}"
+
+[goal]
+en = "Goal"
+de = "Ziel"
+
+[reviewNodeLabel]
+en = "Review of card {id}, {state}"
+de = "Prüfung von Karte {id}, {state}"
+
+[cardNodeLabel]
+en = "Card {id}, {state}"
+de = "Karte {id}, {state}"
+
+[reviewTag]
+en = "REVIEW"
+de = "PRÜFUNG"
+
+[cardKind]
+en = "card"
+de = "Karte"
+
+[card]
+en = "Card"
+de = "Karte"
+
+[roleLine]
+en = "Role {role}"
+de = "Rolle {role}"
+
+[needsFirstList]
+en = "needs first: {ids}"
+de = "braucht zuerst: {ids}"
+
+[openSession]
+en = "Open session: {name}"
+de = "Sitzung öffnen: {name}"
+
+[gaveUp]
+en = "Does not fit the plan twice; the Studio gave up."
+de = "Passt zweimal nicht in den Plan; das Studio hat aufgegeben."
+
+[integrateAgain]
+en = "Integrate again"
+de = "Erneut integrieren"
+
+[redo]
+en = "Redo"
+de = "Neu machen"
+
+[history]
+en = "History"
+de = "Verlauf"
+
+[clickCard]
+en = "Click a card to see its history and its sessions."
+de = "Klicke eine Karte an, um ihren Verlauf und ihre Sitzungen zu sehen."
+
+[cardIntegrated]
+en = "Card #{id} is integrated into the plan."
+de = "Karte #{id} ist in den Plan integriert."
+
+[cardStillConflicts]
+en = "Card #{id} still does not fit into the plan ({files})."
+de = "Karte #{id} passt immer noch nicht in den Plan ({files})."
+
+[cardWorkerMoving]
+en = "The worker of card #{id} is still moving; try again in a moment."
+de = "Der Bearbeiter von Karte #{id} ist noch in Bewegung; versuche es gleich noch einmal."
+
+[cardRedone]
+en = "Card #{id} will be redone on the plan's new state."
+de = "Karte #{id} wird auf dem neuen Stand des Plans neu gemacht."
+
+# The Planning pane (`PlanPane.svelte`).
+[plans]
+en = "Plans"
+de = "Pläne"
+
+[board]
+en = "Board"
+de = "Board"
+
+[newPlan]
+en = "New plan…"
+de = "Neuer Plan…"
+
+[name]
+en = "Name"
+de = "Name"
+
+[planName]
+en = "Name of the plan"
+de = "Name des Plans"
+
+[goalOfPlan]
+en = "Goal of the plan"
+de = "Ziel des Plans"
+
+[goalPlaceholder]
+en = "What should be there at the end?"
+de = "Was soll am Ende da sein?"
+
+[create]
+en = "Create"
+de = "Anlegen"
+
+[noPlanOnBoard]
+en = "No plan on this board yet."
+de = "Noch kein Plan auf diesem Board."
+
+[resetTitle]
+en = "Put Planning, Agents and the Flow view back in their places"
+de = "Setzt Planung, Agenten und die Flow-Ansicht an ihre Plätze zurück"
+
+[resetLayout]
+en = "Reset layout"
+de = "Layout zurücksetzen"
+
+[plan]
+en = "Plan"
+de = "Plan"
+
+[noBoard]
+en = "There is no board yet. Create one in the Kanban."
+de = "Es gibt noch kein Board. Lege eines im Kanban an."
+
+[pickPlan]
+en = "Pick a plan or create one: you write the goal, the planner cuts it into cards."
+de = "Wähle einen Plan oder lege einen an: du schreibst das Ziel, der Planer zerlegt es in Karten."
+
+[runsByItself]
+en = "runs by itself"
+de = "läuft von selbst"
+
+[closeTitle]
+en = "Close the plan: nothing starts from it any more, and its line is removed"
+de = "Plan schließen: nichts startet mehr daraus, und seine Linie wird entfernt"
+
+[closeBlocked]
+en = "A session still works on a card of the plan: let it finish or release it first"
+de = "Eine Sitzung arbeitet noch an einer Karte des Plans: lass sie fertig werden oder gib sie erst frei"
+
+[close]
+en = "Close"
+de = "Schließen"
+
+[reallyDelete]
+en = "Really delete"
+de = "Wirklich löschen"
+
+[delete]
+en = "Delete"
+de = "Löschen"
+
+[deleteTitle]
+en = "Delete the plan; its cards stay on the board without a plan"
+de = "Plan löschen; seine Karten bleiben ohne Plan auf dem Board"
+
+[deleteBlocked]
+en = "The plan is still running: take it over or close it first"
+de = "Der Plan läuft noch: übernimm oder schließe ihn zuerst"
+
+[origin]
+en = "The goal of card #{id} on the board. Once released its steps run by themselves, and the card follows them — to Review when everything waits for your take-over."
+de = "Das Ziel von Karte #{id} auf dem Board. Nach der Freigabe laufen seine Schritte von selbst, und die Karte folgt ihnen — nach der Prüfung, wenn alles auf deine Übernahme wartet."
+
+[costLimit]
+en = "Cost limit (USD)"
+de = "Kostengrenze (USD)"
+
+[noLimit]
+en = "none"
+de = "keine"
+
+[costInvalid]
+en = "The cost limit is a positive amount in USD, or empty for none."
+de = "Die Kostengrenze ist ein positiver Betrag in USD, oder leer für keine."
+
+[suggestedGoal]
+en = "Suggested goal"
+de = "Vorgeschlagenes Ziel"
+
+[sharpenedTitle]
+en = "Sharpened goal suggested"
+de = "Geschärftes Ziel vorgeschlagen"
+
+[sharpenedText]
+en = "From the conversation with the grill session. It replaces your goal only when you take it over."
+de = "Aus dem Gespräch mit der Grill-Sitzung. Es ersetzt dein Ziel erst, wenn du es übernimmst."
+
+[takeOver]
+en = "Take over"
+de = "Übernehmen"
+
+[discard]
+en = "Discard"
+de = "Verwerfen"
+
+[plannerIs]
+en = "Planner:"
+de = "Planer:"
+
+[grillIs]
+en = "Grill:"
+de = "Grill:"
+
+[showPane]
+en = "Show pane"
+de = "Pane zeigen"
+
+[plannerRole]
+en = "Role of the planner"
+de = "Rolle des Planers"
+
+[grillRole]
+en = "Role for grilling"
+de = "Rolle fürs Grillen"
+
+[grillAfter]
+en = "Grill afterwards"
+de = "Danach grillen"
+
+[needsGoal]
+en = "The planner needs a goal."
+de = "Der Planer braucht ein Ziel."
+
+[startPlanner]
+en = "Start planner"
+de = "Planer starten"
+
+[grillNoEngine]
+en = "Pick an engine for the grill role, or the grilling will not start."
+de = "Wähle eine Engine für die Grill-Rolle, sonst startet das Grillen nicht."
+
+[grillAfterPlanner]
+en = "The grilling starts as soon as the planner has proposed its cards and waits for you."
+de = "Das Grillen startet, sobald der Planer seine Karten vorgeschlagen hat und auf dich wartet."
+
+[grillSoon]
+en = "The grilling starts in a moment: the cards are there, the planner is no longer running."
+de = "Das Grillen startet gleich: die Karten sind da, der Planer läuft nicht mehr."
+
+[grillAfterPlanning]
+en = "After planning, a grill session questions you about the cards."
+de = "Nach dem Planen befragt dich eine Grill-Sitzung zu den Karten."
+
+[proposals]
+en = "Proposals"
+de = "Vorschläge"
+
+[proposalsCount]
+en = "Proposals ({n})"
+de = "Vorschläge ({n})"
+
+[plannerNothingYet]
+en = "The planner has not proposed anything yet."
+de = "Der Planer hat noch nichts vorgeschlagen."
+
+[noProposals]
+en = "No proposals waiting for your yes."
+de = "Keine Vorschläge warten auf dein Ja."
+
+[changedTitle]
+en = "The planner changed this proposal after creating it"
+de = "Der Planer hat diesen Vorschlag nach dem Anlegen geändert"
+
+[changedByPlanner]
+en = "changed by the planner"
+de = "vom Planer geändert"
+
+[roleOf]
+en = "Role of {title}"
+de = "Rolle von {title}"
+
+[levelOf]
+en = "Level of {title}"
+de = "Stufe von {title}"
+
+[accept]
+en = "Accept"
+de = "Annehmen"
+
+[edit]
+en = "Edit"
+de = "Bearbeiten"
+
+[reallyDiscard]
+en = "Really discard"
+de = "Wirklich verwerfen"
+
+[addCardRunning]
+en = "Add card to the running plan"
+de = "Karte zum laufenden Plan hinzufügen"
+
+[releasePlan]
+en = "Release plan"
+de = "Plan freigeben"
+
+[runAutomatically]
+en = "Run by itself"
+de = "Automatisch abarbeiten"
+
+[autoStartText]
+en = "Cards start by themselves as soon as their predecessors are done, as many at once as possible; the review runs by itself."
+de = "Karten starten von selbst, sobald ihre Vorgänger fertig sind, so viele gleichzeitig wie möglich; die Prüfung läuft von selbst."
+
+[manualText]
+en = "The proposals move to the first open column; you start every card yourself."
+de = "Die Vorschläge wandern in die erste offene Spalte; jede Karte startest du selbst."
+
+[plannerDoneAfter]
+en = "The planner is done after that."
+de = "Der Planer ist danach fertig."
+
+[autoMode]
+en = "Auto mode"
+de = "Automodus"
+
+[autoRightsOn]
+en = "The plan's workers may run any command and edit without asking. A push, the CLI, the database and config files stay blocked in their plain forms — patterns, not a sandbox: switch it on for cards you have read. Reviewers may run any command too but get no edit tools; taking the plan over stays yours."
+de = "Die Bearbeiter des Plans dürfen jeden Befehl ausführen und ohne Nachfrage bearbeiten. Ein Push, die CLI, die Datenbank und Config-Dateien bleiben in ihren schlichten Formen gesperrt — Muster, keine Sandbox: schalte es für Karten ein, die du gelesen hast. Reviewer dürfen ebenfalls jeden Befehl ausführen, bekommen aber keine Bearbeitungswerkzeuge; den Plan zu übernehmen bleibt deine Sache."
+
+[autoRightsOff]
+en = "The plan's workers ask before commands their role does not allow."
+de = "Die Bearbeiter des Plans fragen vor Befehlen, die ihre Rolle nicht erlaubt."
+
+[notGrilled]
+en = "This plan was not grilled: its goal has not been questioned yet. You can still release it."
+de = "Dieser Plan wurde nicht gegrillt: sein Ziel wurde noch nicht hinterfragt. Freigeben kannst du ihn trotzdem."
+
+[spend]
+en = "Spend: {line}"
+de = "Ausgaben: {line}"
+
+[paused]
+en = "Paused: {reason}."
+de = "Pausiert: {reason}."
+
+[continue]
+en = "Continue"
+de = "Weiter"
+
+[continueText]
+en = "Sets the plan's limit to the spend so far plus a new allowance."
+de = "Setzt die Grenze des Plans auf die bisherigen Ausgaben plus ein neues Budget."
+
+[dayCapBefore]
+en = "Daily limit of the Studio sessions reached: {reason}. Nothing new starts until tomorrow; raise it:"
+de = "Tagesgrenze der Studio-Sitzungen erreicht: {reason}. Bis morgen startet nichts Neues; anheben:"
+
+[dayCapAfter]
+en = "in the config."
+de = "in der Config."
+
+[today]
+en = "Today: {spent} of {cap}"
+de = "Heute: {spent} von {cap}"
+
+[autoModeRunning]
+en = "Anything but a push (blocked by patterns, not a sandbox), without asking. Applies to sessions started from now on; running ones keep their rights — to stop one, stop its card."
+de = "Alles außer einem Push (durch Muster gesperrt, keine Sandbox), ohne Nachfrage. Gilt für Sitzungen, die ab jetzt starten; laufende behalten ihre Rechte — um eine zu stoppen, stoppe ihre Karte."
+
+[takeOverPlan]
+en = "Take over plan"
+de = "Plan übernehmen"
+
+[takeOverText]
+en = "All cards are on the plan's line. The work goes into the project's main branch, its commits stay separate as long as the branch has not moved. Nothing is pushed; a conflict is rolled back."
+de = "Alle Karten liegen auf der Linie des Plans. Die Arbeit geht in den Haupt-Branch des Projekts, ihre Commits bleiben getrennt, solange sich der Branch nicht bewegt hat. Nichts wird gepusht; ein Konflikt wird zurückgerollt."
+
+[conflictMain]
+en = "Conflict with the main branch, nothing was changed: {files}"
+de = "Konflikt mit dem Haupt-Branch, nichts wurde geändert: {files}"
+
+[cardsOfPlan]
+en = "Cards of the plan"
+de = "Karten des Plans"
+
+[plannerReading]
+en = "The planner {name} is reading the project."
+de = "Der Planer {name} liest das Projekt."
+
+[grillQuestioning]
+en = "{name} is now questioning you about the cards in the terminal."
+de = "{name} befragt dich jetzt im Terminal zu den Karten."
+
+[grillFailed]
+en = "The grilling could not be started; tick the box again."
+de = "Das Grillen ließ sich nicht starten; setze den Haken noch einmal."
+
+[autoModeGone]
+en = "The plan is closed or gone; its auto mode was not changed."
+de = "Der Plan ist geschlossen oder weg; sein Automodus wurde nicht geändert."
+
+[autoOn]
+en = "Auto mode on: sessions started from now on may do anything but push."
+de = "Automodus an: Sitzungen, die ab jetzt starten, dürfen alles außer pushen."
+
+[autoOff]
+en = "Auto mode off: sessions started from now on ask again."
+de = "Automodus aus: Sitzungen, die ab jetzt starten, fragen wieder."
+
+[noLongerDraft]
+en = "The plan is no longer a draft."
+de = "Der Plan ist kein Entwurf mehr."
+
+[releasedWorking]
+en = { one = "Plan released: {n} card is being worked on.", other = "Plan released: {n} cards are being worked on." }
+de = { one = "Plan freigegeben: an {n} Karte wird gearbeitet.", other = "Plan freigegeben: an {n} Karten wird gearbeitet." }
+
+[releasedWaiting]
+en = { one = "Plan released: {n} card waits in the first open column.", other = "Plan released: {n} cards wait in the first open column." }
+de = { one = "Plan freigegeben: {n} Karte wartet in der ersten offenen Spalte.", other = "Plan freigegeben: {n} Karten warten in der ersten offenen Spalte." }
+
+[takenOver]
+en = { one = "Plan “{name}” was taken over ({commit}): {n} card.", other = "Plan “{name}” was taken over ({commit}): {n} cards." }
+de = { one = "Plan „{name}“ wurde übernommen ({commit}): {n} Karte.", other = "Plan „{name}“ wurde übernommen ({commit}): {n} Karten." }
+
+[notCleaned]
+en = "Not cleaned up: {note}"
+de = "Nicht aufgeräumt: {note}"
+
+[resumed]
+en = "Plan “{name}” keeps running: a new limit was set on top of the current spend."
+de = "Plan „{name}“ läuft weiter: eine neue Grenze wurde auf die bisherigen Ausgaben gesetzt."
+
+[deleted]
+en = "Plan “{name}” was deleted; its cards stay on the board, without a plan."
+de = "Plan „{name}“ wurde gelöscht; seine Karten bleiben ohne Plan auf dem Board."
+
+[closeConfirm]
+en = "Close the plan “{name}”? Nothing starts from it any more and its line is removed; work on the line that was not taken over stays on its branch."
+de = "Plan „{name}“ schließen? Nichts startet mehr daraus, und seine Linie wird entfernt; Arbeit auf der Linie, die nicht übernommen wurde, bleibt auf ihrem Branch."
+
+[closedNote]
+en = "Plan “{name}” was closed. {notes}"
+de = "Plan „{name}“ wurde geschlossen. {notes}"
+
+[noLongerProposal]
+en = "The card is no longer a proposal and stays."
+de = "Die Karte ist kein Vorschlag mehr und bleibt."
+
+# A card session's usage (`cardUsage.ts`) and the note after a take-over (`cardStart.ts` `unpushedNote`).
+[usageSteps]
+en = "Steps"
+de = "Schritte"
+
+[usageTokens]
+en = "Tokens"
+de = "Tokens"
+
+[usageCost]
+en = "Cost"
+de = "Kosten"
+
+[unmeasuredNoSessionId]
+en = "No Claude Code session was recorded for this session (it ran with its own command)."
+de = "Für diese Sitzung wurde keine Claude-Code-Sitzung aufgezeichnet (sie lief mit einem eigenen Befehl)."
+
+[unmeasuredNoRecordYet]
+en = "The session has not recorded anything yet — it may have just started."
+de = "Die Sitzung hat noch nichts aufgezeichnet — vielleicht ist sie gerade erst gestartet."
+
+[unmeasuredReadFailed]
+en = "The session's record could not be read."
+de = "Die Aufzeichnung der Sitzung konnte nicht gelesen werden."
+
+[unmeasuredNotMeasured]
+en = "This harness is not measured."
+de = "Dieser Harness wird nicht gemessen."
+
+[unmeasuredLimit]
+en = "{why} A limit only applies once the session can be measured."
+de = "{why} Eine Grenze gilt erst, wenn die Sitzung gemessen werden kann."
+
+[notPushedAhead]
+en = "Not pushed yet: ↑{ahead} to {target}. Push in the Studio's Git tab."
+de = "Noch nicht gepusht: ↑{ahead} nach {target}. Pushen im Git-Reiter des Studios."
+
+[theUpstream]
+en = "the upstream"
+de = "den Upstream"
+
+[notPushedNoUpstream]
+en = "Not pushed yet: the branch has no upstream yet. Pushing in the Studio's Git tab creates it."
+de = "Noch nicht gepusht: Der Branch hat noch keinen Upstream. Pushen im Git-Reiter des Studios legt ihn an."
