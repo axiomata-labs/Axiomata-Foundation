@@ -1,0 +1,14 @@
+# The podcast's show notes (Axiomata-OS `axiomata_core::podcast`): what the app writes into an episode's Markdown note
+# after the voicing, in the language of the episode.
+
+[chaptersHeading]
+en = "## Chapters"
+de = "## Kapitel"
+
+[pronunciationHeading]
+en = "## Pronunciation"
+de = "## Aussprache"
+
+[wordsWaiting]
+en = { one = "1 new word waits for you in Hauch → Pronunciation; it is spoken already, strike or change it if it sounds wrong: {list}", other = "{n} new words wait for you in Hauch → Pronunciation; they are spoken already, strike or change what sounds wrong: {list}" }
+de = { one = "1 neues Wort wartet in Hauch → Aussprache auf dich; es gilt schon, streich oder ändere es, wenn es falsch klingt: {list}", other = "{n} neue Wörter warten in Hauch → Aussprache auf dich; sie gelten schon, streich oder ändere, was falsch klingt: {list}" }
