@@ -203,7 +203,7 @@ mod tests {
     fn a_layout_comes_back_as_it_was_stored_with_its_version() {
         let layout = sample();
         let stored = layout.to_stored();
-        assert_eq!(Layout::from_stored(&stored), Some(layout));
+        assert_eq!(Layout::from_stored(&stored).as_ref(), Some(&layout));
         let value: Value = serde_json::from_str(&stored).unwrap();
         assert_eq!(value["version"], LAYOUT_VERSION);
         assert_eq!(
