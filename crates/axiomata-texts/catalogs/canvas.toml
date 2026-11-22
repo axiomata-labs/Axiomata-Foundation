@@ -1,0 +1,660 @@
+# The texts of the canvas and what lives on it: the tiles' frame (`canvas/Tile.svelte`, `canvas/BackgroundHost.svelte`,
+# `canvas/EmptyCanvas.svelte`), the module names the tiles and pickers show (`modules/index.ts`, read through
+# `core/registry.ts` `moduleTitle`), the Terminal and Skills Deck tiles and their flip sides, the App Ring's dialogs,
+# the `ui/` kit, the app root's notices (`App.svelte`) and the helpers whose words these show (`core/appGroups.ts`,
+# `modules/bundledSkills.ts`). Skill names, app names, theme and font names, terminal output and command lines are
+# data and stay as they are (`docs/plans/i18n.md`, Q13).
+
+# The app root's notices about card sessions.
+[reviewStarted]
+en = "Card #{id}: a reviewer is checking it (Studio, Agents)."
+de = "Karte #{id}: Ein Reviewer prüft sie (Studio, Agents)."
+
+[reviewBlocked]
+en = "Card #{id} waits for a review: {reason}"
+de = "Karte #{id} wartet auf eine Prüfung: {reason}"
+
+[limitCard]
+en = "Card #{id}: {agent} was stopped at the limit ({reason})."
+de = "Karte #{id}: {agent} wurde an der Grenze gestoppt ({reason})."
+
+[limitPlan]
+en = "Plan #{id}: {agent} was stopped at the limit ({reason})."
+de = "Plan #{id}: {agent} wurde an der Grenze gestoppt ({reason})."
+
+# The module names (the English ones are also what the agent's manifest carries).
+[modMemory]
+en = "Memory"
+de = "Gedächtnis"
+
+[modSkillsDeck]
+en = "Skills Deck"
+de = "Skills Deck"
+
+[modRoutines]
+en = "Routines"
+de = "Routines"
+
+[modSecondBrain]
+en = "Second Brain"
+de = "Second Brain"
+
+[modFile]
+en = "File"
+de = "Datei"
+
+[modTodo]
+en = "ToDo"
+de = "ToDo"
+
+[modCalendar]
+en = "Calendar"
+de = "Kalender"
+
+[modReminders]
+en = "Reminders"
+de = "Erinnerungen"
+
+[modMail]
+en = "Mail"
+de = "Mail"
+
+[modTerminal]
+en = "Terminal"
+de = "Terminal"
+
+[modKanban]
+en = "Kanban"
+de = "Kanban"
+
+[modDummy]
+en = "Dummy"
+de = "Dummy"
+
+[modDummySingle]
+en = "Dummy (single)"
+de = "Dummy (einzeln)"
+
+# A tile's frame.
+[settings]
+en = "Settings"
+de = "Einstellungen"
+
+[remove]
+en = "Remove"
+de = "Entfernen"
+
+[removeModule]
+en = "Remove module"
+de = "Modul entfernen"
+
+[unknownModule]
+en = "Unknown module type “{type}”."
+de = "Unbekannter Modultyp „{type}“."
+
+[tileSettings]
+en = "{title} · Settings"
+de = "{title} · Einstellungen"
+
+[back]
+en = "Back"
+de = "Zurück"
+
+[flipBack]
+en = "Flip back"
+de = "Zurückdrehen"
+
+[moduleCanvas]
+en = "Module canvas"
+de = "Modul-Canvas"
+
+# The empty canvas.
+[emptyTitle]
+en = "Your dashboard is empty"
+de = "Dein Dashboard ist leer"
+
+[emptyText]
+en = "Add a module — a calendar, your skills, the routines, the Orbit behind it all."
+de = "Füge ein Modul hinzu — einen Kalender, deine Skills, die Routines, den Orbit hinter allem."
+
+[addAModule]
+en = "Add a module"
+de = "Modul hinzufügen"
+
+# A background module's corner.
+[motion]
+en = "Motion"
+de = "Bewegung"
+
+[reduceMotionOn]
+en = "macOS “Reduce motion” is on"
+de = "macOS „Bewegung reduzieren“ ist an"
+
+[pauseMotion]
+en = "Pause motion"
+de = "Bewegung anhalten"
+
+[startMotion]
+en = "Start motion"
+de = "Bewegung starten"
+
+[backgroundSettings]
+en = "Background settings"
+de = "Hintergrund-Einstellungen"
+
+[removeBackground]
+en = "Remove background"
+de = "Hintergrund entfernen"
+
+# The Terminal tile.
+[processExited]
+en = "[process exited]"
+de = "[Prozess beendet]"
+
+[historyBanner]
+en = "history — scroll down to return"
+de = "Verlauf — scrolle nach unten, um zurückzukehren"
+
+[programCopied]
+en = { one = "the program copied 1 character", other = "the program copied {n} characters" }
+de = { one = "das Programm hat 1 Zeichen kopiert", other = "das Programm hat {n} Zeichen kopiert" }
+
+# The Terminal's flip side.
+[loading]
+en = "Loading…"
+de = "Lade…"
+
+[session]
+en = "Session"
+de = "Sitzung"
+
+[shell]
+en = "Shell"
+de = "Shell"
+
+[startDirectory]
+en = "Start directory"
+de = "Startordner"
+
+[appDefault]
+en = "app default"
+de = "Standard der App"
+
+[scrollbackLines]
+en = "Scrollback (lines)"
+de = "Verlauf (Zeilen)"
+
+[envVars]
+en = "Environment variables"
+de = "Umgebungsvariablen"
+
+[visualBell]
+en = "Visual bell"
+de = "Visuelle Glocke"
+
+[sessionHint]
+en = "Shell, start directory, scrollback, environment variables, and visual bell apply to the next terminal spawned in any tile — not the one currently running."
+de = "Shell, Startordner, Verlauf, Umgebungsvariablen und visuelle Glocke gelten für das nächste Terminal, das in einer Kachel startet — nicht für das laufende."
+
+[font]
+en = "Font"
+de = "Schrift"
+
+[customFont]
+en = "Custom…"
+de = "Eigene…"
+
+[bundledFonts]
+en = "Bundled"
+de = "Mitgeliefert"
+
+[installedMono]
+en = "Installed on this Mac (monospaced)"
+de = "Auf diesem Mac installiert (dicktengleich)"
+
+[fontFamily]
+en = "Font family"
+de = "Schriftfamilie"
+
+[themeDefaultHint]
+en = "theme default"
+de = "Standard des Themes"
+
+[sizePx]
+en = "Size (px)"
+de = "Größe (px)"
+
+[weight]
+en = "Weight"
+de = "Stärke"
+
+[themeDefault]
+en = "Theme default"
+de = "Standard des Themes"
+
+[weight100]
+en = "Thin"
+de = "Dünn"
+
+[weight200]
+en = "Extra Light"
+de = "Extraleicht"
+
+[weight300]
+en = "Light"
+de = "Leicht"
+
+[weight400]
+en = "Regular"
+de = "Normal"
+
+[weight500]
+en = "Medium"
+de = "Mittel"
+
+[weight600]
+en = "Semi Bold"
+de = "Halbfett"
+
+[weight700]
+en = "Bold"
+de = "Fett"
+
+[weight800]
+en = "Extra Bold"
+de = "Extrafett"
+
+[weight900]
+en = "Black"
+de = "Schwarz"
+
+[appearance]
+en = "Appearance"
+de = "Darstellung"
+
+[theme]
+en = "Theme"
+de = "Theme"
+
+[themeIsDefault]
+en = "{name} (default)"
+de = "{name} (Standard)"
+
+[bgOpacity]
+en = "Background opacity"
+de = "Deckkraft des Hintergrunds"
+
+[cursorStyle]
+en = "Cursor style"
+de = "Cursorform"
+
+[cursorBlock]
+en = "Block"
+de = "Block"
+
+[cursorOutline]
+en = "Outline"
+de = "Umriss"
+
+[cursorUnderline]
+en = "Underline"
+de = "Unterstrich"
+
+[cursorBar]
+en = "Bar"
+de = "Balken"
+
+[cursorBlink]
+en = "Cursor blink"
+de = "Cursor blinkt"
+
+[boldBright]
+en = "Bold text in bright colour"
+de = "Fetten Text in hellen Farben"
+
+[appearanceHint]
+en = "Everything on this page applies live to every open terminal — no reopen or new session needed except where noted above. All settings are shared by every Terminal tile and saved to terminal-settings.json, not to this one tile."
+de = "Alles auf dieser Seite gilt sofort für jedes offene Terminal — kein Neuöffnen und keine neue Sitzung nötig, außer wo oben vermerkt. Alle Einstellungen teilen sich alle Terminal-Kacheln; sie liegen in terminal-settings.json, nicht in dieser einen Kachel."
+
+# The Skills Deck.
+[review]
+en = "Review"
+de = "Ansehen"
+
+[skippedTitle]
+en = "A skill directory with a broken or missing SKILL.md — see ~/.axiomata/skills/"
+de = "Ein Skill-Ordner mit kaputter oder fehlender SKILL.md — siehe ~/.axiomata/skills/"
+
+[skipped]
+en = "skipped"
+de = "übersprungen"
+
+[noSkills]
+en = "No skills in ~/.axiomata/skills/."
+de = "Keine Skills in ~/.axiomata/skills/."
+
+[noSkillsMatch]
+en = "No skills match the filter."
+de = "Kein Skill passt zum Filter."
+
+[backendSet]
+en = "set in the skill"
+de = "im Skill festgelegt"
+
+[backendDefault]
+en = "the skill harness of the settings"
+de = "der Skill-Harness aus den Einstellungen"
+
+[running]
+en = "running"
+de = "läuft"
+
+[resumeTitle]
+en = "Go on from where the run stopped"
+de = "Mache dort weiter, wo der Lauf stehen blieb"
+
+[resume]
+en = "resume"
+de = "fortsetzen"
+
+[dropTitle]
+en = "Give the interrupted run up"
+de = "Gib den unterbrochenen Lauf auf"
+
+[drop]
+en = "drop"
+de = "verwerfen"
+
+[runSkill]
+en = "Run {name}"
+de = "{name} ausführen"
+
+[runningEllipsis]
+en = "Running…"
+de = "Läuft…"
+
+[run]
+en = "Run"
+de = "Ausführen"
+
+[errRun]
+en = "run {name}: {error}"
+de = "Ausführen von {name}: {error}"
+
+[errResume]
+en = "resume {name}: {error}"
+de = "Fortsetzen von {name}: {error}"
+
+[errDrop]
+en = "drop {name}: {error}"
+de = "Verwerfen von {name}: {error}"
+
+[statusSuccess]
+en = "success"
+de = "erfolgreich"
+
+[statusFailed]
+en = "failed"
+de = "fehlgeschlagen"
+
+[statusRunning]
+en = "running"
+de = "läuft"
+
+[statusInterrupted]
+en = "interrupted"
+de = "unterbrochen"
+
+# The Skills Deck's flip side.
+[backend]
+en = "Backend"
+de = "Backend"
+
+[allBackends]
+en = "all"
+de = "alle"
+
+[order]
+en = "Order"
+de = "Reihenfolge"
+
+[byName]
+en = "by name"
+de = "nach Name"
+
+[recentFirst]
+en = "recently run first"
+de = "zuletzt ausgeführte zuerst"
+
+[bundledSkills]
+en = "Bundled skills"
+de = "Mitgelieferte Skills"
+
+[updateAllTitle]
+en = "Updates every outdated or missing bundled skill; never a copy you changed"
+de = "Aktualisiert jeden veralteten oder fehlenden mitgelieferten Skill; nie eine Kopie, die du geändert hast"
+
+[updateAll]
+en = "Update all outdated"
+de = "Alle veralteten aktualisieren"
+
+[readingBundled]
+en = "Reading the bundled skills…"
+de = "Lese die mitgelieferten Skills…"
+
+[update]
+en = "Update"
+de = "Aktualisieren"
+
+[updateName]
+en = "Update {name}"
+de = "{name} aktualisieren"
+
+[replaceNotice]
+en = "Your copy of /{name} will be replaced by the bundled version."
+de = "Deine Kopie von /{name} wird durch die mitgelieferte Version ersetzt."
+
+[replace]
+en = "Replace"
+de = "Ersetzen"
+
+[keepMine]
+en = "Keep mine"
+de = "Meine behalten"
+
+[onlyBundled]
+en = "Only skills that ship with the app are listed; your own skills are never touched."
+de = "Nur Skills, die mit der App kommen, stehen hier; deine eigenen Skills bleiben unberührt."
+
+[stateUpToDate]
+en = "up to date"
+de = "aktuell"
+
+[stateOutdated]
+en = "outdated"
+de = "veraltet"
+
+[stateMissing]
+en = "missing"
+de = "fehlt"
+
+[stateChanged]
+en = "changed by you"
+de = "von dir geändert"
+
+[stateDiffers]
+en = "differs — may be yours"
+de = "weicht ab — vielleicht deine"
+
+[bundledNotice]
+en = { one = "1 bundled skill has an update", other = "{n} bundled skills have updates" }
+de = { one = "Für 1 mitgelieferten Skill gibt es ein Update", other = "Für {n} mitgelieferte Skills gibt es Updates" }
+
+# The App Ring's right-click menu.
+[addToNewGroup]
+en = "Add to a new group"
+de = "Zu einer neuen Gruppe hinzufügen"
+
+[addToGroup]
+en = "Add to group “{name}”"
+de = "Zur Gruppe „{name}“ hinzufügen"
+
+[removeFromGroup]
+en = "Remove from group"
+de = "Aus Gruppe entfernen"
+
+[rename]
+en = "Rename"
+de = "Umbenennen"
+
+[changeIcon]
+en = "Change icon"
+de = "Symbol ändern"
+
+[confirmRemove]
+en = "Remove “{label}” from the ring?"
+de = "„{label}“ aus dem Ring entfernen?"
+
+[cancel]
+en = "Cancel"
+de = "Abbrechen"
+
+[newName]
+en = "New name"
+de = "Neuer Name"
+
+[apply]
+en = "Apply"
+de = "Übernehmen"
+
+[chooseIcon]
+en = "Choose an icon"
+de = "Wähle ein Symbol"
+
+[groupName]
+en = "Group {n}"
+de = "Gruppe {n}"
+
+# The App Ring's "+" dialog.
+[addApp]
+en = "Add app"
+de = "App hinzufügen"
+
+[internalOrExternal]
+en = "Internal or external"
+de = "Intern oder extern"
+
+[internal]
+en = "Internal"
+de = "Intern"
+
+[external]
+en = "External"
+de = "Extern"
+
+[search]
+en = "Search…"
+de = "Suchen…"
+
+[filterApps]
+en = "Filter apps"
+de = "Apps filtern"
+
+[noModulesFound]
+en = "No modules found."
+de = "Keine Module gefunden."
+
+[show]
+en = "Show"
+de = "Anzeigen"
+
+[hide]
+en = "Hide"
+de = "Ausblenden"
+
+[noAppsFound]
+en = "No apps found."
+de = "Keine Apps gefunden."
+
+[add]
+en = "Add"
+de = "Hinzufügen"
+
+[moreApps]
+en = "More apps not shown — use the search field."
+de = "Weitere Apps nicht angezeigt — nutze das Suchfeld."
+
+# The dev-only dummy module.
+[dummyModule]
+en = "dummy module · {id}"
+de = "Dummy-Modul · {id}"
+
+[dummyCompact]
+en = "compact: {state}"
+de = "kompakt: {state}"
+
+[on]
+en = "on"
+de = "an"
+
+[off]
+en = "off"
+de = "aus"
+
+[compactLayout]
+en = "Compact layout"
+de = "Kompaktes Layout"
+
+# A permission request's answers.
+[allow]
+en = "Allow"
+de = "Erlauben"
+
+[deny]
+en = "Deny"
+de = "Ablehnen"
+
+[inTerminal]
+en = "In terminal"
+de = "Im Terminal"
+
+[allowTitle]
+en = "Allow this once"
+de = "Dieses eine Mal erlauben"
+
+[denyTitle]
+en = "Refuse it; the agent is told you declined"
+de = "Ablehnen; der Agent erfährt, dass du abgelehnt hast"
+
+[terminalTitle]
+en = "Answer it in the agent's terminal instead"
+de = "Stattdessen im Terminal des Agenten antworten"
+
+[couldNotAnswer]
+en = "Could not answer: {error}"
+de = "Antwort nicht möglich: {error}"
+
+# The rest of the kit.
+[refetchModels]
+en = "Fetch the model list again"
+de = "Modellliste neu abrufen"
+
+[notInCatalog]
+en = "Not in the provider's catalog — kept as typed."
+de = "Nicht im Katalog des Anbieters — so übernommen, wie eingegeben."
+
+[fetchingModels]
+en = "Fetching the model list…"
+de = "Rufe die Modellliste ab…"
+
+[fewerDetails]
+en = "Fewer details"
+de = "Weniger Details"
+
+[moreDetails]
+en = "More details"
+de = "Mehr Details"
+
+[closeKeys]
+en = "Close ({keys})"
+de = "Schließen ({keys})"
