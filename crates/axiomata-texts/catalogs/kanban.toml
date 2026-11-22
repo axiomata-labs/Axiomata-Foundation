@@ -1,0 +1,780 @@
+# The texts of the Kanban board: the board panel and a card's detail (`modules/kanban.svelte`), the boards popover
+# (`modules/KanbanBoards.svelte`), a card's step forms and usage (`modules/Card*.svelte`), the waiting badge
+# (`ui/WaitingBadge.svelte`) and the pure helpers whose words only they show (`core/kanban.ts`, `ide/cardPlan.ts`,
+# `core/agentWaiting.ts` `waitedFor`, `modules/kanbanApp.ts`). Column names, labels and a card's own text are data and
+# never pass through here; the tiers Light/Medium/Heavy and role names stay as they are (`docs/plans/i18n.md`, Q13).
+
+# A card's state as the board shows it (`core/kanban.ts` `STATE_LABEL`).
+[stateProposed]
+en = "proposal"
+de = "Vorschlag"
+
+[stateBlocked]
+en = "waiting"
+de = "wartet"
+
+[stateReady]
+en = "ready"
+de = "bereit"
+
+[stateWorking]
+en = "in progress"
+de = "in Arbeit"
+
+[statePlanned]
+en = "plan"
+de = "Plan"
+
+[stateInputRequired]
+en = "question"
+de = "Frage"
+
+[stateInReview]
+en = "in review"
+de = "in Prüfung"
+
+[stateDone]
+en = "done"
+de = "erledigt"
+
+[stateVerified]
+en = "checked"
+de = "geprüft"
+
+[stateIntegrated]
+en = "in the plan"
+de = "im Plan"
+
+[stateTakenOver]
+en = "taken over"
+de = "übernommen"
+
+[stateFailed]
+en = "failed"
+de = "fehlgeschlagen"
+
+[stateCanceled]
+en = "canceled"
+de = "abgesagt"
+
+# A line of a card's history (`core/kanban.ts` `EVENT_LABEL`).
+[eventStarted]
+en = "started"
+de = "gestartet"
+
+[eventReported]
+en = "reported done"
+de = "als erledigt gemeldet"
+
+[eventApproved]
+en = "checked"
+de = "geprüft"
+
+[eventReturned]
+en = "returned"
+de = "zurückgegeben"
+
+[eventEscalated]
+en = "escalated"
+de = "eskaliert"
+
+[eventLimitStop]
+en = "limit reached"
+de = "Grenze erreicht"
+
+[eventInputRequired]
+en = "question"
+de = "Frage"
+
+[eventInputProvided]
+en = "answered"
+de = "beantwortet"
+
+[eventFailed]
+en = "failed"
+de = "fehlgeschlagen"
+
+[eventCanceled]
+en = "called off"
+de = "abgesagt"
+
+[eventReleased]
+en = "released"
+de = "freigegeben"
+
+[eventTakenOver]
+en = "taken over"
+de = "übernommen"
+
+[eventIntegrated]
+en = "taken into the plan"
+de = "in den Plan übernommen"
+
+[eventNote]
+en = "note"
+de = "Notiz"
+
+# Where a plan made from a card stands (`ide/cardPlan.ts` `PHASE_LABEL`).
+[phasePlanning]
+en = "planning"
+de = "plant"
+
+[phaseRunning]
+en = "running"
+de = "läuft"
+
+[phaseWaiting]
+en = "waits for your take-over"
+de = "wartet auf deine Übernahme"
+
+# A due date (`core/kanban.ts` `dueState`).
+[dueOverdue]
+en = "{n} d overdue"
+de = "{n} T überfällig"
+
+[dueToday]
+en = "today"
+de = "heute"
+
+[dueTomorrow]
+en = "tomorrow"
+de = "morgen"
+
+[dueIn]
+en = "in {n} d"
+de = "in {n} T"
+
+# How long an agent has waited (`core/agentWaiting.ts` `waitedFor`).
+[waitedNow]
+en = "now"
+de = "jetzt"
+
+[waitedMinutes]
+en = "{n} min"
+de = "{n} Min."
+
+[waitedHours]
+en = "{n} h"
+de = "{n} Std."
+
+# What a column's role means.
+[roleOpen]
+en = "open"
+de = "offen"
+
+[roleDoing]
+en = "in progress"
+de = "in Arbeit"
+
+[roleDone]
+en = "done"
+de = "erledigt"
+
+# A card on the board.
+[approvedBy]
+en = "approved by {name}"
+de = "abgenommen von {name}"
+
+[planBadge]
+en = "plan · {phase}"
+de = "Plan · {phase}"
+
+[planBadgeSteps]
+en = "plan · {phase} · {done}/{total}"
+de = "Plan · {phase} · {done}/{total}"
+
+[stateOn]
+en = "{state} on {ids}"
+de = "{state} auf {ids}"
+
+[returnedByReviewer]
+en = "returned by the reviewer"
+de = "vom Reviewer zurückgegeben"
+
+# A card's detail.
+[cardNumber]
+en = "Card #{id}"
+de = "Karte #{id}"
+
+[title]
+en = "Title"
+de = "Titel"
+
+[text]
+en = "Text"
+de = "Text"
+
+[noText]
+en = "No text."
+de = "Kein Text."
+
+[labels]
+en = "Labels"
+de = "Labels"
+
+[labelsPlaceholder]
+en = "rust, design"
+de = "rust, design"
+
+[due]
+en = "Due"
+de = "Fällig"
+
+[assignedTo]
+en = "Assigned to"
+de = "Zugewiesen an"
+
+[assigneePlaceholder]
+en = "human:owner or agent:name"
+de = "human:owner oder agent:name"
+
+[agentFlow]
+en = "Agent flow"
+de = "Agenten-Flow"
+
+[kind]
+en = "Kind"
+de = "Art"
+
+[kindPlaceholder]
+en = "implement, review, test, doc"
+de = "implement, review, test, doc"
+
+[rolePlaceholder]
+en = "e.g. allrounder"
+de = "z. B. allrounder"
+
+[reason]
+en = "Reason"
+de = "Begründung"
+
+[reasonPlaceholder]
+en = "why this role"
+de = "warum diese Rolle"
+
+[plan]
+en = "Plan"
+de = "Plan"
+
+[goalOfPlan]
+en = "The goal of plan #{id}; it is no step of a plan"
+de = "Das Ziel von Plan #{id}; es ist kein Schritt eines Plans"
+
+[noPlan]
+en = "no plan"
+de = "kein Plan"
+
+[acceptancePlaceholder]
+en = "Acceptance criteria — how the reviewer tells the card is done."
+de = "Abnahmekriterien — woran der Reviewer erkennt, dass die Karte fertig ist."
+
+[removeDependency]
+en = "Remove dependency on #{id}"
+de = "Abhängigkeit von #{id} entfernen"
+
+[addDependency]
+en = "Add dependency"
+de = "Abhängigkeit hinzufügen"
+
+[addDependencyOption]
+en = "+ Dependency…"
+de = "+ Abhängigkeit…"
+
+[none]
+en = "none"
+de = "keine"
+
+[state]
+en = "State"
+de = "Zustand"
+
+[returnedTimes]
+en = "{n}× returned"
+de = "{n}× zurückgegeben"
+
+[stepsDone]
+en = "{done}/{total} steps done"
+de = "{done}/{total} Schritte erledigt"
+
+[question]
+en = "Question"
+de = "Frage"
+
+[dueLabel]
+en = "Due"
+de = "Fällig"
+
+[claimedBy]
+en = "Claimed by"
+de = "Beansprucht von"
+
+[approvedByLabel]
+en = "Approved by"
+de = "Abgenommen von"
+
+[archived]
+en = "Archived"
+de = "Archiviert"
+
+[yes]
+en = "yes"
+de = "ja"
+
+[takeOverInFlowTitle]
+en = "Every step is ready: take the plan over in the Flow"
+de = "Jeder Schritt ist bereit: übernimm den Plan im Flow"
+
+[openInFlowTitle]
+en = "The plan's steps, planner and graph"
+de = "Die Schritte des Plans, Planer und Graph"
+
+[takeOverInFlow]
+en = "Take over in the Flow…"
+de = "Im Flow übernehmen…"
+
+[openInFlow]
+en = "Open in the Flow"
+de = "Im Flow öffnen"
+
+[startAsPlanTitle]
+en = "The card becomes a plan: a planner splits it, then it runs by itself"
+de = "Die Karte wird ein Plan: ein Planer zerlegt sie, dann läuft sie von selbst"
+
+[startEllipsis]
+en = "Start…"
+de = "Starten…"
+
+[startReviewTitle]
+en = "The reviewer starts by itself; here with an engine of your choice"
+de = "Der Reviewer startet von selbst; hier mit einer Engine deiner Wahl"
+
+[startReviewEllipsis]
+en = "Start review…"
+de = "Prüfung starten…"
+
+[takeOverEllipsis]
+en = "Take over…"
+de = "Übernehmen…"
+
+[releaseTitle]
+en = "The card waits in Open again; the session's secret is withdrawn"
+de = "Die Karte wartet wieder in Open; das Geheimnis der Sitzung wird entzogen"
+
+[release]
+en = "Release"
+de = "Freigeben"
+
+[acceptProposal]
+en = "Accept proposal"
+de = "Vorschlag annehmen"
+
+[reopen]
+en = "Reopen"
+de = "Wieder öffnen"
+
+[callOff]
+en = "Call off"
+de = "Absagen"
+
+[archive]
+en = "Archive"
+de = "Archivieren"
+
+[restore]
+en = "Restore"
+de = "Wiederherstellen"
+
+[writeNote]
+en = "Write a note…"
+de = "Schreibe eine Notiz…"
+
+[noteLabel]
+en = "Note for the history"
+de = "Notiz für den Verlauf"
+
+[nothingYet]
+en = "Nothing has happened yet."
+de = "Noch nichts passiert."
+
+# The board panel.
+[noBoardYet]
+en = "No board yet"
+de = "Noch kein Board"
+
+[createFirstBelow]
+en = "Create the first one below."
+de = "Lege unten das erste an."
+
+[loading]
+en = "Loading…"
+de = "Lade…"
+
+[cardGone]
+en = "This card no longer exists."
+de = "Diese Karte gibt es nicht mehr."
+
+[chooseBoard]
+en = "Choose a board"
+de = "Wähle ein Board"
+
+[filterPlaceholder]
+en = "Filter cards…"
+de = "Karten filtern…"
+
+[filterLabel]
+en = "Filter cards"
+de = "Karten filtern"
+
+[hideArchived]
+en = "Hide archived cards"
+de = "Archivierte Karten ausblenden"
+
+[showArchived]
+en = "Show archived cards"
+de = "Archivierte Karten zeigen"
+
+[reloadBoard]
+en = "Reload the board"
+de = "Board neu laden"
+
+[addColumn]
+en = "Add a column"
+de = "Spalte hinzufügen"
+
+[boardsAndView]
+en = "Boards & view"
+de = "Boards & Ansicht"
+
+[columnName]
+en = "Name of the column"
+de = "Name der Spalte"
+
+[columnActions]
+en = "Column {name}: actions"
+de = "Spalte {name}: Aktionen"
+
+[rename]
+en = "Rename"
+de = "Umbenennen"
+
+[remove]
+en = "Remove"
+de = "Entfernen"
+
+[reviewColumn]
+en = "Review column of the flow — stays on every board"
+de = "Review-Spalte des Flows — bleibt auf jedem Board"
+
+[proposalColumn]
+en = "Proposal column of the flow — stays on every board"
+de = "Vorschlagsspalte des Flows — bleibt auf jedem Board"
+
+[removeColumn]
+en = "Remove the column?"
+de = "Spalte entfernen?"
+
+[cardsWhereTo]
+en = { one = "{n} card — where to?", other = "{n} cards — where to?" }
+de = { one = "{n} Karte — wohin?", other = "{n} Karten — wohin?" }
+
+[targetColumn]
+en = "Target column"
+de = "Zielspalte"
+
+[choose]
+en = "choose…"
+de = "wählen…"
+
+[noCards]
+en = "No cards"
+de = "Keine Karten"
+
+[newCardPlaceholder]
+en = "Title, Enter"
+de = "Titel, Enter"
+
+[newCardLabel]
+en = "Title of the new card"
+de = "Titel der neuen Karte"
+
+[addCard]
+en = "Card"
+de = "Karte"
+
+[card]
+en = "Card"
+de = "Karte"
+
+[closeCard]
+en = "Close the card (Esc)"
+de = "Karte schließen (Esc)"
+
+[boardEmpty]
+en = "Nothing here yet — create the first card in a column below."
+de = "Noch nichts hier — lege die erste Karte unten in einer Spalte an."
+
+[newColumn]
+en = "New column"
+de = "Neue Spalte"
+
+[columnHoldsCards]
+en = "The column still holds cards — choose where they should go."
+de = "Die Spalte enthält noch Karten — wähle, wohin sie sollen."
+
+[deletedCard]
+en = "deleted"
+de = "gelöscht"
+
+# Moving a card by keyboard, for a screen reader.
+[pickedUp]
+en = "{title} picked up. Arrow keys move, Space drops, Escape cancels."
+de = "{title} aufgenommen. Pfeiltasten verschieben, Leertaste legt ab, Escape bricht ab."
+
+[pickedUpAt]
+en = "{title} picked up — {column}, position {n}. Arrow keys move, Space drops, Escape cancels."
+de = "{title} aufgenommen — {column}, Position {n}. Pfeiltasten verschieben, Leertaste legt ab, Escape bricht ab."
+
+[dropped]
+en = "{title} dropped."
+de = "{title} abgelegt."
+
+[staysPut]
+en = "{title} stays where it was."
+de = "{title} bleibt, wo sie war."
+
+# What closing the panel would lose.
+[lostTitle]
+en = "the new card title “{title}” not yet added"
+de = "der neue Kartentitel „{title}“, noch nicht hinzugefügt"
+
+[lostNote]
+en = "the history note “{note}” not yet written"
+de = "die Verlaufsnotiz „{note}“, noch nicht geschrieben"
+
+[lostForm]
+en = "the open {form} form of card #{card} with what was entered in it"
+de = "das offene Formular „{form}“ von Karte #{card} mit dem, was darin eingegeben wurde"
+
+[formPlan]
+en = "plan"
+de = "Plan"
+
+[formStart]
+en = "start"
+de = "Start"
+
+[formReview]
+en = "review"
+de = "Prüfung"
+
+[formTakeOver]
+en = "take-over"
+de = "Übernahme"
+
+[and]
+en = "and"
+de = "und"
+
+# The boards popover (`KanbanBoards.svelte`).
+[boards]
+en = "Boards"
+de = "Boards"
+
+[noBoardCreated]
+en = "No board created yet."
+de = "Noch kein Board angelegt."
+
+[boardName]
+en = "Name of the board"
+de = "Name des Boards"
+
+[deleteBoard]
+en = "Delete the board"
+de = "Board löschen"
+
+[deleteBoardQuestion]
+en = "Delete the board?"
+de = "Board löschen?"
+
+[cardsDeletedWith]
+en = { one = "{n} card is deleted with it.", other = "{n} cards are deleted with it." }
+de = { one = "{n} Karte wird mit gelöscht.", other = "{n} Karten werden mit gelöscht." }
+
+[newBoard]
+en = "New board…"
+de = "Neues Board…"
+
+[newBoardName]
+en = "Name of the new board"
+de = "Name des neuen Boards"
+
+[create]
+en = "Create"
+de = "Anlegen"
+
+[cards]
+en = "Cards"
+de = "Karten"
+
+[colourStripe]
+en = "Colour stripe by the first label"
+de = "Farbstreifen nach dem ersten Label"
+
+[allBoards]
+en = "Applies to all boards."
+de = "Gilt für alle Boards."
+
+[loadBoardsFailed]
+en = "Kanban could not load the boards: {error}"
+de = "Kanban konnte die Boards nicht laden: {error}"
+
+# A card's step forms (`CardStartForm`, `CardPlanStartForm`, `CardReviewForm`, `CardTakeOverForm`).
+[noProject]
+en = "There is no project the card could run in. Create one in the Studio."
+de = "Es gibt kein Projekt, in dem die Karte laufen könnte. Lege eins im Studio an."
+
+[project]
+en = "Project"
+de = "Projekt"
+
+[engine]
+en = "Engine"
+de = "Engine"
+
+[roleOwnEngine]
+en = "The role {role}'s own"
+de = "Die eigene der Rolle {role}"
+
+[roleOwnEngineWith]
+en = "The role {role}'s own ({engine})"
+de = "Die eigene der Rolle {role} ({engine})"
+
+[roleNamesNoEngine]
+en = "The role “{role}” names no engine — pick one."
+de = "Die Rolle „{role}“ nennt keine Engine — wähle eine."
+
+[starting]
+en = "Starting…"
+de = "Starte…"
+
+[start]
+en = "Start"
+de = "Starten"
+
+[startedInSession]
+en = "Card #{id} runs in the session {name}."
+de = "Karte #{id} läuft in der Sitzung {name}."
+
+[startAsPlan]
+en = "Start as plan"
+de = "Als Plan starten"
+
+[nowPlan]
+en = "Card #{id} is now plan #{plan}: start its planner in the Flow."
+de = "Karte #{id} ist jetzt Plan #{plan}: starte seinen Planer im Flow."
+
+[planStartHint]
+en = "The card becomes a plan. In the Studio you choose whether to be grilled and start the planner, which proposes the steps. Once you release the plan, the steps run by themselves (up to $5 unless you change it) and the card moves along — to Review when everything is ready for your take-over."
+de = "Die Karte wird ein Plan. Im Studio wählst du, ob du gegrillt wirst, und startest den Planer, der die Schritte vorschlägt. Sobald du den Plan freigibst, laufen die Schritte von selbst (bis 5 $, wenn du es nicht änderst), und die Karte zieht mit — nach Review, wenn alles für deine Übernahme bereit ist."
+
+[reviewerEngine]
+en = "The reviewer's engine"
+de = "Engine des Reviewers"
+
+[reviewerOwnEngine]
+en = "The reviewer role's own"
+de = "Die eigene der Rolle reviewer"
+
+[reviewerOwnEngineWith]
+en = "The reviewer role's own ({engine})"
+de = "Die eigene der Rolle reviewer ({engine})"
+
+[allowAgentConfig]
+en = "Even if the work changes the configuration of agents (.claude, .mcp.json, opencode.json, AGENTS.md…)"
+de = "Auch wenn die Arbeit die Konfiguration von Agenten ändert (.claude, .mcp.json, opencode.json, AGENTS.md…)"
+
+[startReview]
+en = "Start review"
+de = "Prüfung starten"
+
+[beingReviewed]
+en = "Card #{id} is being reviewed by {name}."
+de = "Karte #{id} wird von {name} geprüft."
+
+[commitMessage]
+en = "Commit message"
+de = "Commit-Nachricht"
+
+[takeOverHint]
+en = "Exactly the state the reviewer saw is taken over, as one commit on the project's main branch. Nothing is pushed."
+de = "Übernommen wird genau der Stand, den der Reviewer gesehen hat, als ein Commit auf dem Haupt-Branch des Projekts. Es wird nichts gepusht."
+
+[takeOverConflict]
+en = "Conflict, nothing was changed. These files are in conflict: {files}"
+de = "Konflikt, nichts wurde verändert. Diese Dateien sind in Konflikt: {files}"
+
+[takingOver]
+en = "Taking over…"
+de = "Übernehme…"
+
+[takeOver]
+en = "Take over"
+de = "Übernehmen"
+
+[alreadyOnBase]
+en = "Card #{id} closed: its work was already on the main line ({commit}), so nothing was committed."
+de = "Karte #{id} geschlossen: ihre Arbeit war schon auf dem Haupt-Branch ({commit}), also wurde nichts committet."
+
+[takenOver]
+en = "Card #{id} was taken over ({commit})."
+de = "Karte #{id} wurde übernommen ({commit})."
+
+# A card's usage (`CardUsage.svelte`).
+[usage]
+en = "Usage"
+de = "Verbrauch"
+
+[reviewer]
+en = "Reviewer"
+de = "Reviewer"
+
+[worker]
+en = "Worker"
+de = "Bearbeiter"
+
+[usageUnknown]
+en = "Usage unknown."
+de = "Verbrauch unbekannt."
+
+[stopped]
+en = "Stopped: {reason}"
+de = "Gestoppt: {reason}"
+
+# The waiting badge (`ui/WaitingBadge.svelte`).
+[anAgent]
+en = "An agent"
+de = "Ein Agent"
+
+[agentWaiting]
+en = "{name} is waiting for you"
+de = "{name} wartet auf dich"
+
+[agentsWaiting]
+en = "{n} agents are waiting for you"
+de = "{n} Agenten warten auf dich"
+
+[agentsWaitingLabel]
+en = "Agents waiting for you"
+de = "Agenten, die auf dich warten"
+
+[waitingForYou]
+en = "Waiting for you"
+de = "Wartet auf dich"
+
+[noCard]
+en = "no card"
+de = "keine Karte"
+
+[waitsOnPlan]
+en = "waits for your answer on its plan"
+de = "wartet auf deine Antwort zu seinem Plan"
