@@ -1,0 +1,53 @@
+#  The words of `core/format.ts`: how long ago, how long until, which day.
+
+[never]
+en = "never"
+de = "nie"
+
+[justNow]
+en = "just now"
+de = "gerade eben"
+
+[minutesAgo]
+en = "{n} min ago"
+de = "vor {n} Min."
+
+[hoursAgo]
+en = "{n} h ago"
+de = "vor {n} Std."
+
+[daysAgo]
+en = { one = "1 d ago", other = "{n} d ago" }
+de = { one = "vor 1 Tag", other = "vor {n} Tagen" }
+
+[none]
+en = "—"
+de = "—"
+
+[due]
+en = "due"
+de = "fällig"
+
+[inUnderAMinute]
+en = "in <1 min"
+de = "in <1 Min."
+
+[inMinutes]
+en = "in {n} min"
+de = "in {n} Min."
+
+[inHours]
+en = "in {n} h"
+de = "in {n} Std."
+
+[inDays]
+en = { one = "in 1 d", other = "in {n} d" }
+de = { one = "in 1 Tag", other = "in {n} Tagen" }
+
+[today]
+en = "Today"
+de = "Heute"
+
+[tomorrow]
+en = "Tomorrow"
+de = "Morgen"
