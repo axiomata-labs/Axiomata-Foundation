@@ -1,0 +1,116 @@
+# The texts of Lirvel in Axiomata (`shell/LirvelTalk.svelte`, `shell/LirvelCorner.svelte`): her words and cards around
+# the Orbit, her small picture in the corner, the choice of her form. Her own words, the owner's heard words and what
+# she found arrive already in the owner's
+# language from Lirvel and are never translated here.
+
+[loading]
+en = "She is getting ready…"
+de = "Sie macht sich bereit …"
+
+[summoned]
+en = "A click on her begins the conversation."
+de = "Ein Klick auf sie beginnt das Gespräch."
+
+[paused]
+en = "Paused – a click goes on."
+de = "Pausiert – ein Klick setzt fort."
+
+[end]
+en = "End the conversation"
+de = "Gespräch beenden"
+
+[noDevice]
+en = "No microphone or speakers within reach – she is waiting for them."
+de = "Kein Mikrofon oder Lautsprecher erreichbar – sie wartet darauf."
+
+[heard]
+en = "“{heard}”"
+de = "„{heard}“"
+
+[yes]
+en = "Yes"
+de = "Ja"
+
+[no]
+en = "No"
+de = "Nein"
+
+[undo]
+en = "Undo"
+de = "Rückgängig"
+
+[journalOffer]
+en = "Write the conversation into the journal?"
+de = "Das Gespräch ins Journal schreiben?"
+
+[journalWriting]
+en = "Writing into the journal …"
+de = "Schreibe ins Journal …"
+
+[journalWritten]
+en = "In the journal: “{title}”"
+de = "Im Journal: „{title}“"
+
+[journalFailed]
+en = "Lirvel could not write it into the journal."
+de = "Lirvel konnte es nicht ins Journal schreiben."
+
+[done]
+en = "Done."
+de = "Erledigt."
+
+[undone]
+en = "Taken back."
+de = "Zurückgenommen."
+
+[whole]
+en = "This needs a whole sentence from you."
+de = "Dafür braucht sie einen ganzen Satz von dir."
+
+[more]
+en = "and {count} more"
+de = "und {count} weitere"
+
+[settings]
+en = "Set up Lirvel"
+de = "Lirvel einstellen"
+
+[corner]
+en = "Lirvel — a click pauses the conversation or goes on"
+de = "Lirvel — ein Klick pausiert das Gespräch oder setzt fort"
+
+[failed]
+en = "Lirvel did not answer: {error}"
+de = "Lirvel hat nicht geantwortet: {error}"
+
+[formTitle]
+en = "Lirvel's form"
+de = "Lirvels Form"
+
+[formHint]
+en = "The shape Lirvel shows herself in, here and in her own window. Each tile plays a short conversation: she listens, thinks, speaks."
+de = "Die Gestalt, in der Lirvel sich zeigt, hier und in ihrem eigenen Fenster. Jede Kachel spielt ein kurzes Gespräch: Lirvel hört, denkt, spricht."
+
+[formNeedsLirvel]
+en = " Start Lirvel to choose another form."
+de = " Starte Lirvel, um eine andere Form zu wählen."
+
+[formSchwarm]
+en = "Flock"
+de = "Schwarm"
+
+[formSaiten]
+en = "Strings"
+de = "Saiten"
+
+[formKlangsand]
+en = "Sand"
+de = "Klangsand"
+
+[formSchleier]
+en = "Veils"
+de = "Schleier"
+
+[formFaden]
+en = "Thread"
+de = "Faden"
