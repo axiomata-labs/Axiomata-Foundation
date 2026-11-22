@@ -1,0 +1,685 @@
+# The texts of the day-to-day tiles: Calendar, Reminders, Mail, ToDo and Routines (`modules/calendar.svelte`,
+# `modules/reminders.svelte`, `modules/mail.svelte`, `modules/todo.svelte`, `modules/routines-board.svelte`, their
+# settings faces and parts) and of the helpers whose words they show (`core/skillRun.ts`' digest notes,
+# `core/calendar.ts`, `core/mail.ts`, `core/routineInterval.ts`). Event titles, reminders, mail subjects and senders,
+# todo items, skill names and cron strings are data and stay as they are; weekday and month names come from
+# `core/format.ts`. A text that wraps a `<code>` piece is split around it (`…Before` / `…After`), so German may
+# place the piece where its word order needs it.
+
+# Shared by the digest tiles (Calendar, Reminders, Mail).
+[lastRunTitle]
+en = "Last run: {when}"
+de = "Letzter Lauf: {when}"
+
+[noRunYet]
+en = "No run yet"
+de = "Noch kein Lauf"
+
+[neverRun]
+en = "never run"
+de = "nie gelaufen"
+
+[refresh]
+en = "Refresh"
+de = "Aktualisieren"
+
+[runNow]
+en = "Run {skill} now"
+de = "{skill} jetzt laufen lassen"
+
+[loading]
+en = "Loading…"
+de = "Lade…"
+
+[firstRunBefore]
+en = "Running "
+de = "Erster Lauf von "
+
+[firstRunAfter]
+en = " for the first time…"
+de = "…"
+
+[firstRunSlowAfter]
+en = " for the first time — this can take a while…"
+de = " — das kann dauern…"
+
+[noDataBefore]
+en = "No data yet — run "
+de = "Noch keine Daten — starte "
+
+[noDataAfter]
+en = " from the Skills Deck, schedule it as a Routine, or hit ↻ above."
+de = " im Skills Deck, plane es als Routine oder klicke oben auf ↻."
+
+[lastRunFailed]
+en = "Last run failed."
+de = "Der letzte Lauf ist fehlgeschlagen."
+
+[currentlyCallingBefore]
+en = "Currently calling "
+de = "Ruft gerade "
+
+[currentlyCallingAfter]
+en = "."
+de = " auf."
+
+[titlePlaceholder]
+en = "Title…"
+de = "Titel…"
+
+[create]
+en = "Create"
+de = "Anlegen"
+
+[creating]
+en = "Creating…"
+de = "Lege an…"
+
+[cancel]
+en = "Cancel"
+de = "Abbrechen"
+
+[save]
+en = "Save"
+de = "Speichern"
+
+[saving]
+en = "Saving…"
+de = "Speichere…"
+
+[saved]
+en = "Saved."
+de = "Gespeichert."
+
+[deleteItem]
+en = "Delete \"{name}\""
+de = "„{name}“ löschen"
+
+[markDone]
+en = "Mark \"{name}\" done"
+de = "„{name}“ als erledigt markieren"
+
+# The skill name field on a digest tile's settings face.
+[skillName]
+en = "Skill name"
+de = "Skill-Name"
+
+[skillNameHintBefore]
+en = "Runs once when this tile first mounts (app start, or right after you place it) and whenever you hit ↻ — never on a repeating timer. For a recurring refresh, schedule "
+de = "Läuft einmal, wenn diese Kachel erscheint (beim App-Start oder gleich nachdem du sie platziert hast), und wann immer du auf ↻ klickst — nie nach einem festen Takt. Für eine regelmäßige Aktualisierung plane "
+
+[skillNameHintAfter]
+en = " (or whatever you've renamed it to here) as a Routine instead."
+de = " (oder wie du ihn hier umbenannt hast) stattdessen als Routine."
+
+# Reading back a digest skill's latest run (`core/skillRun.ts`, the digest parsers).
+[staleNote]
+en = "The latest run ({when}) could not be used: {reason}."
+de = "Der letzte Lauf ({when}) war nicht verwendbar: {reason}."
+
+[staleNoteShown]
+en = "The latest run ({when}) could not be used: {reason} — showing the digest from {shown}."
+de = "Der letzte Lauf ({when}) war nicht verwendbar: {reason} — gezeigt wird der Stand von {shown}."
+
+[reasonRunFailed]
+en = "the run failed"
+de = "der Lauf ist fehlgeschlagen"
+
+[reasonRecordMissing]
+en = "its record was not found"
+de = "sein Eintrag wurde nicht gefunden"
+
+[reasonNoOutput]
+en = "it produced no output"
+de = "er hat nichts ausgegeben"
+
+[reasonNoJson]
+en = "its output held no readable JSON"
+de = "seine Ausgabe enthielt kein lesbares JSON"
+
+[runRecordNotFound]
+en = "Run record not found."
+de = "Eintrag des Laufs nicht gefunden."
+
+[lastRunNoOutput]
+en = "Last run produced no output."
+de = "Der letzte Lauf hat nichts ausgegeben."
+
+[noJsonObject]
+en = "no JSON object found"
+de = "kein JSON-Objekt gefunden"
+
+[outputNotJson]
+en = "{skill} output was not valid JSON: {reason}"
+de = "Die Ausgabe von {skill} war kein gültiges JSON: {reason}"
+
+[outputNotObject]
+en = "{skill} output was not a JSON object"
+de = "Die Ausgabe von {skill} war kein JSON-Objekt"
+
+# Calendar.
+[filterByCalendar]
+en = "Filter by calendar"
+de = "Nach Kalender filtern"
+
+[allCalendars]
+en = "All calendars"
+de = "Alle Kalender"
+
+[newEvent]
+en = "New event"
+de = "Neuer Termin"
+
+[rangeHint]
+en = "Only this and the next month are loaded — ↻ refreshes."
+de = "Geladen sind nur dieser und der nächste Monat — ↻ aktualisiert."
+
+[noEvents]
+en = "No events in this period."
+de = "Keine Termine in diesem Zeitraum."
+
+[noEventsIn]
+en = "No events in “{calendar}” in this period."
+de = "Keine Termine in „{calendar}“ in diesem Zeitraum."
+
+[allDay]
+en = "All day"
+de = "Ganztägig"
+
+[agendaDays]
+en = "Days in the agenda"
+de = "Tage in der Agenda"
+
+[clockNext]
+en = "Clock next to the calendar"
+de = "Uhr neben dem Kalender"
+
+[clockStyle]
+en = "Clock style"
+de = "Art der Uhr"
+
+[clockDigital]
+en = "Digital"
+de = "Digital"
+
+[clockArc]
+en = "Day arc"
+de = "Tagesbogen"
+
+[calendar]
+en = "Calendar"
+de = "Kalender"
+
+[startTime]
+en = "Start time"
+de = "Beginn"
+
+[endTime]
+en = "End time"
+de = "Ende"
+
+[locationPlaceholder]
+en = "Location (optional)…"
+de = "Ort (optional)…"
+
+[repeat]
+en = "Repeat"
+de = "Wiederholen"
+
+[repeatNone]
+en = "Does not repeat"
+de = "Keine Wiederholung"
+
+[repeatDaily]
+en = "Daily"
+de = "Täglich"
+
+[repeatWeekly]
+en = "Weekly"
+de = "Wöchentlich"
+
+[repeatMonthly]
+en = "Monthly"
+de = "Monatlich"
+
+[repeatYearly]
+en = "Yearly"
+de = "Jährlich"
+
+[unitDays]
+en = { one = "day", other = "days" }
+de = { one = "Tag", other = "Tage" }
+
+[unitWeeks]
+en = { one = "week", other = "weeks" }
+de = { one = "Woche", other = "Wochen" }
+
+[unitMonths]
+en = { one = "month", other = "months" }
+de = { one = "Monat", other = "Monate" }
+
+[unitYears]
+en = { one = "year", other = "years" }
+de = { one = "Jahr", other = "Jahre" }
+
+[everyDays]
+en = { one = "Every", other = "Every" }
+de = { one = "Jeden", other = "Alle" }
+
+[everyWeeks]
+en = { one = "Every", other = "Every" }
+de = { one = "Jede", other = "Alle" }
+
+[everyMonths]
+en = { one = "Every", other = "Every" }
+de = { one = "Jeden", other = "Alle" }
+
+[everyYears]
+en = { one = "Every", other = "Every" }
+de = { one = "Jedes", other = "Alle" }
+
+[until]
+en = "until"
+de = "bis"
+
+[interval]
+en = "Interval"
+de = "Abstand"
+
+[repeatUntil]
+en = "Repeat until"
+de = "Wiederholen bis"
+
+[untilBeforeStart]
+en = "The repetition ends before the first event."
+de = "Die Wiederholung endet vor dem ersten Termin."
+
+[previousMonth]
+en = "Previous month"
+de = "Voriger Monat"
+
+[nextMonth]
+en = "Next month"
+de = "Nächster Monat"
+
+[month]
+en = "Month"
+de = "Monat"
+
+[arcEmpty]
+en = "{time}, no events between {from}:00 and {to}:00"
+de = "{time}, keine Termine zwischen {from}:00 und {to}:00"
+
+[arcToday]
+en = "{time}; today: {events}"
+de = "{time}; heute: {events}"
+
+# Reminders.
+[reminderList]
+en = "Reminder list"
+de = "Erinnerungsliste"
+
+[noLists]
+en = "No lists"
+de = "Keine Listen"
+
+[newReminder]
+en = "New reminder"
+de = "Neue Erinnerung"
+
+[list]
+en = "List"
+de = "Liste"
+
+[dueOptional]
+en = "Due date (optional)"
+de = "Fällig am (optional)"
+
+[notesPlaceholder]
+en = "Notes (optional)…"
+de = "Notizen (optional)…"
+
+[noReminderLists]
+en = "No reminder lists found."
+de = "Keine Erinnerungslisten gefunden."
+
+[nothingOpenIn]
+en = "Nothing open in \"{list}\"."
+de = "Nichts offen in „{list}“."
+
+[priority]
+en = "Priority: {level}"
+de = "Priorität: {level}"
+
+[priorityLow]
+en = "low"
+de = "niedrig"
+
+[priorityMedium]
+en = "medium"
+de = "mittel"
+
+[priorityHigh]
+en = "high"
+de = "hoch"
+
+[remindersHint]
+en = "There's no \"all lists\" view — pick one list on the front; that choice is remembered."
+de = "Eine Ansicht „alle Listen“ gibt es nicht — wähle vorne eine Liste; die Wahl bleibt gespeichert."
+
+# Mail.
+[curated]
+en = "curated"
+de = "ausgewählt"
+
+[lastThreeDays]
+en = "last 3 days"
+de = "letzte 3 Tage"
+
+[todaysMix]
+en = "Today's mix"
+de = "Heutige Mischung"
+
+[nothingImportant]
+en = "Nothing important or topic-matched right now."
+de = "Gerade nichts Wichtiges und nichts zu deinen Themen."
+
+[important]
+en = "Important"
+de = "Wichtig"
+
+[byTopic]
+en = "By topic"
+de = "Nach Thema"
+
+[opening]
+en = "Opening…"
+de = "Öffne…"
+
+[topicsLabel]
+en = "Topics (one per line) — mail matching any of these shows up alongside whatever the agent judges important on its own:"
+de = "Themen (eins pro Zeile) — Mails zu einem davon erscheinen neben dem, was der Agent selbst für wichtig hält:"
+
+[topicsPlaceholder]
+en = "Photography\nDevelopment\nAI/LLM"
+de = "Fotografie\nEntwicklung\nKI/LLM"
+
+# ToDo.
+[openCount]
+en = "open"
+de = "offen"
+
+[doneCount]
+en = "· {n} done"
+de = "· {n} erledigt"
+
+[reload]
+en = "Reload"
+de = "Neu laden"
+
+[nothingOpen]
+en = "Nothing open. Add a task below."
+de = "Nichts offen. Lege unten eine Aufgabe an."
+
+[editItem]
+en = "Edit \"{name}\""
+de = "„{name}“ bearbeiten"
+
+[reopenItem]
+en = "Reopen \"{name}\""
+de = "„{name}“ wieder öffnen"
+
+[doneSection]
+en = "Done · {n}"
+de = "Erledigt · {n}"
+
+[newTask]
+en = "New task…"
+de = "Neue Aufgabe…"
+
+[addTask]
+en = "Add task"
+de = "Aufgabe hinzufügen"
+
+[showDoneDefault]
+en = "Show the Done section by default"
+de = "Bereich „Erledigt“ standardmäßig zeigen"
+
+[backedByBefore]
+en = "Backed by "
+de = "Gespeichert in "
+
+[backedByAfter]
+en = " in the workspace root."
+de = " im Workspace-Ordner."
+
+# Routines.
+[noRoutines]
+en = "No routines yet — add one on the flip side."
+de = "Noch keine Routines — lege auf der Rückseite eine an."
+
+[allDisabled]
+en = "All routines are disabled."
+de = "Alle Routines sind ausgeschaltet."
+
+[colTime]
+en = "Time"
+de = "Zeit"
+
+[colRoutine]
+en = "Routine"
+de = "Routine"
+
+[colStatus]
+en = "Status"
+de = "Status"
+
+[rowTitle]
+en = "{cron} · {type}: {value} · last {when}"
+de = "{cron} · {type}: {value} · zuletzt {when}"
+
+[targetSkill]
+en = "skill"
+de = "Skill"
+
+[targetPrompt]
+en = "prompt"
+de = "Prompt"
+
+[statusNext]
+en = "next"
+de = "als Nächste"
+
+[statusQueued]
+en = "queued"
+de = "wartet"
+
+[statusOff]
+en = "off"
+de = "aus"
+
+[edit]
+en = "Edit"
+de = "Bearbeiten"
+
+[editName]
+en = "Edit {name}"
+de = "{name} bearbeiten"
+
+[delete]
+en = "Delete"
+de = "Löschen"
+
+[deleteName]
+en = "Delete {name}"
+de = "{name} löschen"
+
+[enable]
+en = "Enable"
+de = "Einschalten"
+
+[enableName]
+en = "Enable {name}"
+de = "{name} einschalten"
+
+[disable]
+en = "Disable"
+de = "Ausschalten"
+
+[disableName]
+en = "Disable {name}"
+de = "{name} ausschalten"
+
+[on]
+en = "on"
+de = "an"
+
+[off]
+en = "off"
+de = "aus"
+
+[toggleFailed]
+en = "Switching #{id} failed: {error}"
+de = "Umschalten von #{id} fehlgeschlagen: {error}"
+
+[deleteFailed]
+en = "Deleting #{id} failed: {error}"
+de = "Löschen von #{id} fehlgeschlagen: {error}"
+
+[editFailed]
+en = "Saving #{id} failed: {error}"
+de = "Speichern von #{id} fehlgeschlagen: {error}"
+
+[showDisabled]
+en = "Show disabled routines"
+de = "Ausgeschaltete Routines zeigen"
+
+[sort]
+en = "Sort"
+de = "Sortierung"
+
+[sortNext]
+en = "soonest first"
+de = "nächste zuerst"
+
+[sortName]
+en = "by name"
+de = "nach Name"
+
+[addRoutine]
+en = "Add routine"
+de = "Routine hinzufügen"
+
+[add]
+en = "Add"
+de = "Hinzufügen"
+
+[adding]
+en = "Adding…"
+de = "Füge hinzu…"
+
+[added]
+en = "Added #{id}."
+de = "#{id} hinzugefügt."
+
+[addFailed]
+en = "Add failed: {error}"
+de = "Hinzufügen fehlgeschlagen: {error}"
+
+[namePlaceholder]
+en = "name"
+de = "Name"
+
+[kindMinutes]
+en = "every N minutes"
+de = "alle N Minuten"
+
+[kindHourly]
+en = "every N hours"
+de = "alle N Stunden"
+
+[kindDaily]
+en = "daily"
+de = "täglich"
+
+[kindWeekly]
+en = "weekly"
+de = "wöchentlich"
+
+[kindCustom]
+en = "custom (cron)"
+de = "eigene (Cron)"
+
+[everyLower]
+en = "every"
+de = "alle"
+
+[minutesUnit]
+en = "min"
+de = "Min."
+
+[hoursAt]
+en = "h at :"
+de = "Std. um :"
+
+[at]
+en = "at"
+de = "um"
+
+[cronPlaceholder]
+en = "0 0 9 * * *  (sec min hour day month weekday)"
+de = "0 0 9 * * *  (Sek Min Std Tag Monat Wochentag)"
+
+[skillNamePlaceholder]
+en = "skill name"
+de = "Skill-Name"
+
+[promptPlaceholder]
+en = "prompt text"
+de = "Prompt-Text"
+
+[backendDefault]
+en = "default (skill harness)"
+de = "Standard (Skill-Harness)"
+
+[everyMinutes]
+en = "every {n} min"
+de = "alle {n} Min."
+
+[hourlyAt]
+en = "hourly at :{minute}"
+de = "stündlich um :{minute}"
+
+[everyHoursAt]
+en = "every {n}h at :{minute}"
+de = "alle {n} Std. um :{minute}"
+
+[dailyAt]
+en = "daily at {time}"
+de = "täglich um {time}"
+
+[weeklyAt]
+en = "weekly on {day} at {time}"
+de = "wöchentlich am {day} um {time}"
+
+# The terminal settings file (`modules/terminalSettings.ts`).
+[terminalSettingsUnreadable]
+en = "Could not read terminal-settings.json: {error}"
+de = "terminal-settings.json ließ sich nicht lesen: {error}"
+
+[terminalSettingsUnsaved]
+en = "Could not save terminal-settings.json: {error}"
+de = "terminal-settings.json ließ sich nicht speichern: {error}"
+
+# A write through a one-shot agent turn (`core/instruct.ts`).
+[instructAgentError]
+en = "The agent reported an error."
+de = "Der Agent hat einen Fehler gemeldet."
+
+[instructUnconfirmed]
+en = "The agent didn't confirm the write (\"{reply}\") — it may not have happened. Hit ↻ to check."
+de = "Der Agent hat das Schreiben nicht bestätigt („{reply}“) — vielleicht ist es nicht passiert. Prüfe es mit ↻."
+
+[instructIdUnconfirmed]
+en = "The item may have been created, but its id could not be confirmed — hit ↻ to check."
+de = "Der Eintrag ist vielleicht angelegt, aber seine ID ließ sich nicht bestätigen — prüfe es mit ↻."
