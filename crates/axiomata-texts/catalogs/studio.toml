@@ -1,0 +1,921 @@
+# The texts of the Studio's frame and of its Run, Debug, git and diff views (`ide/IdeView.svelte`,
+# `ide/ActivityRail.svelte`, `ide/PaneGroup.svelte`, `ide/panes/*`, `ide/TasksPanel.svelte`, `ide/DebugPanel.svelte`,
+# `ide/BreakpointEditor.svelte`, `ide/DiffView.svelte`, `ide/GitActionDialog.svelte`, and the helpers `ide/modes.ts`,
+# `ide/paneKinds.ts`, `ide/tasksBackend.ts`). The modes Canvas and Flow and the views Git, Run and Debug are names
+# and stay English (`docs/plans/i18n.md`, Q13); so do git words used as names (Commit, Diff, Merge, Squash, Branch).
+
+# The frame: header, modes, the rail of views.
+[modes]
+en = "Mode"
+de = "Modus"
+
+[modeEditor]
+en = "Editor"
+de = "Editor"
+
+[modeCanvas]
+en = "Canvas"
+de = "Canvas"
+
+[modeFlow]
+en = "Flow"
+de = "Flow"
+
+[editorSettings]
+en = "Editor settings"
+de = "Editor-Einstellungen"
+
+[shortcuts]
+en = "Keyboard shortcuts"
+de = "Tastenkürzel"
+
+[backToOs]
+en = "Back to the OS"
+de = "Zurück zum OS"
+
+[canvasEmpty]
+en = "The canvas is empty"
+de = "Der Canvas ist leer"
+
+[canvasEmptyText]
+en = "Agents appear here as soon as a card or a session starts."
+de = "Agenten erscheinen hier, sobald eine Karte oder eine Sitzung startet."
+
+[openTerminal]
+en = "Open terminal"
+de = "Terminal öffnen"
+
+[noProject]
+en = "No project open"
+de = "Kein Projekt offen"
+
+[noProjectText]
+en = "Open one from the project bar in the sidebar."
+de = "Öffne eines über die Projektleiste in der Seitenleiste."
+
+[thisFile]
+en = "This file"
+de = "Diese Datei"
+
+[watchFailed]
+en = "The session cannot be watched: {error}"
+de = "Der Sitzung lässt sich nicht zusehen: {error}"
+
+[debugAgain]
+en = "Start the debug session again from the Debug view."
+de = "Starte die Debug-Sitzung neu aus der Debug-Ansicht."
+
+[dialogFailed]
+en = "Could not open the dialog: {error}"
+de = "Der Dialog ließ sich nicht öffnen: {error}"
+
+[masterFailed]
+en = "The master session could not be opened: {error}"
+de = "Die Master-Sitzung ließ sich nicht öffnen: {error}"
+
+[cardElsewhere]
+en = "A card is running in another project (session #{id}); its pane appears as soon as you open it."
+de = "In einem anderen Projekt läuft eine Karte (Sitzung #{id}); ihr Pane erscheint, sobald du es öffnest."
+
+[sessionFailed]
+en = "The session could not be opened: {error}"
+de = "Die Sitzung ließ sich nicht öffnen: {error}"
+
+[railViews]
+en = "Views"
+de = "Ansichten"
+
+[viewFiles]
+en = "Files"
+de = "Dateien"
+
+[viewSearch]
+en = "Search the project (⇧⌘F)"
+de = "Projekt durchsuchen (⇧⌘F)"
+
+[viewGit]
+en = "Git"
+de = "Git"
+
+[gitChanged]
+en = "Git — {n} changed"
+de = "Git — {n} geändert"
+
+[viewRun]
+en = "Run — build, test, start"
+de = "Run — bauen, testen, starten"
+
+[viewDebug]
+en = "Debug"
+de = "Debug"
+
+[viewAgents]
+en = "Agents"
+de = "Agenten"
+
+[agentsWorking]
+en = { one = "Agents — 1 working", other = "Agents — {n} working" }
+de = { one = "Agenten — 1 arbeitet", other = "Agenten — {n} arbeiten" }
+
+[newTerminal]
+en = "New terminal"
+de = "Neues Terminal"
+
+[openFile]
+en = "Open a file… (⌘O)"
+de = "Datei öffnen… (⌘O)"
+
+# Panes: their titles as drawn, and what a pane says when it has nothing to show.
+[closeTab]
+en = "Close {title}"
+de = "{title} schließen"
+
+[paneSearch]
+en = "Search"
+de = "Suche"
+
+[paneFiles]
+en = "Files"
+de = "Dateien"
+
+[paneGit]
+en = "Git"
+de = "Git"
+
+[paneAgents]
+en = "Agents"
+de = "Agenten"
+
+[panePlanning]
+en = "Planning"
+de = "Planung"
+
+[paneFlowView]
+en = "Flow view"
+de = "Flow-Ansicht"
+
+[paneRoster]
+en = "Models & roles"
+de = "Modelle & Rollen"
+
+[paneNewNote]
+en = "New note"
+de = "Neue Notiz"
+
+[watchTitle]
+en = "Watch {name}"
+de = "{name} zusehen"
+
+[notInProject]
+en = "“{path}” is not inside this project."
+de = "„{path}“ liegt nicht in diesem Projekt."
+
+[agentGone]
+en = "This agent profile is no longer in the open project."
+de = "Dieses Agentenprofil gehört nicht mehr zum offenen Projekt."
+
+[fileLost]
+en = "This file pane lost its file."
+de = "Dieses Pane hat seine Datei verloren."
+
+[noProjectTree]
+en = "No project is open for this file tree."
+de = "Für diesen Dateibaum ist kein Projekt offen."
+
+[noProjectGit]
+en = "No project is open for git."
+de = "Für Git ist kein Projekt offen."
+
+[noProjectPlan]
+en = "No project is open to plan for."
+de = "Es ist kein Projekt offen, für das du planen kannst."
+
+[noProjectGraph]
+en = "No project is open to show a graph for."
+de = "Es ist kein Projekt offen, dessen Graph sich zeigen ließe."
+
+[noProjectTeam]
+en = "No project is open to show a team for."
+de = "Es ist kein Projekt offen, dessen Team sich zeigen ließe."
+
+[noProjectSearch]
+en = "No project is open to search."
+de = "Es ist kein Projekt offen, das du durchsuchen kannst."
+
+[noModule]
+en = "No module of kind “{kind}” in this build."
+de = "Kein Modul der Art „{kind}“ in diesem Build."
+
+[hideHidden]
+en = "Hide dotfiles, .git, node_modules, target"
+de = "Dotfiles, .git, node_modules, target ausblenden"
+
+[showHidden]
+en = "Show dotfiles, .git, node_modules, target"
+de = "Dotfiles, .git, node_modules, target zeigen"
+
+[readFolders]
+en = "Read the folders again"
+de = "Ordner neu einlesen"
+
+[agentWorksHere]
+en = "{name} is working in this worktree and may change this file while you edit it — you'll be asked before anything is overwritten."
+de = "{name} arbeitet in diesem Worktree und kann diese Datei ändern, während du sie bearbeitest — du wirst gefragt, bevor etwas überschrieben wird."
+
+[theAgent]
+en = "The agent"
+de = "Der Agent"
+
+[placeGone]
+en = "{rel}: the place it lived in is gone (a discarded worktree, or a removed project)."
+de = "{rel}: der Ort, an dem sie lag, ist weg (ein verworfener Worktree oder ein entferntes Projekt)."
+
+[fileMissing]
+en = "{rel} does not exist (any more)."
+de = "{rel} gibt es nicht (mehr)."
+
+[cannotOpen]
+en = "Could not open {rel}: {error}"
+de = "{rel} ließ sich nicht öffnen: {error}"
+
+[clickToOpen]
+en = "⌘-click a file:line to open it"
+de = "⌘-Klick auf Datei:Zeile öffnet sie"
+
+[stopTask]
+en = "Stop (Ctrl-C)"
+de = "Stoppen (Ctrl-C)"
+
+[runAgain]
+en = "Run again"
+de = "Erneut ausführen"
+
+[taskEarlier]
+en = "This task was started in an earlier session. Run it again from the Run view."
+de = "Diese Aufgabe wurde in einer früheren Sitzung gestartet. Starte sie neu aus der Run-Ansicht."
+
+# The Run view.
+[run]
+en = "Run"
+de = "Run"
+
+[groupRun]
+en = "Run"
+de = "Starten"
+
+[groupBuild]
+en = "Build"
+de = "Bauen"
+
+[groupTest]
+en = "Test"
+de = "Testen"
+
+[groupLint]
+en = "Check"
+de = "Prüfen"
+
+[groupOther]
+en = "Other"
+de = "Sonstiges"
+
+[taskIn]
+en = "in {cwd}:"
+de = "in {cwd}:"
+
+[readTasks]
+en = "Read the tasks again"
+de = "Aufgaben neu einlesen"
+
+[openToRun]
+en = "Open a project to see what it can run."
+de = "Öffne ein Projekt, um zu sehen, was es ausführen kann."
+
+[allowTasks]
+en = "Allow these tasks"
+de = "Diese Aufgaben erlauben"
+
+[cancel]
+en = "Cancel"
+de = "Abbrechen"
+
+[save]
+en = "Save"
+de = "Speichern"
+
+[review]
+en = "Review…"
+de = "Prüfen…"
+
+[tasksReview]
+en = "Project tasks need your review"
+de = "Die Aufgaben des Projekts brauchen deine Prüfung"
+
+[tasksReviewBefore]
+en = "This project has its own"
+de = "Dieses Projekt hat eine eigene"
+
+[tasksReviewAfter]
+en = "It runs commands from the repository, so it stays off until you have looked at them."
+de = "Sie führt Befehle aus dem Repository aus und bleibt deshalb aus, bis du sie angesehen hast."
+
+[reviewTasksFirst]
+en = "Review the project's tasks.json first"
+de = "Prüfe zuerst die tasks.json des Projekts"
+
+[startInPane]
+en = "Start again in its pane: {task}"
+de = "Neu starten in seinem Pane: {task}"
+
+[tagProject]
+en = "project"
+de = "Projekt"
+
+[tagPersonal]
+en = "personal"
+de = "persönlich"
+
+[inPane]
+en = "in a pane"
+de = "in einem Pane"
+
+[editNamed]
+en = "Edit {name}"
+de = "{name} bearbeiten"
+
+[removeNamed]
+en = "Remove {name}"
+de = "{name} entfernen"
+
+[nothingToRun]
+en = "Nothing to run yet"
+de = "Noch nichts auszuführen"
+
+[nothingToRunText]
+en = "Tasks are found in Cargo.toml, package.json, pyproject.toml and a Makefile, or written in .axiomata/tasks.json."
+de = "Aufgaben werden in Cargo.toml, package.json, pyproject.toml und einem Makefile gefunden oder in .axiomata/tasks.json geschrieben."
+
+[newTask]
+en = "New task"
+de = "Neue Aufgabe"
+
+[editTask]
+en = "Edit task"
+de = "Aufgabe bearbeiten"
+
+[name]
+en = "Name"
+de = "Name"
+
+[taskNamePlaceholder]
+en = "Start the server"
+de = "Server starten"
+
+[command]
+en = "Command"
+de = "Befehl"
+
+[folder]
+en = "Folder"
+de = "Ordner"
+
+[insideOptional]
+en = "inside the project, optional"
+de = "im Projekt, optional"
+
+[taskFor]
+en = "What it is for"
+de = "Wofür sie ist"
+
+[keepIt]
+en = "Keep it"
+de = "Aufbewahren"
+
+[inThisProject]
+en = "In this project"
+de = "In diesem Projekt"
+
+[forAllProjects]
+en = "For all my projects"
+de = "Für alle meine Projekte"
+
+[taskNeeds]
+en = "A task needs a name and a command."
+de = "Eine Aufgabe braucht einen Namen und einen Befehl."
+
+[removeTaskPersonal]
+en = "Remove the task “{label}” from your tasks file?"
+de = "Die Aufgabe „{label}“ aus deiner Aufgaben-Datei entfernen?"
+
+[removeTaskProject]
+en = "Remove the task “{label}” from the project's tasks.json?"
+de = "Die Aufgabe „{label}“ aus der tasks.json des Projekts entfernen?"
+
+# The Debug view.
+[debug]
+en = "Debug"
+de = "Debug"
+
+[readConfigs]
+en = "Read the configurations again"
+de = "Konfigurationen neu einlesen"
+
+[openToDebug]
+en = "Open a project to debug it."
+de = "Öffne ein Projekt, um es zu debuggen."
+
+[allowThese]
+en = "Allow these"
+de = "Diese erlauben"
+
+[debugReview]
+en = "Project debug setups need your review"
+de = "Die Debug-Konfigurationen des Projekts brauchen deine Prüfung"
+
+[debugReviewBefore]
+en = "This project has its own"
+de = "Dieses Projekt hat eine eigene"
+
+[debugReviewAfter]
+en = "It starts programs from the repository, so it stays off until you have looked at them."
+de = "Sie startet Programme aus dem Repository und bleibt deshalb aus, bis du sie angesehen hast."
+
+[start]
+en = "Start"
+de = "Start"
+
+[whatToDebug]
+en = "What to debug"
+de = "Was debuggt wird"
+
+[currentFile]
+en = "Current file — {rel}"
+de = "Aktuelle Datei — {rel}"
+
+[arguments]
+en = "Arguments"
+de = "Argumente"
+
+[argumentsOwn]
+en = "Arguments — {args}"
+de = "Argumente — {args}"
+
+[argumentsOptional]
+en = "Arguments (optional)"
+de = "Argumente (optional)"
+
+[runInTerminal]
+en = "Run in a terminal"
+de = "In einem Terminal ausführen"
+
+[runInTerminalHint]
+en = "For a TUI or a program that reads the keyboard"
+de = "Für eine TUI oder ein Programm, das die Tastatur liest"
+
+[nothingToDebug]
+en = "Nothing to debug found. Say what to start with “New configuration…”."
+de = "Nichts zum Debuggen gefunden. Sage mit „Neue Konfiguration…“, was gestartet werden soll."
+
+[newConfigButton]
+en = "New configuration…"
+de = "Neue Konfiguration…"
+
+[newConfig]
+en = "New configuration"
+de = "Neue Konfiguration"
+
+[editConfig]
+en = "Edit configuration"
+de = "Konfiguration bearbeiten"
+
+[configNamePlaceholder]
+en = "e.g. OChaT app"
+de = "z. B. OChaT-App"
+
+[fileOrModule]
+en = "File or module"
+de = "Datei oder Modul"
+
+[fileOrModulePlaceholder]
+en = "src/ocht/main.py or ocht.cli"
+de = "src/ocht/main.py oder ocht.cli"
+
+[optional]
+en = "optional"
+de = "optional"
+
+[workingFolder]
+en = "Working folder"
+de = "Arbeitsordner"
+
+[keptInBefore]
+en = "Kept in"
+de = "Gespeichert in"
+
+[keptInAfter]
+en = "of this project."
+de = "dieses Projekts."
+
+[removeConfig]
+en = "Remove “{name}” from the project's debug.json?"
+de = "„{name}“ aus der debug.json des Projekts entfernen?"
+
+[starting]
+en = "Starting"
+de = "Startet"
+
+[running]
+en = "Running"
+de = "Läuft"
+
+[paused]
+en = "Paused"
+de = "Angehalten"
+
+[ended]
+en = "Ended"
+de = "Beendet"
+
+[exitCode]
+en = "exit code {code}"
+de = "Exit-Code {code}"
+
+[debugger]
+en = "Debugger"
+de = "Debugger"
+
+[continue]
+en = "Continue ({key})"
+de = "Fortsetzen ({key})"
+
+[pause]
+en = "Pause"
+de = "Anhalten"
+
+[stepOver]
+en = "Step over ({key})"
+de = "Überspringen ({key})"
+
+[stepInto]
+en = "Step into ({key})"
+de = "Hineinspringen ({key})"
+
+[stepOut]
+en = "Step out ({key})"
+de = "Herausspringen ({key})"
+
+[stop]
+en = "Stop"
+de = "Stoppen"
+
+[callStack]
+en = "Call stack"
+de = "Aufrufstapel"
+
+[noSource]
+en = "No source file"
+de = "Keine Quelldatei"
+
+[variables]
+en = "Variables"
+de = "Variablen"
+
+[watch]
+en = "Watch"
+de = "Beobachten"
+
+[addWatch]
+en = "Add a watch expression…"
+de = "Ausdruck zum Beobachten hinzufügen…"
+
+[breakpoints]
+en = "Breakpoints"
+de = "Haltepunkte"
+
+[removeAllBreakpoints]
+en = "Remove all breakpoints"
+de = "Alle Haltepunkte entfernen"
+
+[breakpointsHint]
+en = "Click a line number in a Python or Rust file to set one."
+de = "Klicke auf eine Zeilennummer in einer Python- oder Rust-Datei, um einen zu setzen."
+
+[breakpointExtras]
+en = "Condition, hit count, log message"
+de = "Bedingung, Trefferzahl, Log-Nachricht"
+
+[remove]
+en = "Remove"
+de = "Entfernen"
+
+[bpWhen]
+en = "when"
+de = "wenn"
+
+[bpHit]
+en = "hit"
+de = "Treffer"
+
+[bpLogs]
+en = "logs"
+de = "loggt"
+
+[tuiNote]
+en = "This program draws a full-screen interface, which a console cannot show. Stop it and start again with “Run in a terminal” ticked — breakpoints and stepping work the same there."
+de = "Dieses Programm zeichnet eine Vollbild-Oberfläche, die eine Konsole nicht zeigen kann. Stoppe es und starte es neu mit „In einem Terminal ausführen“ — Haltepunkte und Schritte funktionieren dort genauso."
+
+[console]
+en = "Console"
+de = "Konsole"
+
+[evaluate]
+en = "Evaluate in this frame…"
+de = "In diesem Frame auswerten…"
+
+# A breakpoint's extras.
+[breakpointAt]
+en = "Breakpoint {label}"
+de = "Haltepunkt {label}"
+
+[condition]
+en = "Condition"
+de = "Bedingung"
+
+[conditionPlaceholder]
+en = "e.g. i == 3"
+de = "z. B. i == 3"
+
+[hitCount]
+en = "Hit count"
+de = "Trefferzahl"
+
+[hitCountPlaceholder]
+en = "e.g. 5, >3, % 10"
+de = "z. B. 5, >3, % 10"
+
+[logMessage]
+en = "Log message"
+de = "Log-Nachricht"
+
+[doesNotStop]
+en = "(does not stop)"
+de = "(hält nicht an)"
+
+[logPlaceholder]
+en = "e.g. total = {total}"
+de = "z. B. total = {total}"
+
+[plainBreakpoint]
+en = "Plain breakpoint"
+de = "Einfacher Haltepunkt"
+
+# An agent's diffs.
+[waitIdle]
+en = "Wait until {name} is idle"
+de = "Warte, bis {name} untätig ist"
+
+[commitFirst]
+en = "Commit the uncommitted changes first"
+de = "Committe zuerst die offenen Änderungen"
+
+[nothingToTakeOver]
+en = "Nothing to take over"
+de = "Nichts zu übernehmen"
+
+[committed]
+en = "{name}: committed {commit}"
+de = "{name}: Commit {commit}"
+
+[tookOver]
+en = "{name}'s work is on {branch} as {commit}"
+de = "Die Arbeit von {name} liegt auf {branch} als {commit}"
+
+[kindAdded]
+en = "Added"
+de = "Hinzugefügt"
+
+[kindModified]
+en = "Modified"
+de = "Geändert"
+
+[kindDeleted]
+en = "Deleted"
+de = "Gelöscht"
+
+[kindRenamed]
+en = "Renamed"
+de = "Umbenannt"
+
+[kindTypeChanged]
+en = "Became a link, or stopped being one"
+de = "Wurde ein Link oder ist keiner mehr"
+
+[comparedWith]
+en = "Compared with the merge base {commit}"
+de = "Verglichen mit der Merge-Basis {commit}"
+
+[against]
+en = "against"
+de = "gegen"
+
+[notRecorded]
+en = "(not recorded)"
+de = "(nicht aufgezeichnet)"
+
+[wholeFile]
+en = "Show the whole file"
+de = "Die ganze Datei zeigen"
+
+[twoColumns]
+en = "Two columns (⌘⇧D)"
+de = "Zwei Spalten (⌘⇧D)"
+
+[oneColumn]
+en = "One column (⌘⇧D)"
+de = "Eine Spalte (⌘⇧D)"
+
+[openAgentCopy]
+en = "Open the agent's copy (⏎)"
+de = "Die Kopie des Agenten öffnen (⏎)"
+
+[discardFileTitle]
+en = "Put this file back to how {branch} has it"
+de = "Diese Datei auf den Stand von {branch} zurücksetzen"
+
+[discardFile]
+en = "Discard file"
+de = "Datei verwerfen"
+
+[commitUncommitted]
+en = "Commit what the agent left uncommitted"
+de = "Committen, was der Agent offen gelassen hat"
+
+[nothingUncommitted]
+en = "Nothing uncommitted"
+de = "Nichts offen"
+
+[commitButton]
+en = "Commit…"
+de = "Commit…"
+
+[takeOverInto]
+en = "Take the committed work over into {branch}"
+de = "Die committete Arbeit in {branch} übernehmen"
+
+[takeOverButton]
+en = "Take over…"
+de = "Übernehmen…"
+
+[dockDiffs]
+en = "Open these diffs in a dock pane of their own"
+de = "Diese Diffs in einem eigenen Pane im Dock öffnen"
+
+[reload]
+en = "Reload (⌘R)"
+de = "Neu laden (⌘R)"
+
+[loading]
+en = "Loading…"
+de = "Lade…"
+
+[sharedFolder]
+en = "This project folder is not a git repository, so its agents work in it together and there is no diff per agent. Make it a git repository to give every agent a worktree of its own."
+de = "Dieser Projektordner ist kein Git-Repository, also arbeiten seine Agenten gemeinsam darin, und es gibt keinen Diff pro Agent. Mache ihn zu einem Git-Repository, damit jeder Agent einen eigenen Worktree bekommt."
+
+[notStarted]
+en = "This agent has not been started yet. Its worktree and branch are made on the first start; what it changes shows up here."
+de = "Dieser Agent wurde noch nicht gestartet. Worktree und Branch entstehen beim ersten Start; was er ändert, erscheint hier."
+
+[noChanges]
+en = "No changes against {branch} yet."
+de = "Noch keine Änderungen gegen {branch}."
+
+[changedFiles]
+en = "Changed files"
+de = "Geänderte Dateien"
+
+[notCommitted]
+en = "Not committed yet"
+de = "Noch nicht committet"
+
+[binaryMark]
+en = "bin"
+de = "bin"
+
+[before]
+en = "Before"
+de = "Vorher"
+
+[after]
+en = "After"
+de = "Nachher"
+
+[none]
+en = "none"
+de = "keine"
+
+[binaryChanged]
+en = "Binary file changed: {from} → {to}."
+de = "Binärdatei geändert: {from} → {to}."
+
+[binaryNew]
+en = "new"
+de = "neu"
+
+[binaryDeleted]
+en = "deleted"
+de = "gelöscht"
+
+[tooLarge]
+en = "Too large to show as a diff."
+de = "Zu groß, um als Diff gezeigt zu werden."
+
+[renamedFrom]
+en = "Renamed from {path}, content unchanged."
+de = "Umbenannt von {path}, Inhalt unverändert."
+
+[modeOnly]
+en = "No line changes (only the file's mode or type)."
+de = "Keine Zeilenänderungen (nur Modus oder Typ der Datei)."
+
+# Asking before a git handgrip.
+[discard]
+en = "Discard"
+de = "Verwerfen"
+
+[commit]
+en = "Commit"
+de = "Commit"
+
+[takeOver]
+en = "Take over"
+de = "Übernehmen"
+
+[discardFileAsk]
+en = "Discard this file's changes?"
+de = "Die Änderungen dieser Datei verwerfen?"
+
+[discardHunkAsk]
+en = "Discard this change?"
+de = "Diese Änderung verwerfen?"
+
+[discardExplain]
+en = "It goes back to how the base has it — committed work included. The result is an uncommitted change in {name}'s worktree, so you can still see it here and undo it until it is committed."
+de = "Sie geht zurück auf den Stand der Basis — committete Arbeit eingeschlossen. Das Ergebnis ist eine offene Änderung im Worktree von {name}; du siehst sie also weiter hier und kannst sie rückgängig machen, bis sie committet ist."
+
+[commitAsk]
+en = "Commit what {name} left uncommitted"
+de = "Committen, was {name} offen gelassen hat"
+
+[message]
+en = "Message"
+de = "Nachricht"
+
+[takeOverAsk]
+en = "Take {name}'s work over into {branch}"
+de = "Die Arbeit von {name} in {branch} übernehmen"
+
+[how]
+en = "How"
+de = "Wie"
+
+[squash]
+en = "Squash"
+de = "Squash"
+
+[mergeNoFf]
+en = "Merge (--no-ff)"
+de = "Merge (--no-ff)"
+
+[squashExplain]
+en = "— one new commit on {branch}"
+de = "— ein neuer Commit auf {branch}"
+
+[mergeExplain]
+en = "— keeps {name}'s commits"
+de = "— behält die Commits von {name}"
+
+[neverPushes]
+en = "Never pushes. {name}'s branch moves onto the new {branch}; its diff is then empty."
+de = "Pusht nie. Der Branch von {name} rückt auf den neuen Stand von {branch}; sein Diff ist dann leer."
+
+[workingNow]
+en = "{name} is working right now and may change these files again."
+de = "{name} arbeitet gerade und kann diese Dateien wieder ändern."
+
+[conflict]
+en = "These files conflict, so nothing was changed:"
+de = "Diese Dateien stehen im Konflikt, deshalb wurde nichts geändert:"
+
+[working]
+en = "Working…"
+de = "Arbeitet…"
+
+# A project's stored layout (`projectSession.ts`, `projects.ts`).
+[layoutUnreadable]
+en = "The stored layout for “{name}” could not be read; starting fresh."
+de = "Das gespeicherte Layout von „{name}“ ließ sich nicht lesen; das Studio beginnt mit einem neuen Layout."
+
+[layoutNotSaved]
+en = "The IDE layout could not be saved: {error}"
+de = "Das IDE-Layout ließ sich nicht speichern: {error}"
