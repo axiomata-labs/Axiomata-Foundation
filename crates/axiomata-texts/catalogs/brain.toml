@@ -1,0 +1,532 @@
+# The texts of the Second Brain and the Orbit (`shell/SecondBrainView.svelte`, `modules/second-brain.svelte`,
+# `modules/TimeTravel.svelte`, `modules/memory-status*.svelte`, `graph/Legend.svelte`, `graph/GlyphPicker.svelte`) and
+# of what the graph draws on its canvas (`graph/render.ts`). "Second Brain", "Orbit", "Vault", area, file, tag and note
+# names are names or data and stay as they are (`docs/plans/i18n.md`, Q13).
+
+[secondBrain]
+en = "Second Brain"
+de = "Second Brain"
+
+# The view's controls.
+[layout]
+en = "Layout"
+de = "Anordnung"
+
+[groupBy]
+en = "Group by"
+de = "Gruppieren nach"
+
+[areas]
+en = "Areas"
+de = "Bereichen"
+
+[folders]
+en = "Folders"
+de = "Ordnern"
+
+[findPlaceholder]
+en = "Find notes or #tag"
+de = "Notizen oder #Tag finden"
+
+[findLabel]
+en = "Find notes by name or #tag"
+de = "Notizen nach Name oder #Tag finden"
+
+[matches]
+en = { one = "1 match", other = "{n} matches" }
+de = { one = "1 Treffer", other = "{n} Treffer" }
+
+[replayTitle]
+en = "Replay the vault's life from its first note, in twenty seconds"
+de = "Das Leben des Vault ab seiner ersten Notiz abspielen, in zwanzig Sekunden"
+
+[replayButton]
+en = "▶ How your vault grew"
+de = "▶ Wie dein Vault wuchs"
+
+[resetViewTitle]
+en = "Reset zoom and pan"
+de = "Zoom und Verschiebung zurücksetzen"
+
+[resetView]
+en = "Reset view"
+de = "Ansicht zurücksetzen"
+
+[reloadTitle]
+en = "Reload the graph from the workspace"
+de = "Den Graphen neu aus dem Workspace laden"
+
+[reload]
+en = "Reload"
+de = "Neu laden"
+
+[helpTitle]
+en = "What do the options mean?"
+de = "Was bedeuten die Optionen?"
+
+[help]
+en = "Help"
+de = "Hilfe"
+
+# Counts under the controls and under the Orbit.
+[notes]
+en = { one = "1 note", other = "{n} notes" }
+de = { one = "1 Notiz", other = "{n} Notizen" }
+
+[files]
+en = { one = "1 file", other = "{n} files" }
+de = { one = "1 Datei", other = "{n} Dateien" }
+
+[areaCount]
+en = { one = "1 area", other = "{n} areas" }
+de = { one = "1 Bereich", other = "{n} Bereiche" }
+
+[folderCount]
+en = { one = "1 folder", other = "{n} folders" }
+de = { one = "1 Ordner", other = "{n} Ordner" }
+
+[links]
+en = { one = "1 link", other = "{n} links" }
+de = { one = "1 Link", other = "{n} Links" }
+
+[truncated]
+en = "truncated"
+de = "gekürzt"
+
+# A podcast episode's audio and script on the ring, after the episode's title.
+[episodeLabel]
+en = "{title} · episode"
+de = "{title} · Folge"
+
+[conversationLabel]
+en = "{title} · conversation episode"
+de = "{title} · Gesprächsfolge"
+
+[scriptLabel]
+en = "{title} · script"
+de = "{title} · Skript"
+
+# The help list beside the layout buttons.
+[helpBundle]
+en = "Every note on one ring, an arc per area, the newest first, clockwise. Links run through the middle, bundled along the folders, in the colour of the note they start from; the links of the last {days} days glow. Point at a note or an area to see its links. Skills ring it outside."
+de = "Jede Notiz auf einem Ring, ein Bogen je Bereich, die neueste zuerst, im Uhrzeigersinn. Links laufen durch die Mitte, gebündelt entlang der Ordner, in der Farbe der Notiz, von der sie ausgehen; die Links der letzten {days} Tage glühen. Zeige auf eine Notiz oder einen Bereich, um seine Links zu sehen. Skills umringen ihn außen."
+
+[helpMap]
+en = "A map of the vault: every note a field, every area a country, the oldest notes at its heart. Links are roads (zoom in); close up every field shows its name. Skills ring the map."
+de = "Eine Karte des Vault: jede Notiz ein Feld, jeder Bereich ein Land, die ältesten Notizen in seinem Kern. Links sind Straßen (zoome hinein); aus der Nähe zeigt jedes Feld seinen Namen. Skills umringen die Karte."
+
+[helpHex]
+en = "A honeycomb: every note its own hex cell, packed tight, each area in its own wedge, the newest nearest the middle. Skills and areas sit inside it."
+de = "Eine Wabe: jede Notiz eine eigene Hex-Zelle, dicht gepackt, jeder Bereich in seinem eigenen Keil, die neuesten nah der Mitte. Skills und Bereiche liegen darin."
+
+[helpAreas]
+en = "One segment per top-level vault folder."
+de = "Ein Segment je Ordner der obersten Vault-Ebene."
+
+[helpFolders]
+en = "One segment per deepest folder, e.g. Learning/Rust/lessons. A finer split of large areas; in Bundle the links bundle along the folder tree."
+de = "Ein Segment je tiefstem Ordner, z. B. Learning/Rust/lessons. Eine feinere Teilung großer Bereiche; im Bündel bündeln sich die Links entlang des Ordnerbaums."
+
+# "How your vault grew".
+[growthTitle]
+en = "How your vault grew"
+de = "Wie dein Vault wuchs"
+
+[pause]
+en = "Pause"
+de = "Pause"
+
+[play]
+en = "Play"
+de = "Abspielen"
+
+[growthMoment]
+en = "Moment of the replay"
+de = "Moment der Wiedergabe"
+
+[endReplay]
+en = "End the replay"
+de = "Wiedergabe beenden"
+
+[endReplayTitle]
+en = "End (Esc)"
+de = "Beenden (Esc)"
+
+[growthAt]
+en = "{day} · {notes}"
+de = "{day} · {notes}"
+
+# The detail panel.
+[kind_file]
+en = "file"
+de = "Datei"
+
+[kind_hub]
+en = "hub"
+de = "Hub"
+
+[kind_area]
+en = "area"
+de = "Bereich"
+
+[kind_skill]
+en = "skill"
+de = "Skill"
+
+[kind_app]
+en = "app"
+de = "App"
+
+[deselect]
+en = "Deselect"
+de = "Auswahl aufheben"
+
+[folder]
+en = "Folder"
+de = "Ordner"
+
+[size]
+en = "Size"
+de = "Größe"
+
+[modified]
+en = "Modified"
+de = "Geändert"
+
+[path]
+en = "Path"
+de = "Pfad"
+
+[linksTerm]
+en = "Links"
+de = "Links"
+
+[tags]
+en = "Tags"
+de = "Tags"
+
+[linksInOut]
+en = "{out} out · {in} in"
+de = "{out} ausgehend · {in} eingehend"
+
+[showTagged]
+en = "Show the notes tagged #{tag}"
+de = "Die Notizen mit #{tag} zeigen"
+
+[open]
+en = "Open"
+de = "Öffnen"
+
+[copyPath]
+en = "Copy path"
+de = "Pfad kopieren"
+
+[flyTo]
+en = "Fly to"
+de = "Hinfliegen"
+
+[deleting]
+en = "Deleting…"
+de = "Lösche…"
+
+[reallyDelete]
+en = "Really delete"
+de = "Wirklich löschen"
+
+[cancel]
+en = "Cancel"
+de = "Abbrechen"
+
+[delete]
+en = "Delete"
+de = "Löschen"
+
+[notesTerm]
+en = "Notes"
+de = "Notizen"
+
+[foldersTerm]
+en = "Folders"
+de = "Ordner"
+
+[notesInArea]
+en = "Notes in this area ({n})"
+de = "Notizen in diesem Bereich ({n})"
+
+[filterPlaceholder]
+en = "Filter…"
+de = "Filtern…"
+
+[filterLabel]
+en = "Filter notes"
+de = "Notizen filtern"
+
+[runSkill]
+en = "▶ Run"
+de = "▶ Ausführen"
+
+[linksTo]
+en = "Links to ({n})"
+de = "Verlinkt auf ({n})"
+
+[linkedFrom]
+en = "Linked from ({n})"
+de = "Verlinkt von ({n})"
+
+[noLinks]
+en = "No links yet."
+de = "Noch keine Links."
+
+[skillRan]
+en = "/{name}: {status} ({ms} ms)"
+de = "/{name}: {status} ({ms} ms)"
+
+[fileDeleted]
+en = "File deleted."
+de = "Datei gelöscht."
+
+[deleteFailed]
+en = "Deleting failed: {error}"
+de = "Löschen fehlgeschlagen: {error}"
+
+[pathCopied]
+en = "Path copied."
+de = "Pfad kopiert."
+
+# The Orbit tile.
+[clickToOpen]
+en = "CLICK TO OPEN SECOND BRAIN"
+de = "KLICKE, UM DAS SECOND BRAIN ZU ÖFFNEN"
+
+[addApp]
+en = "Add app"
+de = "App hinzufügen"
+
+# The time travel.
+[today]
+en = "today"
+de = "heute"
+
+[stop]
+en = "Stop"
+de = "Stopp"
+
+[growVault]
+en = "Grow the vault"
+de = "Den Vault wachsen lassen"
+
+[timeTravel]
+en = "Time travel"
+de = "Zeitreise"
+
+[backToToday]
+en = "Back to today"
+de = "Zurück zu heute"
+
+[timeTravelOpen]
+en = "Time travel: how the vault grew"
+de = "Zeitreise: wie der Vault wuchs"
+
+# The legend.
+[legendHub]
+en = "AGENTS.md (hub)"
+de = "AGENTS.md (Hub)"
+
+[legendArea]
+en = "Area (folder)"
+de = "Bereich (Ordner)"
+
+[legendNote]
+en = "Note / page"
+de = "Notiz / Seite"
+
+[legendSkill]
+en = "Skill"
+de = "Skill"
+
+[legendLink]
+en = "Link, in its note's area colour"
+de = "Link, in der Bereichsfarbe seiner Notiz"
+
+[legendFreshLink]
+en = "Link of the last {days} days"
+de = "Link der letzten {days} Tage"
+
+# The canvas: a note's age badge and the honeycomb's ring captions.
+[ageNew]
+en = "NEW"
+de = "NEU"
+
+[ageDays]
+en = "{n}D"
+de = "{n} T."
+
+[ageMonths]
+en = "{n}M"
+de = "{n}M"
+
+[ageYears]
+en = "{n}Y"
+de = "{n}J"
+
+[captionSkills]
+en = "SKILLS"
+de = "SKILLS"
+
+[captionMemory]
+en = "MEMORY"
+de = "GEDÄCHTNIS"
+
+# The memory status tile.
+[loading]
+en = "Loading…"
+de = "Lade…"
+
+[stale]
+en = "stale"
+de = "veraltet"
+
+[fresh]
+en = "fresh"
+de = "aktuell"
+
+[filesWord]
+en = { one = "file", other = "files" }
+de = { one = "Datei", other = "Dateien" }
+
+[synced]
+en = "synced {when}"
+de = "synchronisiert {when}"
+
+[syncing]
+en = "Syncing…"
+de = "Synchronisiere…"
+
+[sync]
+en = "Sync"
+de = "Synchronisieren"
+
+[inSync]
+en = "In sync · {files}"
+de = "Synchron · {files}"
+
+[wrote]
+en = "Wrote {n} · {unchanged} unchanged"
+de = "{n} geschrieben · {unchanged} unverändert"
+
+[failedCount]
+en = "{n} failed"
+de = "{n} fehlgeschlagen"
+
+[syncFailed]
+en = "Sync failed: {error}"
+de = "Synchronisieren fehlgeschlagen: {error}"
+
+[compact]
+en = "Compact (badge line only)"
+de = "Kompakt (nur die Statuszeile)"
+
+# The icon picker: the glyphs' names, read out for each cell.
+[chooseIcon]
+en = "Choose an icon"
+de = "Wähle ein Symbol"
+
+[glyph_group]
+en = "Group"
+de = "Gruppe"
+
+[glyph_folder]
+en = "Folder"
+de = "Ordner"
+
+[glyph_code]
+en = "Code"
+de = "Code"
+
+[glyph_terminal]
+en = "Terminal"
+de = "Terminal"
+
+[glyph_ide]
+en = "IDE"
+de = "IDE"
+
+[glyph_chip]
+en = "Chip"
+de = "Chip"
+
+[glyph_graphic]
+en = "Graphics"
+de = "Grafik"
+
+[glyph_calculator]
+en = "Calculator"
+de = "Rechner"
+
+[glyph_browser]
+en = "Browser"
+de = "Browser"
+
+[glyph_book]
+en = "Book"
+de = "Buch"
+
+[glyph_briefcase]
+en = "Briefcase"
+de = "Aktentasche"
+
+[glyph_camera]
+en = "Camera"
+de = "Kamera"
+
+[glyph_photos]
+en = "Photos"
+de = "Fotos"
+
+[glyph_music]
+en = "Music"
+de = "Musik"
+
+[glyph_mail]
+en = "Mail"
+de = "Mail"
+
+[glyph_messenger]
+en = "Messenger"
+de = "Messenger"
+
+[glyph_writer]
+en = "Writing"
+de = "Schreiben"
+
+[glyph_journal]
+en = "Journal"
+de = "Tagebuch"
+
+[glyph_people]
+en = "People"
+de = "Leute"
+
+[glyph_user]
+en = "Person"
+de = "Person"
+
+[glyph_wrench]
+en = "Wrench"
+de = "Schraubenschlüssel"
+
+[glyph_tray]
+en = "Tray"
+de = "Ablage"
+
+[glyph_check]
+en = "Check"
+de = "Haken"
+
+[glyph_calendar]
+en = "Calendar"
+de = "Kalender"
+
+[glyph_list]
+en = "List"
+de = "Liste"
