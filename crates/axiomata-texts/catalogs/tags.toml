@@ -1,0 +1,286 @@
+# The texts of Settings → Workspace → Tags (`shell/TagsSettings.svelte`), its run over the whole vault
+# (`shell/VaultTagging.svelte`) and their helpers (`core/tagProposals.ts`, `core/vaultTagging.ts`). Tags themselves
+# are data and are never translated; `TAGS.md`, Vault and skill names stay as they are (`docs/plans/i18n.md`, Q13).
+
+# The tag list.
+[title]
+en = "Tags"
+de = "Tags"
+
+[lead]
+en = "The vault's tag list, kept in {file}. Agents tag notes only from it; a tag they want that is not on it waits here for you. Aim for some 30–60 tags, 1–4 per note."
+de = "Die Tag-Liste des Vault, abgelegt in {file}. Agenten taggen Notizen nur aus ihr; ein Tag, das sie wollen und das nicht darauf steht, wartet hier auf dich. Ziel: etwa 30–60 Tags, 1–4 pro Notiz."
+
+[proposedByAgents]
+en = "Proposed by agents"
+de = "Von Agenten vorgeschlagen"
+
+[descriptionPlaceholder]
+en = "A line of description"
+de = "Eine Zeile Beschreibung"
+
+[descriptionOf]
+en = "Description of #{tag}"
+de = "Beschreibung von #{tag}"
+
+[descriptionOfNew]
+en = "Description of the new tag"
+de = "Beschreibung des neuen Tags"
+
+[notes]
+en = { one = "1 note", other = "{n} notes" }
+de = { one = "1 Notiz", other = "{n} Notizen" }
+
+[accept]
+en = "Accept"
+de = "Annehmen"
+
+[turnDown]
+en = "Turn down"
+de = "Ablehnen"
+
+[readError]
+en = "Could not read the tag list: {error}"
+de = "Die Tag-Liste ließ sich nicht lesen: {error}"
+
+[reading]
+en = "Reading…"
+de = "Lese…"
+
+[onTheList]
+en = "On the list ({n})"
+de = "Auf der Liste ({n})"
+
+[noTags]
+en = "No tags yet."
+de = "Noch keine Tags."
+
+[newNameOf]
+en = "New name of #{tag}"
+de = "Neuer Name von #{tag}"
+
+[usesIn]
+en = { one = "{uses} uses in 1 note", other = "{uses} uses in {n} notes" }
+de = { one = "{uses}× in 1 Notiz", other = "{uses}× in {n} Notizen" }
+
+[rename]
+en = "Rename"
+de = "Umbenennen"
+
+[countUses]
+en = "Count uses"
+de = "Stellen zählen"
+
+[cancel]
+en = "Cancel"
+de = "Abbrechen"
+
+[renameTag]
+en = "Rename #{tag}"
+de = "#{tag} umbenennen"
+
+[takeOff]
+en = "Take #{tag} off the list"
+de = "#{tag} von der Liste nehmen"
+
+[newTagPlaceholder]
+en = "#new-tag"
+de = "#neues-tag"
+
+[newTag]
+en = "New tag"
+de = "Neues Tag"
+
+[add]
+en = "Add"
+de = "Hinzufügen"
+
+# What saving and answering say.
+[saveFailed]
+en = "Could not save the tag list: {error}"
+de = "Die Tag-Liste ließ sich nicht speichern: {error}"
+
+[added]
+en = "#{tag} added"
+de = "#{tag} hinzugefügt"
+
+[descriptionSaved]
+en = "#{tag}: description saved"
+de = "#{tag}: Beschreibung gespeichert"
+
+[confirmRemove]
+en = "Take #{tag} off the list? Notes that carry it keep it; agents no longer choose it."
+de = "#{tag} von der Liste nehmen? Notizen, die es tragen, behalten es; Agenten wählen es nicht mehr."
+
+[removed]
+en = "#{tag} is off the list"
+de = "#{tag} ist nicht mehr auf der Liste"
+
+[countFailed]
+en = "Could not count the uses: {error}"
+de = "Die Stellen ließen sich nicht zählen: {error}"
+
+[renamed]
+en = { one = "#{from} is #{to} now — {links} uses in 1 note rewritten", other = "#{from} is #{to} now — {links} uses in {n} notes rewritten" }
+de = { one = "#{from} heißt jetzt #{to} — {links} Stellen in 1 Notiz umgeschrieben", other = "#{from} heißt jetzt #{to} — {links} Stellen in {n} Notizen umgeschrieben" }
+
+[renameFailed]
+en = "Renaming failed: {error}"
+de = "Umbenennen fehlgeschlagen: {error}"
+
+[acceptedOn]
+en = { one = "#{tag} is on the list and set on 1 note", other = "#{tag} is on the list and set on {n} notes" }
+de = { one = "#{tag} steht auf der Liste und ist an 1 Notiz gesetzt", other = "#{tag} steht auf der Liste und ist an {n} Notizen gesetzt" }
+
+[notSet]
+en = "#{tag} not set: {failure}"
+de = "#{tag} nicht gesetzt: {failure}"
+
+[turnedDown]
+en = "#{tag} turned down"
+de = "#{tag} abgelehnt"
+
+[answerFailed]
+en = "Could not answer the proposal: {error}"
+de = "Der Vorschlag ließ sich nicht beantworten: {error}"
+
+# The badge (`core/tagProposals.ts`).
+[waiting]
+en = { one = "A tag proposal waits for you", other = "{n} tag proposals wait for you" }
+de = { one = "Ein Tag-Vorschlag wartet auf dich", other = "{n} Tag-Vorschläge warten auf dich" }
+
+# What is wrong with a typed tag (`core/tagProposals.ts`).
+
+# The run over the whole vault.
+[vaultTitle]
+en = "Tag the whole vault"
+de = "Den ganzen Vault taggen"
+
+[vaultHint]
+en = "Once, for the notes there already are. Each step says first what it reads and costs."
+de = "Einmal, für die Notizen, die es schon gibt. Jeder Schritt sagt vorher, was er liest und kostet."
+
+[stepList]
+en = "1 · Propose a tag list"
+de = "1 · Eine Tag-Liste vorschlagen"
+
+[stepNotes]
+en = "2 · Plan tags and links for every note"
+de = "2 · Tags und Links für jede Notiz planen"
+
+[running]
+en = "running"
+de = "läuft"
+
+[proposing]
+en = "Proposing…"
+de = "Schlage vor…"
+
+[propose]
+en = "Propose"
+de = "Vorschlagen"
+
+[planning]
+en = "Planning…"
+de = "Plane…"
+
+[planRest]
+en = "Plan the rest"
+de = "Den Rest planen"
+
+[plan]
+en = "Plan"
+de = "Planen"
+
+[stale]
+en = "A step is marked as running, but not from this window (the app was closed during it)."
+de = "Ein Schritt ist als laufend markiert, aber nicht aus diesem Fenster (die App wurde währenddessen geschlossen)."
+
+[endIt]
+en = "End it"
+de = "Beenden"
+
+[preview]
+en = { one = "Preview (1 note)", other = "Preview ({n} notes)" }
+de = { one = "Vorschau (1 Notiz)", other = "Vorschau ({n} Notizen)" }
+
+[proposedChip]
+en = "Proposed to you when the plan is written; set once you accept it"
+de = "Wird dir vorgeschlagen, wenn der Plan geschrieben wird; gesetzt, sobald du es annimmst"
+
+[leftOut]
+en = "left out: {reason}"
+de = "ausgelassen: {reason}"
+
+[nothing]
+en = "nothing"
+de = "nichts"
+
+[showAll]
+en = "Show all {n}"
+de = "Alle {n} zeigen"
+
+[writeInto]
+en = { one = "Write into 1 note", other = "Write into {n} notes" }
+de = { one = "In 1 Notiz schreiben", other = "In {n} Notizen schreiben" }
+
+[discard]
+en = "Discard"
+de = "Verwerfen"
+
+[confirmList]
+en = "Propose a tag list? The agent reads the notes and proposes 30–60 tags; you accept or turn down each."
+de = "Eine Tag-Liste vorschlagen? Der Agent liest die Notizen und schlägt 30–60 Tags vor; du nimmst jedes an oder lehnst es ab."
+
+[confirmNotes]
+en = "Plan tags for every note? The agent reads each note; nothing is written until you look at the preview."
+de = "Tags für jede Notiz planen? Der Agent liest jede Notiz; nichts wird geschrieben, bevor du dir die Vorschau angesehen hast."
+
+[runStatus]
+en = "vault-tagging: {status}"
+de = "vault-tagging: {status}"
+
+[runFailed]
+en = "The vault run failed: {error}"
+de = "Der Vault-Lauf ist fehlgeschlagen: {error}"
+
+[confirmApply]
+en = { one = "Write the planned tags and links into 1 note? Only its tags: and ## Related change.", other = "Write the planned tags and links into {n} notes? Only their tags: and ## Related change." }
+de = { one = "Die geplanten Tags und Links in 1 Notiz schreiben? Nur ihr tags: und ## Related ändern sich.", other = "Die geplanten Tags und Links in {n} Notizen schreiben? Nur ihr tags: und ## Related ändern sich." }
+
+[written]
+en = { one = "Written into 1 note", other = "Written into {n} notes" }
+de = { one = "In 1 Notiz geschrieben", other = "In {n} Notizen geschrieben" }
+
+[writtenUnchanged]
+en = { one = "Written into 1 note, {unchanged} unchanged", other = "Written into {n} notes, {unchanged} unchanged" }
+de = { one = "In 1 Notiz geschrieben, {unchanged} unverändert", other = "In {n} Notizen geschrieben, {unchanged} unverändert" }
+
+[notWritten]
+en = { one = "1 note not written (kept in the preview): {first}", other = "{n} notes not written (kept in the preview): {first}" }
+de = { one = "1 Notiz nicht geschrieben (bleibt in der Vorschau): {first}", other = "{n} Notizen nicht geschrieben (bleiben in der Vorschau): {first}" }
+
+[writeFailed]
+en = "Writing failed: {error}"
+de = "Schreiben fehlgeschlagen: {error}"
+
+[confirmDiscard]
+en = "Throw the preview away? No note was changed."
+de = "Die Vorschau verwerfen? Keine Notiz wurde geändert."
+
+# The estimate of a step (`core/vaultTagging.ts`).
+[estimateTokens]
+en = "about {input} tokens in, {output} out"
+de = "etwa {input} Tokens rein, {output} raus"
+
+[estimateCost]
+en = "about {cost}"
+de = "etwa {cost}"
+
+[estimateNoPrice]
+en = "no price for {model} in your price table"
+de = "kein Preis für {model} in deiner Preistabelle"
+
+[estimateNoPriceSkill]
+en = "no price for the skill model in your price table"
+de = "kein Preis für das Skills-Modell in deiner Preistabelle"
