@@ -1,0 +1,322 @@
+# The texts of Settings → Storage (`shell/StorageSettings.svelte`) and of its helper (`core/maintenance.ts`). The
+# report's rows come from Rust in English (`axiomata_core::maintenance`); they are named here by their fixed keys,
+# and a row added later shows as the backend words it (`docs/plans/i18n.md`, Q11). Paths, Glut and Axiomata stay as
+# they are (Q13).
+
+[title]
+en = "Storage"
+de = "Speicher"
+
+[lead]
+en = "Axiomata cleans up its own data in {home} once a week at start. Your projects, the vault and Glut's own folder are never touched here."
+de = "Axiomata räumt seine eigenen Daten in {home} einmal pro Woche beim Start auf. Deine Projekte, der Vault und Gluts eigener Ordner werden hier nie angefasst."
+
+[measureError]
+en = "Could not measure the storage: {error}"
+de = "Der Speicher ließ sich nicht messen: {error}"
+
+[measuring]
+en = "Measuring…"
+de = "Messe…"
+
+[lastCleanup]
+en = "Last clean-up"
+de = "Letztes Aufräumen"
+
+[never]
+en = "never"
+de = "nie"
+
+[wouldFree]
+en = "Would free"
+de = "Würde freigeben"
+
+[days]
+en = "days"
+de = "Tage"
+
+[kept]
+en = "kept"
+de = "behalten"
+
+[frees]
+en = "frees {amount}"
+de = "gibt {amount} frei"
+
+[glutKeep]
+en = "Glut cleans {folder} by its own rules, once a day and with “Clean up now”"
+de = "Glut räumt {folder} nach eigenen Regeln auf, einmal am Tag und mit „Jetzt aufräumen“"
+
+[glutUnknown]
+en = "Glut: unknown format"
+de = "Glut: unbekanntes Format"
+
+[weekly]
+en = "Clean up once a week at start"
+de = "Einmal pro Woche beim Start aufräumen"
+
+[saving]
+en = "Saving…"
+de = "Speichere…"
+
+[saveRules]
+en = "Save rules"
+de = "Regeln speichern"
+
+[cleaningUp]
+en = "Cleaning up…"
+de = "Räume auf…"
+
+[cleanNow]
+en = "Clean up now"
+de = "Jetzt aufräumen"
+
+[saveFirst]
+en = "Save the rules first: “Clean up now” cleans by the saved ones."
+de = "Speichere zuerst die Regeln: „Jetzt aufräumen“ räumt nach den gespeicherten auf."
+
+[endedToRemove]
+en = "Ended sessions a clean-up removes"
+de = "Beendete Sitzungen, die ein Aufräumen entfernt"
+
+[endedRemoved]
+en = "Ended sessions removed"
+de = "Entfernte beendete Sitzungen"
+
+[endedHint]
+en = "Sessions whose harness ended days ago with no work of their own — nothing uncommitted, no commit beyond their base, no open card. Their worktree and branch go with them; a session with work always stays."
+de = "Sitzungen, deren Harness vor Tagen ohne eigene Arbeit endete — nichts Uncommittetes, kein Commit über ihre Basis hinaus, keine offene Karte. Ihr Worktree und ihr Branch gehen mit; eine Sitzung mit Arbeit bleibt immer."
+
+[orphansTitle]
+en = "Orphaned worktrees waiting for you"
+de = "Verwaiste Worktrees, die auf dich warten"
+
+[orphansHint]
+en = "Their agent is gone, but they hold work nobody saved, so no clean-up removes them."
+de = "Ihr Agent ist weg, aber sie enthalten Arbeit, die niemand gesichert hat, deshalb entfernt kein Aufräumen sie."
+
+[unknownState]
+en = "unknown state"
+de = "Zustand unbekannt"
+
+[deleteWorktree]
+en = "Delete {path}"
+de = "{path} löschen"
+
+[backupsTitle]
+en = "Backups of the old roles and engines"
+de = "Backups der alten Rollen und Engines"
+
+[backupsHint]
+en = "The role copies and engines the move to roles at tiers put aside. Nothing uses them; delete one when you no longer need it."
+de = "Die Rollen-Kopien und Engines, die der Umzug auf Rollen mit Stufen beiseitegelegt hat. Nichts nutzt sie; lösche eines, wenn du es nicht mehr brauchst."
+
+[deleteBackup]
+en = "Delete backup {path}"
+de = "Backup {path} löschen"
+
+# What the actions say.
+[rulesSaved]
+en = "Storage rules saved"
+de = "Speicher-Regeln gespeichert"
+
+[saveRulesFailed]
+en = "Could not save the rules: {error}"
+de = "Die Regeln ließen sich nicht speichern: {error}"
+
+[confirmCleanFrees]
+en = "Clean up now? This frees about {size}. Worktrees with changes stay."
+de = "Jetzt aufräumen? Das gibt etwa {size} frei. Worktrees mit Änderungen bleiben."
+
+[confirmCleanNothing]
+en = "Clean up now? Nothing is due right now; the database is still compacted if it needs it."
+de = "Jetzt aufräumen? Gerade ist nichts fällig; die Datenbank wird trotzdem kompaktiert, wenn sie es braucht."
+
+[cleaned]
+en = "Cleaned up — {size} freed"
+de = "Aufgeräumt — {size} freigegeben"
+
+[cleanFailed]
+en = "Clean-up failed: {error}"
+de = "Aufräumen fehlgeschlagen: {error}"
+
+[worktreeDirty]
+en = "It has changes nobody saved"
+de = "Er hat Änderungen, die niemand gesichert hat"
+
+[worktreeUnknown]
+en = "Git cannot tell whether it has changes"
+de = "Git kann nicht sagen, ob er Änderungen hat"
+
+[confirmDeleteWorktree]
+en = "Delete the worktree {path}? {what}; they are gone for good."
+de = "Den Worktree {path} löschen? {what}; sie sind endgültig weg."
+
+[worktreeDeleted]
+en = "Worktree deleted"
+de = "Worktree gelöscht"
+
+[worktreeDeleteFailed]
+en = "Could not delete the worktree: {error}"
+de = "Der Worktree ließ sich nicht löschen: {error}"
+
+[confirmDeleteBackup]
+en = "Delete the backup {path}? The old role files and engines in it are gone for good."
+de = "Das Backup {path} löschen? Die alten Rollendateien und Engines darin sind endgültig weg."
+
+[backupDeleted]
+en = "Backup deleted"
+de = "Backup gelöscht"
+
+[backupDeleteFailed]
+en = "Could not delete the backup: {error}"
+de = "Das Backup ließ sich nicht löschen: {error}"
+
+# A rule out of its bounds (`core/maintenance.ts`).
+[ruleRange]
+en = "{rule} must be a whole number from {min} to {max}"
+de = "{rule} muss eine ganze Zahl von {min} bis {max} sein"
+
+[ruleDays]
+en = "{label} (days)"
+de = "{label} (Tage)"
+
+[ruleKept]
+en = "{label} (kept)"
+de = "{label} (behalten)"
+
+# The report's rows, by their keys in `axiomata_core::maintenance`.
+[itemRuns]
+en = "Runs"
+de = "Läufe"
+
+[itemRoutineRuns]
+en = "Routine firings"
+de = "Läufe der Routines"
+
+[itemChatTurns]
+en = "Chat turns"
+de = "Chat-Schritte"
+
+[itemWebSearches]
+en = "Web searches"
+de = "Websuchen"
+
+[itemCardEvents]
+en = "Archived card history"
+de = "Verlauf archivierter Karten"
+
+[itemSessionSpend]
+en = "Session spend"
+de = "Sitzungskosten"
+
+[itemDatabase]
+en = "Database file"
+de = "Datenbankdatei"
+
+[itemEndedSessions]
+en = "Ended sessions without work"
+de = "Beendete Sitzungen ohne Arbeit"
+
+[itemAppLog]
+en = "App log"
+de = "App-Log"
+
+[itemRunsLog]
+en = "Run log"
+de = "Lauf-Log"
+
+[itemBackups]
+en = "Backups"
+de = "Backups"
+
+[itemAgentEvents]
+en = "Agent status folders"
+de = "Status-Ordner der Agenten"
+
+[itemClaudeSessions]
+en = "Claude sessions"
+de = "Claude-Sitzungen"
+
+[itemWorktrees]
+en = "Orphaned worktrees"
+de = "Verwaiste Worktrees"
+
+# What the rows count.
+[unitRows]
+en = { one = "1 row", other = "{n} rows" }
+de = { one = "1 Zeile", other = "{n} Zeilen" }
+
+[unitFiles]
+en = { one = "1 file", other = "{n} files" }
+de = { one = "1 Datei", other = "{n} Dateien" }
+
+[unitSessions]
+en = { one = "1 session", other = "{n} sessions" }
+de = { one = "1 Sitzung", other = "{n} Sitzungen" }
+
+[unitFolders]
+en = { one = "1 folder", other = "{n} folders" }
+de = { one = "1 Ordner", other = "{n} Ordner" }
+
+[unitEntries]
+en = { one = "1 entry", other = "{n} entries" }
+de = { one = "1 Eintrag", other = "{n} Einträge" }
+
+[unitWorktrees]
+en = { one = "1 worktree", other = "{n} worktrees" }
+de = { one = "1 Worktree", other = "{n} Worktrees" }
+
+# How long a row without an editable rule keeps its data (the others show their rule's fields).
+[keepDatabase]
+en = "compacted when over {percent} % is free"
+de = "kompaktiert, wenn über {percent} % frei sind"
+
+[keepRunsLog]
+en = "rotated at {mb} MB, the last {n} kept"
+de = "rotiert bei {mb} MB, die letzten {n} bleiben"
+
+[keepEndedSessions]
+en = { one = "ended, quiet for 1 day, no open card, nothing uncommitted and no commit beyond its base", other = "ended, quiet for {n} days, no open card, nothing uncommitted and no commit beyond its base" }
+de = { one = "beendet, seit 1 Tag still, keine offene Karte, nichts Uncommittetes und kein Commit über ihre Basis hinaus", other = "beendet, seit {n} Tagen still, keine offene Karte, nichts Uncommittetes und kein Commit über ihre Basis hinaus" }
+
+[keepAgentEvents]
+en = "while their agent exists"
+de = "solange ihr Agent existiert"
+
+[keepWorktrees]
+en = "removed with their agent; one with changes waits for you"
+de = "mit ihrem Agenten entfernt; einer mit Änderungen wartet auf dich"
+
+# Glut's items (`glut clean --json`).
+[glutSnapshots]
+en = "Snapshots"
+de = "Snapshots"
+
+[glutJournals]
+en = "Run journals"
+de = "Lauf-Journale"
+
+[glutSessions]
+en = "Sessions"
+de = "Sitzungen"
+
+[glutResults]
+en = "Tool results"
+de = "Tool-Ergebnisse"
+
+[glutImages]
+en = "Images"
+de = "Bilder"
+
+[glutExports]
+en = "Exports"
+de = "Exporte"
+
+[glutLean]
+en = "Lean savings log"
+de = "Lean-Ersparnis-Log"
+
+[glutOther]
+en = "Other"
+de = "Sonstiges"
