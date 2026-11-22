@@ -33,6 +33,12 @@ impl NodeId {
 }
 
 impl TabId {
+    /// A new id, for a pane the layout's owner makes itself (a panel a mode is built from).
+    #[must_use]
+    pub fn fresh() -> Self {
+        Self(random_uuid())
+    }
+
     /// The id as written.
     #[must_use]
     pub fn as_str(&self) -> &str {
