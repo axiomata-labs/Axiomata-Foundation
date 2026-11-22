@@ -1,7 +1,10 @@
 //! Checks the catalogs in `catalogs/` and compiles them into `$OUT_DIR/catalogs.rs` (see the crate's docs). A catalog
 //! that breaks a rule fails the build, naming the area, the key and the rule.
 
-use std::collections::{BTreeMap, BTreeSet};
+#[path = "src/rules.rs"]
+mod rules;
+
+use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use std::path::Path;
 use std::{env, fs};
@@ -63,7 +66,15 @@ fn main() {
             ));
             continue;
         }
-        let source = fs::read_to_string(&path).expect("a readable catalog");
+        if rules::reserved(&rules::module(&area)) {
+            problems.push(format!(
+                "{area}: the module `{}` is a name Rust keeps",
+                rules::module(&area)
+            ));
+            continue;
+        }
+        let source =
+            fs::read_to_string(&path).unwrap_or_else(|err| panic!("{}: {err}", path.display()));
         let table: toml::Table = match source.parse() {
             Ok(table) => table,
             Err(err) => {
@@ -75,11 +86,8 @@ fn main() {
         for (key, value) in table {
             match entry(&key, &value) {
                 Ok(entry) => {
-                    problems.extend(
-                        check(&entry)
-                            .into_iter()
-                            .map(|p| format!("{area}.{key}: {p}")),
-                    );
+                    let found = rules::check(&entry.en.forms(), &entry.de.forms());
+                    problems.extend(found.into_iter().map(|p| format!("{area}.{key}: {p}")));
                     entries.push(entry);
                 }
                 Err(problem) => problems.push(format!("{area}.{key}: {problem}")),
@@ -87,7 +95,14 @@ fn main() {
         }
         let mut idents = BTreeMap::new();
         for entry in &entries {
-            if let Some(other) = idents.insert(ident(&entry.key), entry.key.clone()) {
+            let ident = rules::ident(&entry.key);
+            if rules::reserved(&ident) {
+                problems.push(format!(
+                    "{area}.{}: the constant `{ident}` is a name Rust or the catalog keeps",
+                    entry.key
+                ));
+            }
+            if let Some(other) = idents.insert(ident, entry.key.clone()) {
                 problems.push(format!(
                     "{area}: {} and {other} name the same constant",
                     entry.key
@@ -96,12 +111,11 @@ fn main() {
         }
         areas.push((area, entries));
     }
-    if !problems.is_empty() {
-        panic!(
-            "the text catalogs break a rule:\n  {}",
-            problems.join("\n  ")
-        );
-    }
+    assert!(
+        problems.is_empty(),
+        "the text catalogs break a rule:\n  {}",
+        problems.join("\n  ")
+    );
     let out = Path::new(&env::var("OUT_DIR").expect("cargo sets it")).join("catalogs.rs");
     fs::write(out, generate(&areas)).expect("the generated catalogs");
 }
@@ -150,110 +164,6 @@ fn entry(key: &str, value: &toml::Value) -> Result<Entry, String> {
     })
 }
 
-/// What is wrong with `entry`: the two languages of another kind, an empty text, other values named, a gendered form.
-fn check(entry: &Entry) -> Vec<String> {
-    let mut problems = Vec::new();
-    let (en, de) = (entry.en.forms(), entry.de.forms());
-    if en.len() != de.len() {
-        problems.push("counts in one language and not in the other".to_owned());
-        return problems;
-    }
-    for (e, d) in en.iter().zip(&de) {
-        if e.trim().is_empty() || d.trim().is_empty() {
-            problems.push("a text is empty".to_owned());
-        }
-        if names(e) != names(d) {
-            problems.push(format!(
-                "English names {:?}, German {:?}",
-                names(e),
-                names(d)
-            ));
-        }
-        if let Some(form) = gendered(d) {
-            problems.push(format!("German genders (“{form}”); write the plain word"));
-        }
-    }
-    problems
-}
-
-/// The values a text names (`{name}`).
-fn names(text: &str) -> BTreeSet<&str> {
-    let mut out = BTreeSet::new();
-    let mut rest = text;
-    while let Some(open) = rest.find('{') {
-        let after = &rest[open + 1..];
-        let len = after
-            .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
-            .unwrap_or(after.len());
-        if len > 0
-            && after[len..].starts_with('}')
-            && after.starts_with(|c: char| c.is_ascii_alphabetic())
-        {
-            out.insert(&after[..len]);
-        }
-        rest = after;
-    }
-    out
-}
-
-/// The gendered form in `text`, if any (Axiomata-OS `docs/plans/i18n.md` Q23): `*innen`, `:innen`, `_innen`, a capital
-/// `Innen` inside a word, and the participles that stand in for the plain word.
-fn gendered(text: &str) -> Option<String> {
-    const PARTICIPLES: [&str; 4] = ["Benutzende", "Nutzende", "Teilnehmende", "Mitarbeitende"];
-    let chars: Vec<char> = text.chars().collect();
-    for (i, window) in chars.windows(5).enumerate() {
-        let word: String = window.iter().collect();
-        let before = i.checked_sub(1).map(|b| chars[b]);
-        let after_ok = chars.get(i + 5).is_none_or(|c| !c.is_alphanumeric());
-        if word == "innen" && after_ok && matches!(before, Some('*' | ':' | '_')) {
-            return Some(format!("{}innen", before.unwrap_or_default()));
-        }
-        if word == "Innen" && after_ok && before.is_some_and(char::is_lowercase) {
-            return Some("…Innen".to_owned());
-        }
-    }
-    text.split(|c: char| !c.is_alphanumeric())
-        .find(|word| PARTICIPLES.contains(word))
-        .map(str::to_owned)
-}
-
-/// The constant a key becomes: `board.plainFlowCard` → `BOARD_PLAIN_FLOW_CARD`.
-fn ident(key: &str) -> String {
-    let mut out = String::new();
-    let mut prev_lower = false;
-    for c in key.chars() {
-        if c == '.' || c == '_' {
-            out.push('_');
-            prev_lower = false;
-        } else if c.is_ascii_uppercase() && prev_lower {
-            out.push('_');
-            out.push(c);
-            prev_lower = false;
-        } else {
-            out.push(c.to_ascii_uppercase());
-            prev_lower = c.is_ascii_lowercase() || c.is_ascii_digit();
-        }
-    }
-    if out.starts_with(|c: char| c.is_ascii_digit()) {
-        out.insert(0, '_');
-    }
-    out
-}
-
-/// The module an area becomes: `editorEngine` → `editor_engine`.
-fn module(area: &str) -> String {
-    let mut out = String::new();
-    for c in area.chars() {
-        if c.is_ascii_uppercase() {
-            out.push('_');
-            out.push(c.to_ascii_lowercase());
-        } else {
-            out.push(c);
-        }
-    }
-    out
-}
-
 fn generate(areas: &[(String, Vec<Entry>)]) -> String {
     let mut out = String::from(
         "// Generated by the build script from `catalogs/` — edit the catalogs, not this.\n\n",
@@ -263,23 +173,23 @@ fn generate(areas: &[(String, Vec<Entry>)]) -> String {
             out,
             "/// The texts of the area `{area}` (`catalogs/{area}.toml`)."
         );
-        let _ = writeln!(out, "pub mod {} {{", module(area));
+        let _ = writeln!(out, "pub mod {} {{", rules::module(area));
         out.push_str("    use crate::{Entry, Text};\n\n");
         for entry in entries {
             let _ = writeln!(out, "    /// `{}`.", entry.key);
             let _ = writeln!(
                 out,
                 "    pub const {}: Entry = Entry {{ key: {:?}, en: {}, de: {} }};",
-                ident(&entry.key),
+                rules::ident(&entry.key),
                 entry.key,
                 entry.en.rust(),
                 entry.de.rust()
             );
         }
-        let list: Vec<String> = entries.iter().map(|e| ident(&e.key)).collect();
+        let list: Vec<String> = entries.iter().map(|e| rules::ident(&e.key)).collect();
         let _ = writeln!(
             out,
-            "\n    /// Every key of the area, sorted.\n    pub const ENTRIES: &[Entry] = &[{}];",
+            "\n    /// Every key of the area, in the catalog's order.\n    pub const ENTRIES: &[Entry] = &[{}];",
             list.join(", ")
         );
         out.push_str("}\n\n");
@@ -289,13 +199,13 @@ fn generate(areas: &[(String, Vec<Entry>)]) -> String {
         .map(|(area, _)| {
             format!(
                 "Area {{ name: {area:?}, entries: {}::ENTRIES }}",
-                module(area)
+                rules::module(area)
             )
         })
         .collect();
     let _ = writeln!(
         out,
-        "/// Every area, sorted by name.\npub fn areas() -> &'static [Area] {{\n    const AREAS: &[Area] = &[{}];\n    AREAS\n}}",
+        "/// Every area, sorted by name.\n#[must_use]\npub fn areas() -> &'static [Area] {{\n    const AREAS: &[Area] = &[{}];\n    AREAS\n}}",
         list.join(", ")
     );
     out

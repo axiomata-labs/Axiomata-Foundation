@@ -10,3 +10,10 @@ description = "The apps' texts in English and German, one TOML catalog per area:
 
 [build-dependencies]
 toml.workspace = true
+
+[lints.rust]
+missing_docs = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }

@@ -35,16 +35,14 @@ pub enum Lang {
 }
 
 impl Lang {
-    /// The language a two-letter tag names (`de`, `de-AT`, `en`); English for any other.
+    /// The language a tag names: German for `de` and its regions (`de-AT`, `de_CH`), English for any other.
+    #[must_use]
     pub fn from_tag(tag: &str) -> Self {
-        if tag
+        let german = tag
             .get(..2)
             .is_some_and(|head| head.eq_ignore_ascii_case("de"))
-        {
-            Self::De
-        } else {
-            Self::En
-        }
+            && matches!(tag.as_bytes().get(2), None | Some(b'-' | b'_'));
+        if german { Self::De } else { Self::En }
     }
 }
 
@@ -64,6 +62,7 @@ pub enum Text {
 
 impl Text {
     /// The form for the count `n`: German and English both use one form for exactly 1 and another for the rest.
+    #[must_use]
     pub fn form(self, n: u64) -> &'static str {
         match self {
             Self::Plain(text) => text,
@@ -91,16 +90,19 @@ pub struct Entry {
 
 impl Entry {
     /// The text in `lang`; a text that counts gives its form for many.
+    #[must_use]
     pub fn get(&self, lang: Lang) -> &'static str {
         self.text(lang).form(u64::MAX)
     }
 
     /// The text in `lang` for the count `n`.
+    #[must_use]
     pub fn count(&self, lang: Lang, n: u64) -> &'static str {
         self.text(lang).form(n)
     }
 
     /// The text in `lang`, both forms if it counts.
+    #[must_use]
     pub fn text(&self, lang: Lang) -> Text {
         match lang {
             Lang::En => self.en,
@@ -114,37 +116,43 @@ impl Entry {
 pub struct Area {
     /// The area's name, the catalog's file name (`errors`).
     pub name: &'static str,
-    /// Its keys, sorted.
+    /// Its keys, in the catalog's order.
     pub entries: &'static [Entry],
 }
 
-/// `template` with each `{name}` filled from `values`; a name without a value stays as it is, so a missing value
-/// shows rather than vanishes.
+/// `template` with each `{name}` filled from `values` — a name is a letter, then letters, digits and `_`, as the
+/// catalogs' check reads it —; a name without a value stays as it is, so a missing value shows rather than vanishes.
+#[must_use]
 pub fn fill(template: &str, values: &[(&str, &str)]) -> String {
     let mut out = String::with_capacity(template.len());
     let mut rest = template;
     while let Some(open) = rest.find('{') {
         out.push_str(&rest[..open]);
         let after = &rest[open + 1..];
-        let name_len = after
-            .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
-            .unwrap_or(after.len());
-        let name = &after[..name_len];
-        let closed = after[name_len..].starts_with('}');
-        match values.iter().find(|(key, _)| *key == name) {
-            Some((_, value)) if closed && !name.is_empty() => {
-                out.push_str(value);
-                rest = &after[name_len + 1..];
-            }
-            _ => {
-                out.push('{');
-                rest = after;
-            }
+        let value = rules::placeholder(after).and_then(|name| {
+            values
+                .iter()
+                .find(|(key, _)| *key == name)
+                .map(|(_, value)| (name, *value))
+        });
+        if let Some((name, value)) = value {
+            out.push_str(value);
+            rest = &after[name.len() + 1..];
+        } else {
+            out.push('{');
+            rest = after;
         }
     }
     out.push_str(rest);
     out
 }
+
+// The build script's checks: the library reads only `placeholder` from them and runs the rest in its tests.
+#[allow(
+    dead_code,
+    reason = "the build script uses these rules; the library tests them"
+)]
+mod rules;
 
 include!(concat!(env!("OUT_DIR"), "/catalogs.rs"));
 
@@ -160,6 +168,8 @@ mod tests {
         );
         assert_eq!(fill("Karte {id}.", &[]), "Karte {id}.");
         assert_eq!(fill("{ x } {} {a", &[("a", "1")]), "{ x } {} {a");
+        // A name the catalogs' check would not read is no placeholder here either.
+        assert_eq!(fill("{1x} {_a}", &[("1x", "!"), ("_a", "!")]), "{1x} {_a}");
         assert_eq!(fill("Größe {n}", &[("n", "3")]), "Größe 3");
     }
 
@@ -180,16 +190,23 @@ mod tests {
         assert_eq!(Lang::from_tag("DE"), Lang::De);
         assert_eq!(Lang::from_tag("en"), Lang::En);
         assert_eq!(Lang::from_tag(""), Lang::En);
+        assert_eq!(Lang::from_tag("de_CH"), Lang::De);
+        for other in ["deu", "del", "d"] {
+            assert_eq!(Lang::from_tag(other), Lang::En, "{other}");
+        }
     }
 
     #[test]
-    fn every_area_is_listed_with_sorted_keys_in_both_languages() {
-        assert!(!areas().is_empty());
+    fn every_area_is_listed_by_name_with_keys_named_once() {
+        let names: Vec<&str> = areas().iter().map(|area| area.name).collect();
+        let mut sorted = names.clone();
+        sorted.sort_unstable();
+        assert_eq!(names, sorted);
         for area in areas() {
-            let keys: Vec<&str> = area.entries.iter().map(|e| e.key).collect();
-            let mut sorted = keys.clone();
-            sorted.sort_unstable();
-            assert_eq!(keys, sorted, "{}", area.name);
+            let mut keys: Vec<&str> = area.entries.iter().map(|e| e.key).collect();
+            keys.sort_unstable();
+            keys.dedup();
+            assert_eq!(keys.len(), area.entries.len(), "{}", area.name);
         }
     }
 }
