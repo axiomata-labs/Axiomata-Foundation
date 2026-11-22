@@ -1,0 +1,621 @@
+# The texts of the chat bar (`shell/AssistantBar.svelte`, `shell/SlashPanel.svelte`, `shell/EffortSwitch.svelte`) and
+# of its `/` commands (`core/commands.ts`, `core/slashLists.ts`, `core/effortLevels.ts`). Command names, model ids
+# and effort levels are names and stay as they are (`docs/plans/i18n.md`, Q13).
+
+# The commands, as the suggestion list and /help describe them.
+[cmdHelp]
+en = "List every command, or open a handbook page"
+de = "Alle Kommandos zeigen oder eine Handbuchseite öffnen"
+
+[cmdClear]
+en = "Start a new conversation"
+de = "Ein neues Gespräch beginnen"
+
+[cmdCompact]
+en = "Summarise the conversation so far to free context"
+de = "Das bisherige Gespräch zusammenfassen und Platz schaffen"
+
+[cmdModel]
+en = "Show or change this conversation's model"
+de = "Das Modell dieses Gesprächs zeigen oder wechseln"
+
+[cmdEffort]
+en = "Show or change how hard Glut's model reasons in this conversation"
+de = "Zeigen oder ändern, wie gründlich Gluts Modell in diesem Gespräch nachdenkt"
+
+[cmdPlan]
+en = "Plan mode: the agent reads and plans, changes nothing"
+de = "Plan-Modus: der Agent liest und plant, ändert nichts"
+
+[cmdBuild]
+en = "Build mode: the agent may carry the plan out"
+de = "Build-Modus: der Agent darf den Plan umsetzen"
+
+[cmdSkills]
+en = "List the skills, or run one"
+de = "Die Skills zeigen oder einen starten"
+
+[cmdCost]
+en = "Turns and money of this conversation"
+de = "Schritte und Kosten dieses Gesprächs"
+
+[cmdResume]
+en = "List earlier conversations, or continue one"
+de = "Frühere Gespräche zeigen oder eines fortsetzen"
+
+[cmdUndo]
+en = "Undo the file changes of the last turn"
+de = "Die Dateiänderungen des letzten Schritts zurücknehmen"
+
+[cmdDo]
+en = "A one-shot instruction to the agent, outside the chat"
+de = "Eine einmalige Anweisung an den Agenten, außerhalb des Chats"
+
+[cmdTile]
+en = "Tiles and their actions"
+de = "Kacheln und ihre Aktionen"
+
+[cmdTheme]
+en = "Switch the theme"
+de = "Das Theme wechseln"
+
+[cmdOpen]
+en = "Open a workspace file (.md or .html)"
+de = "Eine Datei aus dem Workspace öffnen (.md oder .html)"
+
+[cmdNewfile]
+en = "Create an empty workspace file and open it"
+de = "Eine leere Datei im Workspace anlegen und öffnen"
+
+[cmdBrain]
+en = "Open the Second Brain (on a file, or searching)"
+de = "Das Second Brain öffnen (auf einer Datei oder mit Suche)"
+
+# What a command answers, toast-sized.
+[newConversation]
+en = "New conversation."
+de = "Neues Gespräch."
+
+[planOn]
+en = "Plan mode: the agent reads and plans, changes nothing."
+de = "Plan-Modus: der Agent liest und plant, ändert nichts."
+
+[buildOn]
+en = "Build mode."
+de = "Build-Modus."
+
+[unknownTheme]
+en = "unknown theme “{id}” ({themes})"
+de = "Unbekanntes Theme „{id}“ ({themes})"
+
+[themeSet]
+en = "Theme: {id}."
+de = "Theme: {id}."
+
+[usage]
+en = "usage: {usage}"
+de = "So geht’s: {usage}"
+
+[opened]
+en = "Opened {path}."
+de = "{path} geöffnet."
+
+[created]
+en = "Created {path}."
+de = "{path} angelegt."
+
+[brainOpened]
+en = "Second Brain opened."
+de = "Second Brain geöffnet."
+
+[unknownCommand]
+en = "unknown command /{name}"
+de = "Unbekanntes Kommando /{name}"
+
+[whileBusy]
+en = "The agent is working — try again when it is done."
+de = "Der Agent arbeitet gerade — versuche es, wenn er fertig ist."
+
+[movedTo]
+en = "/{name} is now {now}"
+de = "/{name} heißt jetzt {now}"
+
+[didYouMean]
+en = "unknown command /{name} — did you mean {near}?"
+de = "Unbekanntes Kommando /{name} — meintest du {near}?"
+
+[unknownHint]
+en = "unknown command /{name} — /help lists them; /do <text> sends an instruction"
+de = "Unbekanntes Kommando /{name} — /help zeigt alle; /do <Text> schickt eine Anweisung"
+
+[handbookUnreadable]
+en = "The handbook could not be read: {error}"
+de = "Das Handbuch ließ sich nicht lesen: {error}"
+
+[handbookOpened]
+en = "Handbook: {title}."
+de = "Handbuch: {title}."
+
+[noHandbookPage]
+en = "No handbook page for “{topic}” — the list shows the pages."
+de = "Keine Handbuchseite zu „{topic}“ — die Liste zeigt die Seiten."
+
+[modelConfigured]
+en = "Model: {model} (configured)."
+de = "Modell: {model} (eingestellt)."
+
+[notModelId]
+en = "“{id}” is not a model id"
+de = "„{id}“ ist keine Modell-ID"
+
+[notAmong]
+en = "{id} is not among {provider}'s models — /model lists them"
+de = "{id} gehört nicht zu den Modellen von {provider} — /model zeigt sie"
+
+[modelSet]
+en = "Model for this conversation: {model}."
+de = "Modell für dieses Gespräch: {model}."
+
+[effortGlutOnly]
+en = "/effort is Glut's: the chat runs on another harness."
+de = "/effort gehört zu Glut: der Chat läuft auf einem anderen Harness."
+
+[effortConfigured]
+en = "Effort: {level} (configured)."
+de = "Effort: {level} (eingestellt)."
+
+[effortBack]
+en = "Effort: back to {label}."
+de = "Effort: zurück auf {label}."
+
+[notEffortLevel]
+en = "“{level}” is no effort level — {levels}"
+de = "„{level}“ ist keine Effort-Stufe — {levels}"
+
+[effortSet]
+en = "Effort for this conversation: {level}."
+de = "Effort für dieses Gespräch: {level}."
+
+[effortSetNote]
+en = "Effort for this conversation: {level} — {note}."
+de = "Effort für dieses Gespräch: {level} — {note}."
+
+[nothingToCompact]
+en = "Nothing to compact yet."
+de = "Noch nichts zum Zusammenfassen."
+
+[compacted]
+en = "Compacted."
+de = "Zusammengefasst."
+
+[notCompacted]
+en = "Not compacted."
+de = "Nicht zusammengefasst."
+
+[noEarlier]
+en = "No earlier conversations."
+de = "Keine früheren Gespräche."
+
+[noSuchConversation]
+en = "no earlier conversation {id} — /resume lists them"
+de = "Kein früheres Gespräch {id} — /resume zeigt sie"
+
+[resumed]
+en = "Resumed “{title}” — its earlier messages are not shown here; the agent has them."
+de = "„{title}“ fortgesetzt — die früheren Nachrichten stehen hier nicht, der Agent kennt sie."
+
+[nothingToUndo]
+en = "Nothing to undo: no conversation yet."
+de = "Nichts zurückzunehmen: noch kein Gespräch."
+
+[undone]
+en = "Undone."
+de = "Zurückgenommen."
+
+[noTurns]
+en = "No turns in this conversation yet."
+de = "Noch keine Schritte in diesem Gespräch."
+
+[skillRan]
+en = "/{name}: {status} ({ms} ms)"
+de = "/{name}: {status} ({ms} ms)"
+
+[noSkills]
+en = "No skills yet."
+de = "Noch keine Skills."
+
+[added]
+en = "Added {title}."
+de = "{title} hinzugefügt."
+
+[noTileMatches]
+en = "no tile matches “{key}”"
+de = "Keine Kachel passt zu „{key}“"
+
+[removed]
+en = "Removed {title}."
+de = "{title} entfernt."
+
+[unknownTileType]
+en = "unknown tile type “{type}” — types: {types}"
+de = "Unbekannte Kachel „{type}“ — Kacheln: {types}"
+
+[noTileOnCanvas]
+en = "no “{title}” tile on the canvas — /tile add {type} first"
+de = "Keine Kachel „{title}“ auf dem Canvas — erst /tile add {type}"
+
+[noActions]
+en = "none"
+de = "keine"
+
+[paramsJson]
+en = "params must be JSON, e.g. {example}"
+de = "Die Werte müssen JSON sein, zum Beispiel {example}"
+
+[tileDone]
+en = "/tile {type} {action} done."
+de = "/tile {type} {action} erledigt."
+
+# The panel above the bar.
+[panelModels]
+en = "Models"
+de = "Modelle"
+
+[panelSkills]
+en = "Skills"
+de = "Skills"
+
+[panelConversations]
+en = "Earlier conversations"
+de = "Frühere Gespräche"
+
+[panelHelp]
+en = "Commands and handbook"
+de = "Kommandos und Handbuch"
+
+[panelEffort]
+en = "Effort"
+de = "Effort"
+
+[panelCost]
+en = "This conversation"
+de = "Dieses Gespräch"
+
+[panelUndo]
+en = "Undone"
+de = "Zurückgenommen"
+
+[panelTile]
+en = "/tile {type} {action}"
+de = "/tile {type} {action}"
+
+[groupConversation]
+en = "Conversation"
+de = "Gespräch"
+
+[groupApp]
+en = "App"
+de = "App"
+
+[groupHarness]
+en = "The chat's harness"
+de = "Der Harness des Chats"
+
+[groupHandbook]
+en = "Handbook"
+de = "Handbuch"
+
+[colModel]
+en = "Model"
+de = "Modell"
+
+[colPrice]
+en = "Price (input / output per 1M)"
+de = "Preis (Eingabe / Ausgabe je 1 Mio.)"
+
+[colContext]
+en = "Context"
+de = "Kontext"
+
+[colSkill]
+en = "Skill"
+de = "Skill"
+
+[colDescription]
+en = "Description"
+de = "Beschreibung"
+
+[colHarness]
+en = "Harness"
+de = "Harness"
+
+[colConversation]
+en = "Conversation"
+de = "Gespräch"
+
+[colWhen]
+en = "Last"
+de = "Zuletzt"
+
+[colTurns]
+en = "Turns"
+de = "Schritte"
+
+[colCommand]
+en = "Command"
+de = "Kommando"
+
+[colLevel]
+en = "Level"
+de = "Stufe"
+
+[colWhat]
+en = "What"
+de = "Was"
+
+[colValue]
+en = "Value"
+de = "Wert"
+
+[turns]
+en = { one = "1 turn", other = "{n} turns" }
+de = { one = "1 Schritt", other = "{n} Schritte" }
+
+[current]
+en = "current"
+de = "aktuell"
+
+[modelNoteTurn]
+en = "{model} for this conversation · configured: {configured}"
+de = "{model} für dieses Gespräch · eingestellt: {configured}"
+
+[modelNoteConfigured]
+en = "{model}, the configured chat model of {provider}"
+de = "{model}, das eingestellte Chat-Modell von {provider}"
+
+[modelDefault]
+en = "back to the configured {model}"
+de = "zurück zum eingestellten {model}"
+
+[useTyped]
+en = "Use {id}"
+de = "{id} verwenden"
+
+[runAsk]
+en = "Run {name}? ⏎ yes · Esc no"
+de = "{name} starten? ⏎ ja · Esc nein"
+
+[noMatch]
+en = "Nothing matches “{query}”."
+de = "Nichts passt zu „{query}“."
+
+[harnessListLater]
+en = "its commands appear once the chat knows them"
+de = "seine Kommandos erscheinen, sobald der Chat sie kennt"
+
+[costTurns]
+en = "Turns"
+de = "Schritte"
+
+[costTotal]
+en = "Cost"
+de = "Kosten"
+
+[costUnpriced]
+en = "Without a price"
+de = "Ohne Preis"
+
+[panelHint]
+en = "↑↓ choose · ⏎ take · Esc close"
+de = "↑↓ wählen · ⏎ übernehmen · Esc schließen"
+
+[closePanel]
+en = "Close"
+de = "Schließen"
+
+# Effort levels (`core/effortLevels.ts`).
+[effortDefault]
+en = "default"
+de = "Standard"
+
+[effortDefaultOf]
+en = "default ({level})"
+de = "Standard ({level})"
+
+[effortGlutDefault]
+en = "Glut's own setting, else the model's default ({level})"
+de = "Gluts eigene Einstellung, sonst der Standard des Modells ({level})"
+
+[effortProviderDefault]
+en = "Glut's own setting, else the provider's default"
+de = "Gluts eigene Einstellung, sonst der Standard des Anbieters"
+
+[effortTurn]
+en = "{level} for this conversation — default: {fallback}"
+de = "{level} für dieses Gespräch — Standard: {fallback}"
+
+[effortConfiguredIs]
+en = "the configured {level}"
+de = "das eingestellte {level}"
+
+[effortSettings]
+en = "{level}, the configured chat effort"
+de = "{level}, der eingestellte Chat-Effort"
+
+[effortUnlisted]
+en = "the model does not list {level} — the provider takes a near level or refuses it"
+de = "das Modell nennt {level} nicht — der Anbieter nimmt eine nahe Stufe oder lehnt ab"
+
+[effortAlways]
+en = "always reasons"
+de = "denkt immer nach"
+
+[effortCatalogSilent]
+en = "the catalog does not say which levels the model takes"
+de = "der Katalog sagt nicht, welche Stufen das Modell kennt"
+
+# The bar itself.
+[placeholder]
+en = "Ask the agent, or /help for commands"
+de = "Frage den Agenten, oder /help für Kommandos"
+
+[placeholderBusy]
+en = "Agent is working…"
+de = "Der Agent arbeitet…"
+
+[inputLabel]
+en = "Assistant input"
+de = "Eingabe für den Assistenten"
+
+[commandsLabel]
+en = "Commands"
+de = "Kommandos"
+
+[planTitle]
+en = "Plan mode: the agent reads and plans, changes nothing — click (or ⇧⇥ in the field) to let it build"
+de = "Plan-Modus: der Agent liest und plant, ändert nichts — klicke (oder ⇧⇥ im Feld), damit er baut"
+
+[buildTitle]
+en = "Build mode: the agent may change things — click (or ⇧⇥ in the field) to only plan"
+de = "Build-Modus: der Agent darf ändern — klicke (oder ⇧⇥ im Feld), damit er nur plant"
+
+[plan]
+en = "Plan"
+de = "Plan"
+
+[build]
+en = "Build"
+de = "Build"
+
+[newSession]
+en = "New session ({keys} in this field)"
+de = "Neues Gespräch ({keys} in diesem Feld)"
+
+[working]
+en = "working…"
+de = "arbeitet…"
+
+[messages]
+en = { one = "1 message in this conversation", other = "{n} messages in this conversation" }
+de = { one = "1 Nachricht in diesem Gespräch", other = "{n} Nachrichten in diesem Gespräch" }
+
+[showChat]
+en = "chat"
+de = "Chat"
+
+[hideChat]
+en = "hide chat"
+de = "Chat ausblenden"
+
+[turnStopped]
+en = "A chat turn stopped when the app did — open the chat to resume it."
+de = "Ein Chat-Schritt brach ab, als die App beendet wurde — öffne den Chat, um ihn fortzusetzen."
+
+[effortFor]
+en = "Effort for this conversation"
+de = "Effort für dieses Gespräch"
+
+[effortTitle]
+en = "Effort: {explanation} — this conversation only; /effort lists the levels"
+de = "Effort: {explanation} — nur dieses Gespräch; /effort zeigt die Stufen"
+
+[effortTitleNote]
+en = "Effort: {explanation} ({note}) — this conversation only; /effort lists the levels"
+de = "Effort: {explanation} ({note}) — nur dieses Gespräch; /effort zeigt die Stufen"
+
+[effortLabel]
+en = "Effort"
+de = "Effort"
+
+[notListed]
+en = "{level} (not listed)"
+de = "{level} (nicht genannt)"
+
+# The questions a chat action puts to the owner (`modules/chatActions.ts`); the agent reads the same text back.
+[askRunSkill]
+en = "Run the skill {name}"
+de = "Den Skill {name} starten"
+
+[askSkillWhere]
+en = "Runs on {harness}; its instructions are ~/.axiomata/skills/{name}/SKILL.md."
+de = "Läuft auf {harness}; seine Anweisungen stehen in ~/.axiomata/skills/{name}/SKILL.md."
+
+[askCreateRoutine]
+en = "Create the routine “{name}” ({cron}) running {what}"
+de = "Die Routine „{name}“ ({cron}) anlegen, sie startet {what}"
+
+[askReplaceRoutine]
+en = "Replace routine #{id} “{old}” with the routine “{name}” ({cron}) running {what}"
+de = "Routine #{id} „{old}“ ersetzen durch die Routine „{name}“ ({cron}), sie startet {what}"
+
+[askRunsSkill]
+en = "the skill {name}"
+de = "den Skill {name}"
+
+[askRunsPromptBelow]
+en = "a prompt (below)"
+de = "einen Prompt (unten)"
+
+[askRunsPrompt]
+en = "the prompt “{prompt}”"
+de = "den Prompt „{prompt}“"
+
+[askPromptLine]
+en = "Prompt: {prompt}"
+de = "Prompt: {prompt}"
+
+[askReplaces]
+en = "It replaces: “{name}” ({cron}) running {what}."
+de = "Sie ersetzt: „{name}“ ({cron}), die {what} startet."
+
+[askStartCard]
+en = "Start card #{id} “{title}” as a plan in the project {project}"
+de = "Karte #{id} „{title}“ als Plan im Projekt {project} starten"
+
+[askClose]
+en = "Close {title}"
+de = "{title} schließen"
+
+[askCloseLoses]
+en = "Closing it would lose {loss}."
+de = "Beim Schließen ginge verloren: {loss}."
+
+[askOnYesFile]
+en = "On yes the panel itself asks you whether to save or discard."
+de = "Bei Ja fragt dich das Panel selbst, ob gespeichert oder verworfen wird."
+
+[askOnYesKanban]
+en = "On yes the panel closes and that text is gone."
+de = "Bei Ja schließt das Panel, und dieser Text ist weg."
+
+[askOnYesTerminal]
+en = "On yes the tile is removed and the program ends with it."
+de = "Bei Ja wird die Kachel entfernt, und das Programm endet mit ihr."
+
+[askNewNote]
+en = "a new note"
+de = "eine neue Notiz"
+
+[askKanbanPanel]
+en = "Kanban ({path})"
+de = "Kanban ({path})"
+
+[askKanbanBoard]
+en = "Kanban (board)"
+de = "Kanban (Board)"
+
+[askTerminalTile]
+en = "{module} tile"
+de = "Kachel {module}"
+
+[askTerminalTileIn]
+en = "{module} tile in {cwd}"
+de = "Kachel {module} in {cwd}"
+
+[askLossProgram]
+en = "the running program “{program}”, which closing ends"
+de = "das laufende Programm „{program}“, das beim Schließen endet"
+
+[askLossUnknown]
+en = "whatever runs in it (it could not be checked)"
+de = "was darin läuft (es ließ sich nicht prüfen)"
