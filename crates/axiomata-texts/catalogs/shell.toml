@@ -1,0 +1,395 @@
+# The texts of the app shell: the dock and its heartbeat (`shell/Dock.svelte`, `shell/Heartbeat.svelte`), the ⌘K
+# spotlight (`shell/Spotlight.svelte`, `core/spotlight.ts`, `core/spotlightItems.ts`), the chat panel and the chat's
+# questions, the module and theme pickers, the handbook panel and the toasts. Module titles come from each module's
+# `label` (`core/registry.ts` `moduleTitle`); theme names, skill and file names are names or data and stay as they
+# are (`docs/plans/i18n.md`, Q13).
+
+# A name in both languages, kept here so the markup carries no literal of its own.
+[appName]
+en = "Axiomata"
+de = "Axiomata"
+
+# The dock.
+[dockLabel]
+en = "Dashboard actions"
+de = "Aktionen des Dashboards"
+
+[targetNote]
+en = "Note"
+de = "Notiz"
+
+[atWork]
+en = "{n} at work"
+de = "{n} bei der Arbeit"
+
+[leaveFocus]
+en = "Leave the focus mode ({keys})"
+de = "Fokusmodus verlassen ({keys})"
+
+[focus]
+en = "Focus"
+de = "Fokus"
+
+[searchOrRun]
+en = "Search or run"
+de = "Suchen oder ausführen"
+
+[searchOrRunKeys]
+en = "Search or run ({keys})"
+de = "Suchen oder ausführen ({keys})"
+
+[addModule]
+en = "Add module"
+de = "Modul hinzufügen"
+
+[theme]
+en = "Theme"
+de = "Theme"
+
+[handbook]
+en = "Handbook"
+de = "Handbuch"
+
+[settingsKeys]
+en = "Settings ({keys})"
+de = "Einstellungen ({keys})"
+
+# The heartbeat and the tank.
+[now]
+en = "now"
+de = "jetzt"
+
+[todayStrip]
+en = { one = "Today's work: 1 run or session", other = "Today's work: {n} runs and sessions" }
+de = { one = "Heute: 1 Lauf oder Sitzung", other = "Heute: {n} Läufe und Sitzungen" }
+
+[spentNoCap]
+en = "Spent today: {amount}, no daily limit"
+de = "Heute ausgegeben: {amount}, keine Tagesgrenze"
+
+[spentOfCap]
+en = "Spent today: {amount} of {cap}"
+de = "Heute ausgegeben: {amount} von {cap}"
+
+[todaysWork]
+en = "Today's work"
+de = "Heute erledigt"
+
+[todayHead]
+en = { one = "Today · 1 entry", other = "Today · {n} entries" }
+de = { one = "Heute · 1 Eintrag", other = "Heute · {n} Einträge" }
+
+[nothingToday]
+en = "Nothing ran today yet."
+de = "Heute lief noch nichts."
+
+[running]
+en = "running"
+de = "läuft"
+
+[runLabel]
+en = "Run {name}"
+de = "Lauf {name}"
+
+[beatRoutine]
+en = "{name} (routine)"
+de = "{name} (Routines)"
+
+[durSeconds]
+en = "{n} s"
+de = "{n} s"
+
+[durMinutes]
+en = "{n} min"
+de = "{n} Min."
+
+[durHours]
+en = "{h} h"
+de = "{h} Std."
+
+[durHoursMinutes]
+en = "{h} h {m} min"
+de = "{h} Std. {m} Min."
+
+# The chat panel.
+[agent]
+en = "Agent"
+de = "Agent"
+
+[session]
+en = "session {id}…"
+de = "Gespräch {id}…"
+
+[newSession]
+en = "new session"
+de = "neues Gespräch"
+
+[toolsUsed]
+en = "Actions the agent used"
+de = "Aktionen, die der Agent genutzt hat"
+
+[turnStopped]
+en = "A turn stopped when the app did:"
+de = "Ein Schritt brach ab, als die App beendet wurde:"
+
+[noText]
+en = "(no text)"
+de = "(kein Text)"
+
+[resume]
+en = "Resume"
+de = "Fortsetzen"
+
+[drop]
+en = "Drop"
+de = "Verwerfen"
+
+[thinking]
+en = "Axiomata is thinking"
+de = "Axiomata denkt nach"
+
+# The chat's questions.
+[questionsForYou]
+en = "Questions for you"
+de = "Fragen an dich"
+
+[deny]
+en = "Deny"
+de = "Ablehnen"
+
+[allow]
+en = "Allow"
+de = "Erlauben"
+
+[askerChat]
+en = "The chat asks"
+de = "Der Chat fragt"
+
+[askerAgent]
+en = "Agent {name} asks"
+de = "Agent {name} fragt"
+
+[askerCommand]
+en = "A command asks"
+de = "Ein Befehl fragt"
+
+[runNow]
+en = "Run it now"
+de = "Jetzt ausführen"
+
+[tooLongTitle]
+en = "Too long to show in full: set it up yourself"
+de = "Zu lang, um es ganz zu zeigen: richte es selbst ein"
+
+[tooLongNote]
+en = "Too long to show in full — it cannot be allowed from here."
+de = "Zu lang, um es ganz zu zeigen — von hier aus lässt es sich nicht erlauben."
+
+# The module picker.
+[noModules]
+en = "No modules registered."
+de = "Keine Module registriert."
+
+[background]
+en = "background"
+de = "Hintergrund"
+
+[single]
+en = "single"
+de = "einmalig"
+
+[placed]
+en = "placed"
+de = "platziert"
+
+# The handbook panel.
+[handbookView]
+en = "Handbook — {title}"
+de = "Handbuch — {title}"
+
+[handbookPages]
+en = "Handbook pages"
+de = "Seiten des Handbuchs"
+
+# The toasts.
+[dismiss]
+en = "Dismiss"
+de = "Schließen"
+
+# The spotlight.
+[search]
+en = "Search"
+de = "Suche"
+
+[searchPlaceholder]
+en = "Search, or ask Axiomata…"
+de = "Suchen oder Axiomata fragen…"
+
+[results]
+en = "Results"
+de = "Ergebnisse"
+
+[askGroup]
+en = "Ask"
+de = "Fragen"
+
+[askAxiomata]
+en = "Ask Axiomata"
+de = "Axiomata fragen"
+
+[quoted]
+en = "“{text}”"
+de = "„{text}“"
+
+[searchingFiles]
+en = "Searching files…"
+de = "Durchsuche Dateien…"
+
+[stillAnswering]
+en = "The agent is still answering — ask again in a moment."
+de = "Der Agent antwortet noch — frage gleich noch einmal."
+
+# The spotlight's groups.
+[groupSuggestion]
+en = "Jump to"
+de = "Gehe zu"
+
+[groupCommand]
+en = "Commands"
+de = "Befehle"
+
+[groupModule]
+en = "Modules"
+de = "Module"
+
+[groupSkill]
+en = "Skills"
+de = "Skills"
+
+[groupRoutine]
+en = "Routines"
+de = "Routines"
+
+[groupCard]
+en = "Cards"
+de = "Karten"
+
+[groupPlan]
+en = "Plans"
+de = "Pläne"
+
+[groupProject]
+en = "Projects"
+de = "Projekte"
+
+[groupHandbook]
+en = "Handbook"
+de = "Handbuch"
+
+[groupTag]
+en = "Tags"
+de = "Tags"
+
+[groupFile]
+en = "Files"
+de = "Dateien"
+
+# The spotlight's items.
+[cmdNewNote]
+en = "New note"
+de = "Neue Notiz"
+
+[cmdSettings]
+en = "Settings"
+de = "Einstellungen"
+
+[cmdEpisode]
+en = "Today's episode"
+de = "Heutige Folge"
+
+[noEpisode]
+en = "No podcast episode yet: the news-podcast skill makes one."
+de = "Noch keine Podcast-Folge: Der Skill news-podcast macht eine."
+
+[cmdConversationEpisode]
+en = "Latest conversation episode"
+de = "Letzte Gesprächsfolge"
+
+[noConversationEpisode]
+en = "No conversation episode yet: talk with Lirvel and let her make one."
+de = "Noch keine Gesprächsfolge: Sprich mit Lirvel und lass sie eine machen."
+
+[cmdKanban]
+en = "Open Kanban"
+de = "Kanban öffnen"
+
+[cmdStudio]
+en = "Open Studio"
+de = "Studio öffnen"
+
+[cmdBrain]
+en = "Open Second Brain"
+de = "Second Brain öffnen"
+
+[placeModule]
+en = "Place module"
+de = "Modul platzieren"
+
+[routineOn]
+en = "on"
+de = "an"
+
+[routineOff]
+en = "off"
+de = "aus"
+
+[notes]
+en = { one = "1 note", other = "{n} notes" }
+de = { one = "1 Notiz", other = "{n} Notizen" }
+
+# What came of a question the owner answered (`core/chatAsks.ts`).
+[askDeclined]
+en = "Declined: {what}"
+de = "Abgelehnt: {what}"
+
+[askTooLate]
+en = "Too late, nothing ran: {what}"
+de = "Zu spät, nichts ausgeführt: {what}"
+
+[askTooLong]
+en = "Too long to show in full, nothing ran: {what}"
+de = "Zu lang, um es ganz zu zeigen, nichts ausgeführt: {what}"
+
+[askDone]
+en = "Done: {what}"
+de = "Erledigt: {what}"
+
+[askFailed]
+en = "{what} failed: {error}"
+de = "{what} ist fehlgeschlagen: {error}"
+
+# The canvas layout (`core/persist.ts`).
+[layoutUnreadable]
+en = "Could not read dashboard.json: {error}"
+de = "dashboard.json ließ sich nicht lesen: {error}"
+
+[layoutMovedAside]
+en = "dashboard.json was unreadable and moved to {path}."
+de = "dashboard.json war nicht lesbar und wurde nach {path} verschoben."
+
+[layoutUnparsable]
+en = "dashboard.json could not be parsed; starting with an empty canvas."
+de = "dashboard.json ließ sich nicht auswerten; es geht mit einem leeren Canvas los."
+
+[layoutUnsaved]
+en = "Could not save dashboard.json: {error}"
+de = "dashboard.json ließ sich nicht speichern: {error}"
+
+# A skill run from the spotlight (`core/spotlightRun.ts`).
+[spotlightRunDone]
+en = "/{name}: done ({ms} ms)"
+de = "/{name}: fertig ({ms} ms)"
+
+[spotlightRunEnded]
+en = "/{name}: {status} ({ms} ms)"
+de = "/{name}: {status} ({ms} ms)"
