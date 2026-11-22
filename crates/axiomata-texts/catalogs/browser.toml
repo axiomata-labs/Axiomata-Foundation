@@ -1,0 +1,107 @@
+# The texts of the small browser (`browser/BrowserPanel.svelte`, `browser/StartPage.svelte`, `core/browser.ts`). A
+# page's own title and address are data and are never translated.
+
+[title]
+en = "Browser"
+de = "Browser"
+
+[back]
+en = "Back"
+de = "Zurück"
+
+[forward]
+en = "Forward"
+de = "Vor"
+
+[reload]
+en = "Reload"
+de = "Neu laden"
+
+[address]
+en = "Address"
+de = "Adresse"
+
+[addressPlaceholder]
+en = "Web address, e.g. example.com"
+de = "Webadresse, z. B. example.com"
+
+[notAnAddress]
+en = "“{text}” is not a web address."
+de = "„{text}“ ist keine Webadresse."
+
+[openExternal]
+en = "Open in the default browser"
+de = "Im Standardbrowser öffnen"
+
+[addFavorite]
+en = "Keep as favorite"
+de = "Als Favorit behalten"
+
+[isFavorite]
+en = "Is a favorite"
+de = "Ist ein Favorit"
+
+[loading]
+en = "Loading…"
+de = "Lädt…"
+
+[home]
+en = "Start page"
+de = "Startseite"
+
+[tabs]
+en = "Tabs"
+de = "Reiter"
+
+[newTab]
+en = "New tab"
+de = "Neuer Reiter"
+
+[closeTab]
+en = "Close tab"
+de = "Reiter schließen"
+
+[tabsFull]
+en = "A panel holds at most {n} tabs; close one first."
+de = "Ein Panel fasst höchstens {n} Reiter; schließ zuerst einen."
+
+[askOpen]
+en = "Open this page in the browser?"
+de = "Diese Seite im Browser öffnen?"
+
+# The start page.
+[startTitle]
+en = "Favorites"
+de = "Favoriten"
+
+[startEmpty]
+en = "No favorites yet. Open a page and keep it with ☆."
+de = "Noch keine Favoriten. Öffne eine Seite und behalte sie mit ☆."
+
+[startHint]
+en = "Type an address above, or pick a favorite."
+de = "Gib oben eine Adresse ein oder wähle einen Favoriten."
+
+[favRename]
+en = "Rename"
+de = "Umbenennen"
+
+[favLeft]
+en = "Move left"
+de = "Nach links"
+
+[favRight]
+en = "Move right"
+de = "Nach rechts"
+
+[favRemove]
+en = "Remove"
+de = "Entfernen"
+
+[favName]
+en = "Name"
+de = "Name"
+
+[favFull]
+en = "The start page holds at most {n} favorites."
+de = "Die Startseite fasst höchstens {n} Favoriten."
