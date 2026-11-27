@@ -61,5 +61,11 @@ sha2 = "0.10"
 semver = { version = "1", features = ["serde"] }
 # Random ids for `axiomata-dock`'s nodes, the version Axiomata-OS has.
 getrandom = "0.3"
+# `axiomata-editor`: where one character as a person sees it ends (a grapheme: an emoji with its skin tone, a letter
+# with its combining accent), and how many cells it takes in a monospace font. Unicode's tables, not an editor.
+unicode-segmentation = "1.13"
+unicode-width = "0.2"
+# `axiomata-editor`'s random tests against a plain line store; a failure shrinks to the shortest edit list showing it.
+proptest = "1"
 # TypeScript types the Axiomata app generates from the Rust ones (feature `ts` of a crate), as Axiomata-OS pins it.
 ts-rs = { version = "12.0.1", default-features = false, features = ["serde-compat", "no-serde-warnings"] }

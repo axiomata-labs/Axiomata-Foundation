@@ -1,0 +1,24 @@
+[package]
+name = "axiomata-editor"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "The text core of a code editor: a rope of lines, positions in UTF-8 bytes, an open document with its selections and undo history, and characters as a person sees them. No UI — Lohe draws it on Schimmer."
+
+[dependencies]
+thiserror.workspace = true
+# The word characters (`\p{L}\p{N}\p{M}_`) of a word motion, exactly as the editor in Axiomata-OS has them.
+regex.workspace = true
+unicode-segmentation.workspace = true
+unicode-width.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+
+[lints.rust]
+missing_docs = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }

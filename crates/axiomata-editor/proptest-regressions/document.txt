@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc b9f2de0fb2206db0944f17f6d838e53aa9fdead7454d88cce832b4877e7a2e6f # shrinks to acts = [Type('a'), Type('a'), Type('a'), Type('a'), Undo]
