@@ -1,0 +1,5 @@
+# Built and generated per machine: Lean's packages (Mathlib, about 7 GB), Charon's LLBC, Creusot's Why3 files.
+.lake/
+*.llbc
+rope-creusot/verif/
+.why3find/

@@ -1,0 +1,13 @@
+[package]
+name = "rope-creusot"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+creusot-std = "0.16.0-dev"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(creusot)'] }
+
+# A root of its own: the proofs are not part of the workspace build.
+[workspace]

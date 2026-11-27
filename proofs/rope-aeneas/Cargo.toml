@@ -1,0 +1,8 @@
+[package]
+name = "rope-aeneas"
+version = "0.1.0"
+edition = "2024"
+description = "The rope's line handling as plain Rust, for Charon and Aeneas to translate into Lean (rust-core.md R7)."
+
+# A root of its own: the proofs are not part of the workspace build.
+[workspace]
