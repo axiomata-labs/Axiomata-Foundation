@@ -36,4 +36,16 @@ pub enum EditError {
         /// The position asked for.
         pos: Pos,
     },
+    /// Two of a set of changes given together overlap (a language server's edits must not).
+    #[error("the changes at {first_start}–{first_end} and {second_start}–{second_end} overlap")]
+    Overlapping {
+        /// Where the earlier change starts.
+        first_start: Pos,
+        /// Where the earlier change ends.
+        first_end: Pos,
+        /// Where the later change starts, before `first_end`.
+        second_start: Pos,
+        /// Where the later change ends.
+        second_end: Pos,
+    },
 }

@@ -14,8 +14,9 @@
 //!
 //! Two things differ from the TypeScript original. An edit that fails halfway (a range outside the text) changes
 //! nothing: the changes are applied to a snapshot first, which costs nothing with a [`Rope`]. And a follower of the
-//! text (a syntax tree) does not register a callback; it switches [`Document::record_text_changes`] on and takes what
-//! happened with [`Document::take_text_changes`].
+//! text does not register a callback: it asks [`Document::follow`] for a bookmark and reads what happened since with
+//! [`Document::changes_since`] — several at once (a syntax tree, the other cursors of a multi-cursor run, a snippet's
+//! tab stops), none taking anything away from another (`docs/plans/rust-core.md` S3).
 
 use std::borrow::Cow;
 
@@ -148,6 +149,82 @@ fn replace_on(
     Ok(next.rope)
 }
 
+/// A bookmark in a document's changes, from [`Document::follow`]. Not `Clone`: each follower has its own place, and
+/// giving it back ([`Document::unfollow`]) lets the document drop what only it still had to read.
+/// Until then the document keeps every change for it.
+#[derive(Debug, PartialEq, Eq)]
+#[must_use = "a follower keeps every change until it is given back with `Document::unfollow`"]
+pub struct Follower {
+    id: u64,
+}
+
+/// The replacements of the text not yet read by every follower, numbered in order.
+#[derive(Debug, Clone, Default)]
+struct ChangeLog {
+    /// The number of `changes[0]`; the next change gets `base + changes.len()`.
+    base: u64,
+    changes: std::collections::VecDeque<TextChange>,
+    /// Each follower's id and the number of the first change it has not read.
+    readers: Vec<(u64, u64)>,
+}
+
+/// The next follower's id.
+static NEXT_FOLLOWER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+impl ChangeLog {
+    fn is_followed(&self) -> bool {
+        !self.readers.is_empty()
+    }
+
+    fn end(&self) -> u64 {
+        self.base + self.changes.len() as u64
+    }
+
+    fn follow(&mut self) -> Follower {
+        // Unique across every document, so a follower handed to another document finds no place there.
+        let id = NEXT_FOLLOWER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        self.readers.push((id, self.end()));
+        Follower { id }
+    }
+
+    fn extend(&mut self, recorded: &[TextChange]) {
+        if self.is_followed() {
+            self.changes.extend(recorded.iter().copied());
+        }
+    }
+
+    fn read(&mut self, follower: &Follower) -> Vec<TextChange> {
+        let end = self.end();
+        let Some(reader) = self.readers.iter_mut().find(|(id, _)| *id == follower.id) else {
+            return Vec::new();
+        };
+        // Within the log: `reader.1` lies in `base..=end` while the reader is known (`trim` keeps it so).
+        let from = usize::try_from(reader.1 - self.base).unwrap_or(usize::MAX);
+        reader.1 = end;
+        let read = self.changes.iter().skip(from).copied().collect();
+        self.trim();
+        read
+    }
+
+    fn unfollow(&mut self, follower: u64) {
+        self.readers.retain(|(id, _)| *id != follower);
+        self.trim();
+    }
+
+    /// Drops the changes every follower has read.
+    fn trim(&mut self) {
+        let oldest = self
+            .readers
+            .iter()
+            .map(|(_, at)| *at)
+            .min()
+            .unwrap_or_else(|| self.end());
+        while self.base < oldest && self.changes.pop_front().is_some() {
+            self.base += 1;
+        }
+    }
+}
+
 /// One open document.
 #[derive(Debug, Clone)]
 pub struct Document {
@@ -168,8 +245,7 @@ pub struct Document {
     sealed: bool,
     group: Option<Group>,
     next_step: u64,
-    recording: bool,
-    recorded: Vec<TextChange>,
+    log: ChangeLog,
 }
 
 impl Document {
@@ -195,8 +271,7 @@ impl Document {
             sealed: true,
             group: None,
             next_step: 0,
-            recording: false,
-            recorded: Vec::new(),
+            log: ChangeLog::default(),
         }
     }
 
@@ -248,6 +323,11 @@ impl Document {
     pub fn set_extra_goals(&mut self, mut goals: Vec<Option<usize>>) {
         goals.resize(self.extra.len(), None);
         self.extra_goals = goals;
+    }
+
+    /// Sets the indentation new lines and ⇥ use — the owner's choice in the status bar over what the file showed.
+    pub fn set_indent(&mut self, indent: Indent) {
+        self.indent = indent;
     }
 
     /// Sets the display column ↑/↓ try to keep, after a vertical move.
@@ -371,7 +451,7 @@ impl Document {
                 &rope,
                 change.range,
                 &inserted,
-                self.recording,
+                self.log.is_followed(),
                 &mut recorded,
             )?;
             applied.push(AppliedChange {
@@ -395,9 +475,7 @@ impl Document {
         now: Millis,
     ) {
         self.rope = rope;
-        if self.recording {
-            self.recorded.extend_from_slice(recorded);
-        }
+        self.log.extend(recorded);
         let after = self.clamped(after);
         self.redo_stack.clear();
         let top_id = self.top_id();
@@ -491,7 +569,13 @@ impl Document {
                 start: change.start,
                 end: end_after(change.start, &change.inserted),
             };
-            rope = replace_on(&rope, r, &change.removed, self.recording, &mut recorded)?;
+            rope = replace_on(
+                &rope,
+                r,
+                &change.removed,
+                self.log.is_followed(),
+                &mut recorded,
+            )?;
         }
         self.take_rope(rope, &recorded);
         if let Some(step) = self.undo_stack.pop() {
@@ -517,7 +601,13 @@ impl Document {
                 start: change.start,
                 end: end_after(change.start, &change.removed),
             };
-            rope = replace_on(&rope, r, &change.inserted, self.recording, &mut recorded)?;
+            rope = replace_on(
+                &rope,
+                r,
+                &change.inserted,
+                self.log.is_followed(),
+                &mut recorded,
+            )?;
         }
         self.take_rope(rope, &recorded);
         if let Some(step) = self.redo_stack.pop() {
@@ -567,18 +657,26 @@ impl Document {
         self.revision += 1;
     }
 
-    /// Starts or stops keeping every replacement of the text — edits, undo, redo, reloads alike — for
-    /// [`Document::take_text_changes`]. Stopping drops what was kept.
-    pub fn record_text_changes(&mut self, on: bool) {
-        self.recording = on;
-        if !on {
-            self.recorded.clear();
-        }
+    /// A bookmark in the document's changes: from now on every replacement of the text — edits, undo, redo,
+    /// reloads alike — is kept until this follower has read it with [`Document::changes_since`]. Give it back with
+    /// [`Document::unfollow`]; while nobody follows, nothing is kept (and no byte offsets are computed).
+    pub fn follow(&mut self) -> Follower {
+        self.log.follow()
     }
 
-    /// The replacements since the last call, in order (a syntax tree follows them incrementally).
-    pub fn take_text_changes(&mut self) -> Vec<TextChange> {
-        std::mem::take(&mut self.recorded)
+    /// The replacements since `follower` last read, in order, and moves its bookmark to now. Other followers still
+    /// read them; what every follower has read is dropped. A follower of another document reads nothing.
+    pub fn changes_since(&mut self, follower: &Follower) -> Vec<TextChange> {
+        self.log.read(follower)
+    }
+
+    /// Ends `follower`'s bookmark; what only it still had to read is dropped.
+    #[allow(
+        clippy::needless_pass_by_value,
+        reason = "taken by value so a follower given back cannot read again"
+    )]
+    pub fn unfollow(&mut self, follower: Follower) {
+        self.log.unfollow(follower.id);
     }
 
     /// The text replaced as a whole by `body`, and that replacement as a syntax tree reads it.
@@ -597,9 +695,7 @@ impl Document {
 
     fn take_rope(&mut self, rope: Rope, recorded: &[TextChange]) {
         self.rope = rope;
-        if self.recording {
-            self.recorded.extend_from_slice(recorded);
-        }
+        self.log.extend(recorded);
     }
 
     fn after_history_move(&mut self, sel: Selection, extra: &[Selection]) {
@@ -627,77 +723,8 @@ impl Document {
 mod tests {
     use super::*;
     use crate::detect::IndentKind;
+    use crate::testing::{FOUR, cursor, doc_from, p, show};
     use crate::text::prev_grapheme;
-
-    const FOUR: Indent = Indent {
-        kind: IndentKind::Spaces,
-        size: 4,
-    };
-
-    fn p(line: usize, col: usize) -> Pos {
-        Pos::new(line, col)
-    }
-
-    fn cursor(line: usize, col: usize) -> Selection {
-        Selection::cursor(p(line, col))
-    }
-
-    /// Where `marker` sits in `text`, and the text without it.
-    fn find(text: &str, marker: char) -> (Option<Pos>, String) {
-        let Some(index) = text.find(marker) else {
-            return (None, text.to_owned());
-        };
-        let before = &text[..index];
-        let line = before.matches('\n').count();
-        let col = before.len() - before.rfind('\n').map_or(0, |at| at + 1);
-        (
-            Some(p(line, col)),
-            [before, &text[index + marker.len_utf8()..]].concat(),
-        )
-    }
-
-    /// A document from text with markers (`testing.ts`): `|` is the cursor, `^` the anchor of a selection.
-    fn doc_from(marked: &str) -> Document {
-        // Remove the earlier marker first; the later one is then found in the text it will really sit in.
-        let caret_first = marked
-            .find('^')
-            .is_none_or(|anchor| marked.find('|').is_some_and(|head| head < anchor));
-        let (head, anchor, text) = if caret_first {
-            let (head, text) = find(marked, '|');
-            let (anchor, text) = find(&text, '^');
-            (head, anchor, text)
-        } else {
-            let (anchor, text) = find(marked, '^');
-            let (head, text) = find(&text, '|');
-            (head, anchor, text)
-        };
-        let mut doc = Document::new(&text, FOUR);
-        let head = head.unwrap_or_default();
-        doc.set_selection(
-            Selection {
-                anchor: anchor.unwrap_or(head),
-                head,
-            },
-            false,
-        );
-        doc
-    }
-
-    /// The document's text with `|` and `^` put back in.
-    fn show(doc: &Document) -> String {
-        let mut lines: Vec<String> = doc.rope().text().split('\n').map(str::to_owned).collect();
-        let sel = doc.selection();
-        let mut marks = vec![(sel.head, '|')];
-        if sel.anchor != sel.head {
-            marks.push((sel.anchor, '^'));
-        }
-        // Insert right to left so earlier columns stay valid.
-        marks.sort_by_key(|mark| std::cmp::Reverse(mark.0));
-        for (at, mark) in marks {
-            lines[at.line].insert(at.col, mark);
-        }
-        lines.join("\n")
-    }
 
     /// What the editor's "insert" command does: the selection replaced by `text`, the cursor after it.
     fn insert(doc: &mut Document, text: &str, kind: EditKind, now: u64) {
@@ -1073,10 +1100,15 @@ mod tests {
         let mut doc = doc_from("ä|b");
         type_text(&mut doc, "x", 0);
         assert!(
-            doc.take_text_changes().is_empty(),
+            !doc.log.is_followed() && doc.log.changes.is_empty(),
             "nothing is kept until a follower asks"
         );
-        doc.record_text_changes(true);
+        let follower = doc.follow();
+        assert_eq!(
+            doc.changes_since(&follower),
+            [],
+            "a follower reads from its bookmark on"
+        );
         type_text(&mut doc, "ö", 10);
         let change = TextChange {
             start: p(0, 3),
@@ -1086,9 +1118,9 @@ mod tests {
             old_end_byte: 3,
             new_end_byte: 5,
         };
-        assert_eq!(doc.take_text_changes(), [change]);
+        assert_eq!(doc.changes_since(&follower), [change]);
         undo(&mut doc);
-        let undone = doc.take_text_changes();
+        let undone = doc.changes_since(&follower);
         assert_eq!(
             undone.len(),
             2,
@@ -1100,8 +1132,56 @@ mod tests {
         );
         // "äb" is three bytes; "newer" five.
         doc.reset("newer\n");
-        let reload = doc.take_text_changes();
+        let reload = doc.changes_since(&follower);
         assert_eq!((reload[0].old_end_byte, reload[0].new_end_byte), (3, 5));
+    }
+
+    #[test]
+    fn two_followers_read_the_same_changes_and_neither_takes_them_from_the_other() {
+        let mut doc = doc_from("|");
+        let early = doc.follow();
+        type_text(&mut doc, "a", 0);
+        let late = doc.follow();
+        type_text(&mut doc, "b", 10);
+        assert_eq!(
+            doc.changes_since(&late).len(),
+            1,
+            "only what came after its bookmark"
+        );
+        assert_eq!(doc.changes_since(&early).len(), 2);
+        assert!(doc.log.changes.is_empty(), "read by both: dropped");
+        type_text(&mut doc, "c", 20);
+        doc.unfollow(late);
+        assert_eq!(
+            doc.log.changes.len(),
+            1,
+            "still kept for the one who has not read it"
+        );
+        assert_eq!(doc.changes_since(&early).len(), 1);
+        doc.unfollow(early);
+        type_text(&mut doc, "d", 30);
+        assert!(doc.log.changes.is_empty(), "nobody follows: nothing kept");
+    }
+
+    #[test]
+    fn a_follower_of_another_document_reads_nothing_there_and_takes_nothing() {
+        let mut a = doc_from("|");
+        let mut b = doc_from("|");
+        let from_a = a.follow();
+        let from_b = b.follow();
+        type_text(&mut b, "x", 0);
+        assert_eq!(
+            b.changes_since(&from_a),
+            [],
+            "a's follower has no place in b"
+        );
+        assert_eq!(
+            b.changes_since(&from_b).len(),
+            1,
+            "and took nothing from b's own"
+        );
+        a.unfollow(from_a);
+        b.unfollow(from_b);
     }
 
     #[test]

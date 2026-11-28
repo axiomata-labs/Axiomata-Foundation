@@ -1,4 +1,5 @@
-//! How fast the text core is on large files (rust-core.md R5): opening, typing, undoing, and one very long line.
+//! How fast the text core is on large files (rust-core.md R5, S6): opening, typing, undoing, one very long line, and
+//! a formatter's run over a large file (the line diff, applying its changes, the trail).
 //!
 //! `cargo run --release -p axiomata-editor --example bench [-- FILE…]` measures generated texts and, if given, real
 //! files. Every number is the median of a few runs, in milliseconds, or in microseconds for one keystroke.
@@ -123,6 +124,62 @@ fn measure_long_line(bytes: usize) {
     );
 }
 
+/// A formatter's run over `text` (rust-core.md S6): every `step`-th line changed; the changes the line diff finds,
+/// applied as the `ReplaceText` command does, and the trail an agent's edit of the same lines leaves.
+fn measure_diff(name: &str, text: &str, step: usize) {
+    let formatted: String = text
+        .split('\n')
+        .enumerate()
+        .map(|(i, line)| {
+            if i % step == 0 {
+                format!("{line} // formatted")
+            } else {
+                line.to_owned()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    let ctx = axiomata_editor::CommandContext {
+        tab_size: 4,
+        layout: &axiomata_editor::commands::UNWRAPPED,
+        page_rows: 40,
+        comment_prefix: Some("//"),
+        now: Millis(0),
+    };
+    let mut diff = Vec::new();
+    let mut apply = Vec::new();
+    let mut trail = Vec::new();
+    let mut count = 0;
+    for _ in 0..RUNS {
+        let mut doc = Document::new(text, FALLBACK);
+        let t = Instant::now();
+        let changes = axiomata_editor::text_changes(doc.rope().text(), &formatted);
+        diff.push(t.elapsed());
+        count = changes.len();
+        let t = Instant::now();
+        if let Err(e) = axiomata_editor::run(
+            &mut doc,
+            &axiomata_editor::Command::ReplaceText(changes),
+            &ctx,
+        ) {
+            eprintln!("{name}: the changes were refused: {e}");
+        }
+        apply.push(t.elapsed());
+        if doc.rope().text() != formatted {
+            eprintln!("{name}: the changes did not give the formatted text");
+        }
+        let t = Instant::now();
+        let _ = axiomata_editor::trail_of(text, &formatted);
+        trail.push(t.elapsed());
+    }
+    println!(
+        "{name:<34} {count:>6} changes: diff {:>10}   apply {:>10}   trail {:>10}",
+        ms(median(diff)),
+        ms(median(apply)),
+        ms(median(trail)),
+    );
+}
+
 fn numbered(lines: usize) -> String {
     (0..lines)
         .map(|i| format!("    let value_{i} = compute(\"line {i}\", äöü, 🙂);"))
@@ -136,6 +193,10 @@ fn main() {
         measure(&format!("{lines} lines, {} KB", text.len() / 1000), &text);
     }
     measure_long_line(5_000_000);
+    for (lines, step) in [(100_000, 1000), (100_000, 50), (100_000, 1)] {
+        let text = numbered(lines);
+        measure_diff(&format!("format {lines} lines, every {step}."), &text, step);
+    }
     for path in std::env::args().skip(1) {
         match std::fs::read_to_string(&path) {
             Ok(text) => measure(&path, &text),
